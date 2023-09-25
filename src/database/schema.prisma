@@ -1,0 +1,120 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "client"
+  binaryTargets   = ["native", "linux-musl-arm64-openssl-3.0.x", "debian-openssl-3.0.x"]
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("MYSQL_DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model Feedback {
+  id          Int       @id @default(autoincrement()) @db.Int
+  userId      Int       @db.Int
+  name        String    @db.VarChar(255)
+  description String?   @db.VarChar(255)
+  createdAt   DateTime  @default(now()) @db.DateTime(6)
+  updatedAt   DateTime  @default(now()) @db.DateTime(6)
+  deletedAt   DateTime? @db.DateTime(6)
+  user        User      @relation(fields: [userId], references: [id], onDelete: NoAction)
+
+  @@index([userId])
+}
+
+model Settings {
+  id                   Int      @id @default(autoincrement()) @db.Int
+  userId               Int      @unique @db.Int
+  theme                String   @default("light") @db.VarChar(255)
+  themePrism           String   @default("default") @db.VarChar(255)
+  themeBackground      String   @default("slanted-gradient") @db.VarChar(255)
+  language             String   @default("en-US") @db.VarChar(255)
+  pageScrollToTop      Boolean  @default(false) @db.TinyInt
+  pageScrollInfinite   Boolean  @default(true) @db.TinyInt
+  pageRedirectHome     Boolean  @default(true) @db.TinyInt
+  windowButtonPosition String   @default("left") @db.VarChar(255)
+  markdownMonospace    Boolean  @default(true) @db.TinyInt
+  createdAt            DateTime @default(now()) @db.DateTime(6)
+  updatedAt            DateTime @default(now()) @db.DateTime(6)
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Session {
+  id          Int      @id @default(autoincrement()) @db.Int
+  userId      Int      @db.Int
+  ua          String   @db.VarChar(255)
+  fingerprint String   @db.VarChar(255)
+  refresh     String   @default(uuid()) @db.VarChar(255)
+  expires     String   @db.VarChar(255)
+  ip          String   @db.VarChar(255)
+  createdAt   DateTime @default(now()) @db.DateTime(6)
+  updatedAt   DateTime @default(now()) @db.DateTime(6)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([fingerprint, userId])
+  @@index([userId])
+}
+
+model User {
+  id             Int        @id @default(autoincrement()) @db.Int
+  googleId       String?    @db.VarChar(255)
+  facebookId     String?    @db.VarChar(255)
+  name           String     @unique @db.VarChar(255)
+  description    String?    @db.VarChar(255)
+  avatar         String?    @db.VarChar(255)
+  email          String     @unique @db.VarChar(255)
+  emailConfirmed Boolean    @default(false) @db.TinyInt
+  password       String?    @db.VarChar(255)
+  createdAt      DateTime   @default(now()) @db.DateTime(6)
+  updatedAt      DateTime   @default(now()) @db.DateTime(6)
+  deletedAt      DateTime?  @db.DateTime(6)
+  githubId       String?    @db.VarChar(255)
+  terms          Boolean    @default(true) @db.TinyInt
+  categories     Category[]
+  posts          Post[]
+  sessions       Session[]
+  feedbacks      Feedback[]
+  settings       Settings?
+
+  @@fulltext([name])
+}
+
+model Category {
+  id          Int       @id @default(autoincrement()) @db.Int
+  userId      Int       @db.Int
+  name        String    @db.VarChar(255)
+  description String?   @db.VarChar(255)
+  createdAt   DateTime  @default(now()) @db.DateTime(6)
+  updatedAt   DateTime  @default(now()) @db.DateTime(6)
+  deletedAt   DateTime? @db.DateTime(6)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts       Post[]
+
+  @@fulltext([name])
+  @@unique([name, userId])
+  @@index([userId])
+}
+
+model Post {
+  id          Int       @id @default(autoincrement()) @db.Int
+  name        String    @db.VarChar(255)
+  description String    @db.VarChar(255)
+  markdown    String    @db.Text
+  image       String?   @db.VarChar(255)
+  userId      Int       @db.Int
+  categoryId  Int       @db.Int
+  createdAt   DateTime  @default(now()) @db.DateTime(6)
+  updatedAt   DateTime  @default(now()) @db.DateTime(6)
+  deletedAt   DateTime? @db.DateTime(6)
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@fulltext([name, description])
+  @@unique([name, userId, categoryId])
+  @@index([categoryId])
+  @@index([userId])
+}
