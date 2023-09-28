@@ -17,13 +17,13 @@ import prismaPlugin from './plugins/prisma.plugin';
 import helmetConfig from './config/helmet.config';
 import { swaggerConfig } from './config/swagger.config';
 
-// import productsRoutes from './routes/products.routes';
-// import categoriesRoutes from './routes/categories.routes';
-// import { messageSchema, paramIdSchema, paginationSchema } from './schema/common.schema';
-// import { categorySchema, productSchema } from './schema/models.schema';
+import categoriesRoutes from './routes/categories.routes';
+import { messageSchema, paramIdSchema } from './schema/common.schema';
 
 const main = async () => {
-  const app = fastify({ logger: loggerConfig });
+  const app = fastify({
+    logger: loggerConfig
+  });
 
   // Now we set up our app, plugins and such
   await app.register(fastifyEnv, envConfig);
@@ -32,13 +32,9 @@ const main = async () => {
   await app.register(fastifyHelmet, helmetConfig);
   await app.register(prismaPlugin);
 
-  // // Json Schemas
-  // app.addSchema(paginationSchema);
-  // app.addSchema(paramIdSchema);
-  // app.addSchema(messageSchema);
-  //
-  // app.addSchema(categorySchema);
-  // app.addSchema(productSchema);
+  // Json Schemas
+  app.addSchema(paramIdSchema);
+  app.addSchema(messageSchema);
 
   // Swagger Docs
   // @ts-ignore
@@ -49,11 +45,16 @@ const main = async () => {
     });
   }
 
-  // // API Endpoint routes
-  // await app.register(async api => {
-  // 	api.register(categoriesRoutes, { prefix: "/categories" });
-  // 	api.register(productsRoutes, { prefix: "/products" });
-  // }, { prefix: "/api/v1" });
+  // npx autocannon -c 1000 -d 5 -p 10 "http://127.0.0.1:5000/api/v1/categories?size=10&page=1"
+
+  // API Endpoint routes
+  await app.register(
+    async api => {
+      api.register(categoriesRoutes, { prefix: '/categories' });
+      // api.register(productsRoutes, { prefix: '/products' });
+    },
+    { prefix: '/api/v1' }
+  );
 
   return app;
 };

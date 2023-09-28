@@ -15,8 +15,9 @@ export const swaggerConfig = {
     consumes: ['application/json'],
     produces: ['application/json'],
     tags: [
-      { name: 'categories', description: 'Category related end-points' },
-      { name: 'products', description: 'Product related end-points' }
+      { name: 'Categories', description: 'Category related end-points' },
+      { name: 'Posts', description: 'Post related end-points' },
+      { name: 'Users', description: 'User related end-points' }
     ]
   }
 };
