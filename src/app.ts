@@ -18,10 +18,21 @@ import helmetConfig from './config/helmet.config';
 import { swaggerConfig } from './config/swagger.config';
 
 import categoriesRoutes from './routes/categories.routes';
-import { messageSchema, paramIdSchema } from './schema/common.schema';
+import postsRoutes from './routes/posts.routes';
+
+import { requestParameterIdSchema, responseErrorSchema } from './schema/common.schema';
+
+import { categorySchema } from './schema/category.schema';
+import { postSchema } from './schema/post.schema';
+import { userSchema } from './schema/user.schema';
 
 const main = async () => {
   const app = fastify({
+    ajv: {
+      customOptions: {
+        keywords: ['collectionFormat']
+      }
+    },
     logger: loggerConfig
   });
 
@@ -33,8 +44,12 @@ const main = async () => {
   await app.register(prismaPlugin);
 
   // Json Schemas
-  app.addSchema(paramIdSchema);
-  app.addSchema(messageSchema);
+  app.addSchema(requestParameterIdSchema);
+  app.addSchema(responseErrorSchema);
+
+  app.addSchema(categorySchema);
+  app.addSchema(postSchema);
+  app.addSchema(userSchema);
 
   // Swagger Docs
   // @ts-ignore
@@ -51,7 +66,7 @@ const main = async () => {
   await app.register(
     async api => {
       api.register(categoriesRoutes, { prefix: '/categories' });
-      // api.register(productsRoutes, { prefix: '/products' });
+      api.register(postsRoutes, { prefix: '/posts' });
     },
     { prefix: '/api/v1' }
   );

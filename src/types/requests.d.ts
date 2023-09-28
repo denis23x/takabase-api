@@ -1,16 +1,10 @@
-/**
- * Some types used mostly to extract data from:
- * - Request parameters
- * - POST body
- * - Query string
- *
- * @format
- */
+/** @format */
 
 type CrudAllRequest = {
   Querystring: {
     search?: string;
     userId?: number;
+    categoryId?: number;
     order?: string;
     scope?: string[];
     page: number;
