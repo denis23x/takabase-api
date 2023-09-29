@@ -22,12 +22,36 @@ export type CRUDIdRequest = {
   };
 };
 
-export type PostCategory = {
+export type POSTCategory = {
   Body: {
     name: string;
     description?: string;
   };
   Headers: {
     userId: number;
+  };
+};
+
+export type POSTPost = {
+  Body: {
+    name: string;
+    description: string;
+    markdown: string;
+    image?: string;
+    categoryId: number;
+  };
+  Headers: {
+    userId: number;
+  };
+};
+
+export type POSTUser = {
+  Body: {
+    name: string;
+    email: string;
+    terms: boolean;
+    facebookId?: string;
+    githubId?: string;
+    googleId?: string;
   };
 };

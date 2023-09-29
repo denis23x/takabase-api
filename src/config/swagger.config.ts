@@ -29,6 +29,13 @@ export const swaggerConfig: SwaggerOptions = {
         name: 'Users',
         description: 'User related end-points'
       }
-    ]
+    ],
+    securityDefinitions: {
+      Authorization_Token: {
+        type: 'apiKey',
+        name: 'Authorization',
+        in: 'header'
+      }
+    }
   }
 };

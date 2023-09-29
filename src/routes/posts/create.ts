@@ -1,21 +1,16 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { Prisma, Category } from '../../database/client';
-import { POSTCategory } from '../../types/requests';
+import type { Prisma, Post } from '../../database/client';
+import { POSTPost } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'POST',
     url: '/',
     schema: {
-      tags: ['Categories'],
-      description: 'Creates a new Category',
-      security: [
-        {
-          Authorization_Token: ['Authorization']
-        }
-      ],
+      tags: ['Posts'],
+      description: 'Creates a new Post',
       headers: {
         type: 'object',
         properties: {
@@ -32,16 +27,26 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           },
           description: {
             type: 'string'
+          },
+          markdown: {
+            type: 'string'
+          },
+          image: {
+            type: 'string',
+            nullable: true
+          },
+          categoryId: {
+            type: 'number'
           }
         },
-        required: ['name']
+        required: ['name', 'description', 'markdown', 'categoryId']
       },
       response: {
         201: {
           type: 'object',
           properties: {
             data: {
-              $ref: 'categorySchema#'
+              $ref: 'postSchema#'
             },
             statusCode: {
               type: 'number'
@@ -56,27 +61,40 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<POSTCategory>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<POSTPost>, reply: FastifyReply): Promise<any> {
       const { userid }: Record<string, any> = request.headers;
-      const { ...categoryCreateInput }: Record<string, any> = request.body;
+      const { categoryId, ...postCreateInput }: Record<string, any> = request.body;
 
-      const categoryCreateArgs: Prisma.CategoryCreateArgs = {
-        select: request.server.prismaService.getCategorySelect(),
+      const postCreateArgs: Prisma.PostCreateArgs = {
+        select: {
+          ...request.server.prismaService.getPostSelect(),
+          category: {
+            select: request.server.prismaService.getCategorySelect()
+          },
+          user: {
+            select: request.server.prismaService.getUserSelect()
+          }
+        },
         data: {
-          ...(categoryCreateInput as Prisma.CategoryCreateInput),
+          ...(postCreateInput as Prisma.PostCreateInput),
           user: {
             connect: {
               id: Number(userid)
+            }
+          },
+          category: {
+            connect: {
+              id: Number(categoryId)
             }
           }
         }
       };
 
-      return request.server.prisma.category
-        .create(categoryCreateArgs)
-        .then((category: Category) => {
+      return request.server.prisma.post
+        .create(postCreateArgs)
+        .then((post: Post) => {
           return reply.status(201).send({
-            data: category,
+            data: post,
             statusCode: 201
           });
         })
