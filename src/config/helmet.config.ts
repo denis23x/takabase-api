@@ -1,6 +1,7 @@
 /** @format */
 
-// See https://github.com/fastify/fastify-helmet#how-it-works
+// https://github.com/fastify/fastify-helmet
+
 export default {
   global: true
 };

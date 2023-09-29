@@ -1,26 +1,26 @@
 /** @format */
 
-const Config = {
+const Config: Record<string, any> = {
   confKey: 'config',
   schema: {
     type: 'object',
     required: ['MYSQL_DATABASE_URL'],
     properties: {
-      PROJECT_NAME: {
-        type: 'string',
-        default: 'fastify-rest'
-      },
       NODE_ENV: {
         type: 'string',
         default: 'development'
       },
-      BIND_PORT: {
+      APP_PORT: {
         type: 'number',
         default: 5000
       },
-      BIND_ADDR: {
+      APP_HOST: {
         type: 'string',
         default: '127.0.0.1'
+      },
+      APP_PRISMA_LOG: {
+        type: 'string',
+        default: 'debug'
       },
       ENABLE_SWAGGER: {
         type: 'boolean',

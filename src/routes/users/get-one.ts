@@ -1,8 +1,8 @@
 /** @format */
 
 import { FastifyInstance, FastifyRequest } from 'fastify';
-import { Prisma } from '../../database/client';
-import { CrudIdRequest } from '../../types/requests';
+import type { Prisma } from '../../database/client';
+import { CRUDIdRequest } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance) {
   fastify.route({
@@ -47,7 +47,7 @@ export default async function (fastify: FastifyInstance) {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CrudIdRequest>, reply) {
+    handler: async function (request: FastifyRequest<CRUDIdRequest>, reply) {
       const { id }: Record<string, number> = request.params;
       const { scope }: Record<string, any> = request.query;
 

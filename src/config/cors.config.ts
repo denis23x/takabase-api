@@ -1,6 +1,7 @@
 /** @format */
 
-// See: https://github.com/fastify/fastify-cors#options
+// https://github.com/fastify/fastify-cors
+
 export default {
   origin: '*'
 };

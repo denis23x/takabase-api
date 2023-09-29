@@ -1,6 +1,6 @@
 /** @format */
 
-export type CrudAllRequest = {
+export type CRUDAllRequest = {
   Querystring: {
     name?: string;
     search?: string;
@@ -13,7 +13,7 @@ export type CrudAllRequest = {
   };
 };
 
-export type CrudIdRequest = {
+export type CRUDIdRequest = {
   Params: {
     id: number;
   };
@@ -21,39 +21,3 @@ export type CrudIdRequest = {
     scope?: string[];
   };
 };
-
-// type PostCategory = {
-//   Body: {
-//     name: string;
-//   };
-// };
-//
-// type PutCategory = {
-//   Body: {
-//     name: string;
-//   };
-//   Params: {
-//     id: string;
-//   };
-// };
-//
-// type PostProduct = {
-//   Body: {
-//     name: string;
-//     published: boolean;
-//     price: number;
-//     categoryId: string;
-//   };
-// };
-//
-// type PutProduct = {
-//   Body: {
-//     name: string;
-//     published: boolean;
-//     price: number;
-//     categoryId: string;
-//   };
-//   Params: {
-//     id: string;
-//   };
-// };

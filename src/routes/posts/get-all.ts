@@ -2,7 +2,7 @@
 
 import { FastifyInstance, FastifyRequest } from 'fastify';
 import type { Prisma } from '../../database/client';
-import { CrudAllRequest } from '../../types/requests';
+import { CRUDAllRequest } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance) {
   fastify.route({
@@ -68,7 +68,7 @@ export default async function (fastify: FastifyInstance) {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CrudAllRequest>, reply) {
+    handler: async function (request: FastifyRequest<CRUDAllRequest>, reply) {
       const { userId, categoryId, search, order, scope, size, page }: Record<string, any> = request.query;
 
       const postFindManyArgs: Prisma.PostFindManyArgs = {

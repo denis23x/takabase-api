@@ -1,10 +1,10 @@
 /** @format */
 
 import fp from 'fastify-plugin';
-import { FastifyPluginAsync } from 'fastify';
+import { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { Prisma, PrismaClient } from '../database/client';
+import * as process from 'process';
 
-// Use TypeScript module augmentation to declare the type of server.prisma to be PrismaClient
 declare module 'fastify' {
   interface FastifyInstance {
     prisma: PrismaClient;
@@ -12,25 +12,22 @@ declare module 'fastify' {
   }
 }
 
-const prismaPlugin: FastifyPluginAsync = fp(async function prismaPlugin(server) {
-  const prisma: PrismaClient = new PrismaClient({
-    errorFormat: 'pretty'
-  });
+const prismaPlugin: FastifyPluginAsync = fp(async function prismaPlugin(fastifyInstance: FastifyInstance) {
+  const options: Prisma.PrismaClientOptions = {
+    errorFormat: 'minimal'
+  };
 
   /** https://www.prisma.io/docs/concepts/components/prisma-client/working-with-prismaclient/logging */
 
-  // if (configService.get('APP_LOG') === 'debug') {
-  //   prismaClientOptions.errorFormat = 'pretty';
-  //   prismaClientOptions.log = ['query', 'info', 'warn', 'error'];
-  // }
+  if (process.env.APP_PRISMA_LOG === 'debug') {
+    options.errorFormat = 'pretty';
+    options.log = ['query', 'info', 'warn', 'error'];
+  }
 
-  // await prisma.$connect();
+  const prisma: PrismaClient = new PrismaClient(options);
 
-  // Make Prisma Client available through the fastify server instance: server.prisma
-  server.decorate('prisma', prisma);
-
-  // Make Prisma Client available through the fastify server instance: server.prisma
-  server.decorate('prismaService', {
+  fastifyInstance.decorate('prisma', prisma);
+  fastifyInstance.decorate('prismaService', {
     getCategorySelect: (): Prisma.CategorySelect => ({
       id: true,
       name: true,
@@ -69,7 +66,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function prismaPlugin(server) 
     })
   });
 
-  server.addHook('onClose', async instance => {
+  fastifyInstance.addHook('onClose', async (instance: FastifyInstance) => {
     await instance.prisma.$disconnect();
   });
 });

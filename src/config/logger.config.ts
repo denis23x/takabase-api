@@ -2,7 +2,7 @@
 
 import { PinoLoggerOptions } from 'fastify/types/logger';
 
-const environmentConfigs = {
+const environmentConfigs: Record<string, PinoLoggerOptions | boolean> = {
   development: {
     level: 'debug',
     transport: {
@@ -18,7 +18,7 @@ const environmentConfigs = {
 };
 
 function getConfig(): PinoLoggerOptions | boolean {
-  const env = process.env.NODE_ENV || 'development';
+  const env: string = process.env.NODE_ENV || 'development';
 
   switch (env) {
     case 'development':

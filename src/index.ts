@@ -1,42 +1,37 @@
 /** @format */
 
-import { main } from './app';
+import { main } from './main';
 import { gracefullyShutdown, unexpectedErrorHandler } from './lib/exit-handler';
+import { FastifyInstance } from 'fastify';
+import { FastifyListenOptions } from 'fastify/types/instance';
 
-/*
- * Build service
- */
+// npx autocannon -c 1000 -d 5 -p 10 "http://127.0.0.1:5000/api/v1/categories?size=10&page=1"
+
 main()
-  .then(app => {
-    // At this point we should be able to gracefully handle all this... We hope
-    process.on('uncaughtException', err => unexpectedErrorHandler(app, err));
-    process.on('unhandledRejection', err => unexpectedErrorHandler(app, err));
+  .then((app: FastifyInstance) => {
+    // GRACEFUL SHUTDOWN
+
+    process.on('uncaughtException', (error: any) => unexpectedErrorHandler(app, error));
+    process.on('unhandledRejection', (error: any) => unexpectedErrorHandler(app, error));
     process.on('SIGTERM', () => gracefullyShutdown(app));
     process.on('SIGINT', () => gracefullyShutdown(app));
 
-    /*
-     * Start me up...
-     */
+    const options: FastifyListenOptions = {
+      port: Number(process.env.APP_PORT),
+      host: process.env.APP_HOST
+    };
+
+    // PROCESS
+
     app
-      // @ts-ignore
-      .listen({ port: app.config.BIND_PORT, host: app.config.BIND_ADDR })
-      .then(_ => {
-        app.log.info('Ready, Waiting for connections...');
-      })
-      .catch(err => {
-        app.log.error(
-          {
-            // @ts-ignore
-            addr: app.config.BIND_ADDR,
-            // @ts-ignore
-            port: app.config.BIND_PORT,
-            error: err.message
-          },
-          'Failed to start server'
-        );
-      });
+      .listen(options)
+      .then(() => app.log.info('Ready, Waiting for connections...'))
+      .catch((error: any) => app.log.error(error));
   })
-  .catch(err => {
-    console.log(err);
+  .catch((error: any) => {
+    console.error(error);
+
+    // BOOTSTRAP FAILED
+
     process.exit(1);
   });

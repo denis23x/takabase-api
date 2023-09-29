@@ -37,6 +37,7 @@ lerna-debug.log*
 
 # .env Files
 .env*
+!.env.example
 
 # Firebase
 .firebase

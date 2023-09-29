@@ -1,6 +1,8 @@
 /** @format */
 
-export const swaggerConfig = {
+import { SwaggerOptions } from '@fastify/swagger';
+
+export const swaggerConfig: SwaggerOptions = {
   swagger: {
     info: {
       title: 'RESTful APIs using Fastify',
@@ -11,13 +13,22 @@ export const swaggerConfig = {
       url: 'https://swagger.io',
       description: 'Find more info here'
     },
-    schemes: ['http'],
+    schemes: ['http', 'https'],
     consumes: ['application/json'],
     produces: ['application/json'],
     tags: [
-      { name: 'Categories', description: 'Category related end-points' },
-      { name: 'Posts', description: 'Post related end-points' },
-      { name: 'Users', description: 'User related end-points' }
+      {
+        name: 'Categories',
+        description: 'Category related end-points'
+      },
+      {
+        name: 'Posts',
+        description: 'Post related end-points'
+      },
+      {
+        name: 'Users',
+        description: 'User related end-points'
+      }
     ]
   }
 };
