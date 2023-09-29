@@ -1,7 +1,8 @@
 /** @format */
 
-type CrudAllRequest = {
+export type CrudAllRequest = {
   Querystring: {
+    name?: string;
     search?: string;
     userId?: number;
     categoryId?: number;
@@ -12,7 +13,7 @@ type CrudAllRequest = {
   };
 };
 
-type CrudIdRequest = {
+export type CrudIdRequest = {
   Params: {
     id: number;
   };

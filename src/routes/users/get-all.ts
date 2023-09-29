@@ -12,13 +12,13 @@ export default async function (fastify: FastifyInstance) {
       querystring: {
         type: 'object',
         properties: {
+          name: {
+            type: 'string'
+          },
           search: {
             type: 'string',
             minLength: 3,
             maxLength: 9
-          },
-          userId: {
-            type: 'number'
           },
           order: {
             type: 'string',
@@ -30,7 +30,7 @@ export default async function (fastify: FastifyInstance) {
             items: {
               type: 'string'
             },
-            default: ['user', 'posts']
+            default: ['categories', 'posts']
           },
           page: {
             type: 'number',
@@ -43,8 +43,8 @@ export default async function (fastify: FastifyInstance) {
         },
         required: ['page', 'size']
       },
-      tags: ['Categories'],
-      description: 'List all categories, paginated',
+      tags: ['Users'],
+      description: 'List all users, paginated',
       response: {
         200: {
           type: 'object',
@@ -52,7 +52,7 @@ export default async function (fastify: FastifyInstance) {
             data: {
               type: 'array',
               items: {
-                $ref: 'categorySchema#'
+                $ref: 'userSchema#'
               }
             },
             statusCode: {
@@ -66,10 +66,10 @@ export default async function (fastify: FastifyInstance) {
       }
     },
     handler: async function (request: FastifyRequest<CrudAllRequest>, reply) {
-      const { userId, search, order, scope, size, page }: Record<string, any> = request.query;
+      const { name, search, order, scope, size, page }: Record<string, any> = request.query;
 
-      const categoryFindManyArgs: Prisma.CategoryFindManyArgs = {
-        select: request.server.prismaService.getCategorySelect(),
+      const userFindManyArgs: Prisma.UserFindManyArgs = {
+        select: request.server.prismaService.getUserSelect(),
         orderBy: {
           id: 'desc'
         },
@@ -77,19 +77,18 @@ export default async function (fastify: FastifyInstance) {
         take: size
       };
 
-      /** Filter */
+      /** Search */
 
-      if (userId) {
-        categoryFindManyArgs.where = {
-          ...categoryFindManyArgs.where,
-          userId
+      if (name) {
+        userFindManyArgs.where = {
+          name
         };
       }
 
       /** Search */
 
       if (search) {
-        categoryFindManyArgs.where = {
+        userFindManyArgs.where = {
           name: {
             search: search + '*'
           }
@@ -97,7 +96,7 @@ export default async function (fastify: FastifyInstance) {
 
         /** Default relevant order */
 
-        categoryFindManyArgs.orderBy = {
+        userFindManyArgs.orderBy = {
           _relevance: {
             fields: ['name'],
             sort: 'asc',
@@ -109,14 +108,14 @@ export default async function (fastify: FastifyInstance) {
       /** Order */
 
       if (order) {
-        categoryFindManyArgs.orderBy = {
-          ...categoryFindManyArgs.orderBy,
+        userFindManyArgs.orderBy = {
+          ...userFindManyArgs.orderBy,
           id: order === 'newest' ? 'desc' : 'asc'
         };
 
         /** For full text search make CategoryOrderByWithRelationAndSearchRelevanceInput[] */
 
-        categoryFindManyArgs.orderBy = Object.entries(categoryFindManyArgs.orderBy).map((entry: any) => {
+        userFindManyArgs.orderBy = Object.entries(userFindManyArgs.orderBy).map((entry: any) => {
           const key: string = entry[0];
           const value: any = entry[1];
 
@@ -129,18 +128,21 @@ export default async function (fastify: FastifyInstance) {
       /** Scope */
 
       if (scope) {
-        if (scope.includes('user')) {
-          categoryFindManyArgs.select = {
-            ...categoryFindManyArgs.select,
-            user: {
-              select: request.server.prismaService.getUserSelect()
+        if (scope.includes('categories')) {
+          userFindManyArgs.select = {
+            ...userFindManyArgs.select,
+            categories: {
+              select: request.server.prismaService.getCategorySelect(),
+              orderBy: {
+                id: 'desc'
+              }
             }
           };
         }
 
         if (scope.includes('posts')) {
-          categoryFindManyArgs.select = {
-            ...categoryFindManyArgs.select,
+          userFindManyArgs.select = {
+            ...userFindManyArgs.select,
             posts: {
               select: request.server.prismaService.getPostSelect(),
               orderBy: {
@@ -151,7 +153,7 @@ export default async function (fastify: FastifyInstance) {
         }
       }
 
-      const data: any[] = await request.server.prisma.category.findMany(categoryFindManyArgs);
+      const data: any[] = await request.server.prisma.user.findMany(userFindManyArgs);
 
       return reply.status(200).send({
         data,

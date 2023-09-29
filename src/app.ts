@@ -19,6 +19,7 @@ import { swaggerConfig } from './config/swagger.config';
 
 import categoriesRoutes from './routes/categories.routes';
 import postsRoutes from './routes/posts.routes';
+import usersRoutes from './routes/users.routes';
 
 import { requestParameterIdSchema, responseErrorSchema } from './schema/common.schema';
 
@@ -67,6 +68,7 @@ const main = async () => {
     async api => {
       api.register(categoriesRoutes, { prefix: '/categories' });
       api.register(postsRoutes, { prefix: '/posts' });
+      api.register(usersRoutes, { prefix: '/users' });
     },
     { prefix: '/api/v1' }
   );

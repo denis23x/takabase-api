@@ -44,6 +44,18 @@ export const userSchema: Record<string, any> = {
       type: 'boolean',
       nullable: true
     },
+    categories: {
+      type: 'array',
+      items: {
+        $ref: 'categorySchema#'
+      }
+    },
+    posts: {
+      type: 'array',
+      items: {
+        $ref: 'postSchema#'
+      }
+    },
     createdAt: {
       type: 'string',
       format: 'date-time'

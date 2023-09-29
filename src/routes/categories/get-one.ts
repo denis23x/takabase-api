@@ -52,15 +52,7 @@ export default async function (fastify: FastifyInstance) {
       const { scope }: Record<string, any> = request.query;
 
       const categoryFindUniqueArgs: Prisma.CategoryFindUniqueArgs = {
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          userId: true,
-          createdAt: true,
-          updatedAt: true,
-          deletedAt: true
-        },
+        select: request.server.prismaService.getCategorySelect(),
         where: {
           id
         }
@@ -73,21 +65,7 @@ export default async function (fastify: FastifyInstance) {
           categoryFindUniqueArgs.select = {
             ...categoryFindUniqueArgs.select,
             user: {
-              select: {
-                id: true,
-                facebookId: true,
-                githubId: true,
-                googleId: true,
-                name: true,
-                description: true,
-                avatar: true,
-                email: true,
-                emailConfirmed: true,
-                password: true,
-                createdAt: true,
-                updatedAt: true,
-                deletedAt: true
-              }
+              select: request.server.prismaService.getUserSelect()
             }
           };
         }
@@ -96,18 +74,7 @@ export default async function (fastify: FastifyInstance) {
           categoryFindUniqueArgs.select = {
             ...categoryFindUniqueArgs.select,
             posts: {
-              select: {
-                id: true,
-                name: true,
-                description: true,
-                markdown: true,
-                image: true,
-                userId: true,
-                categoryId: true,
-                createdAt: true,
-                updatedAt: true,
-                deletedAt: true
-              },
+              select: request.server.prismaService.getPostSelect(),
               orderBy: {
                 id: 'desc'
               }

@@ -72,18 +72,7 @@ export default async function (fastify: FastifyInstance) {
       const { userId, categoryId, search, order, scope, size, page }: Record<string, any> = request.query;
 
       const postFindManyArgs: Prisma.PostFindManyArgs = {
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          markdown: true,
-          image: true,
-          userId: true,
-          categoryId: true,
-          createdAt: true,
-          updatedAt: true,
-          deletedAt: true
-        },
+        select: request.server.prismaService.getPostSelect(),
         orderBy: {
           id: 'desc'
         },
@@ -157,15 +146,7 @@ export default async function (fastify: FastifyInstance) {
           postFindManyArgs.select = {
             ...postFindManyArgs.select,
             category: {
-              select: {
-                id: true,
-                name: true,
-                description: true,
-                userId: true,
-                createdAt: true,
-                updatedAt: true,
-                deletedAt: true
-              }
+              select: request.server.prismaService.getCategorySelect()
             }
           };
         }
@@ -174,21 +155,7 @@ export default async function (fastify: FastifyInstance) {
           postFindManyArgs.select = {
             ...postFindManyArgs.select,
             user: {
-              select: {
-                id: true,
-                facebookId: true,
-                githubId: true,
-                googleId: true,
-                name: true,
-                description: true,
-                avatar: true,
-                email: true,
-                emailConfirmed: true,
-                password: true,
-                createdAt: true,
-                updatedAt: true,
-                deletedAt: true
-              }
+              select: request.server.prismaService.getUserSelect()
             }
           };
         }

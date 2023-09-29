@@ -1,7 +1,7 @@
 /** @format */
 
 import { FastifyInstance, FastifyRequest } from 'fastify';
-import type { Prisma } from '../../database/client';
+import { Prisma } from '../../database/client';
 import { CrudIdRequest } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance) {
@@ -21,18 +21,18 @@ export default async function (fastify: FastifyInstance) {
             items: {
               type: 'string'
             },
-            default: ['category', 'user']
+            default: ['categories', 'posts']
           }
         }
       },
-      tags: ['Posts'],
-      description: 'Get a single post',
+      tags: ['Users'],
+      description: 'Get a single user',
       response: {
         200: {
           type: 'object',
           properties: {
             data: {
-              $ref: 'postSchema#'
+              $ref: 'userSchema#'
             },
             statusCode: {
               type: 'number'
@@ -51,8 +51,8 @@ export default async function (fastify: FastifyInstance) {
       const { id }: Record<string, number> = request.params;
       const { scope }: Record<string, any> = request.query;
 
-      const postFindUniqueArgs: Prisma.PostFindUniqueArgs = {
-        select: request.server.prismaService.getPostSelect(),
+      const userFindUniqueArgs: Prisma.UserFindUniqueArgs = {
+        select: request.server.prismaService.getUserSelect(),
         where: {
           id
         }
@@ -60,35 +60,38 @@ export default async function (fastify: FastifyInstance) {
 
       /** Scope */
 
-      console.log(request.query);
-      console.log(scope);
-
       if (scope) {
-        if (scope.includes('category')) {
-          postFindUniqueArgs.select = {
-            ...postFindUniqueArgs.select,
-            category: {
-              select: request.server.prismaService.getCategorySelect()
+        if (scope.includes('categories')) {
+          userFindUniqueArgs.select = {
+            ...userFindUniqueArgs.select,
+            categories: {
+              select: request.server.prismaService.getCategorySelect(),
+              orderBy: {
+                id: 'desc'
+              }
             }
           };
         }
 
-        if (scope.includes('user')) {
-          postFindUniqueArgs.select = {
-            ...postFindUniqueArgs.select,
-            user: {
-              select: request.server.prismaService.getUserSelect()
+        if (scope.includes('posts')) {
+          userFindUniqueArgs.select = {
+            ...userFindUniqueArgs.select,
+            posts: {
+              select: request.server.prismaService.getPostSelect(),
+              orderBy: {
+                id: 'desc'
+              }
             }
           };
         }
       }
 
-      const data: any = await request.server.prisma.post.findUnique(postFindUniqueArgs);
+      const data: any = await request.server.prisma.user.findUnique(userFindUniqueArgs);
 
       if (data === null) {
         return reply.status(404).send({
           error: 'Not Found',
-          message: 'Post not found',
+          message: 'User not found',
           statusCode: 404
         });
       }

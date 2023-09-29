@@ -7,18 +7,24 @@ export const categorySchema: Record<string, any> = {
     id: {
       type: 'number'
     },
-    userId: {
-      type: 'number'
-    },
-    user: {
-      $ref: 'userSchema#'
-    },
     name: {
       type: 'string'
     },
     description: {
       type: 'string',
       nullable: true
+    },
+    // userId: {
+    //   type: 'number'
+    // },
+    user: {
+      $ref: 'userSchema#'
+    },
+    posts: {
+      type: 'array',
+      items: {
+        $ref: 'postSchema#'
+      }
     },
     createdAt: {
       type: 'string',

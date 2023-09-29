@@ -7,18 +7,6 @@ export const postSchema: Record<string, any> = {
     id: {
       type: 'number'
     },
-    userId: {
-      type: 'number'
-    },
-    user: {
-      $ref: 'userSchema#'
-    },
-    categoryId: {
-      type: 'number'
-    },
-    category: {
-      $ref: 'categorySchema#'
-    },
     name: {
       type: 'string'
     },
@@ -32,6 +20,18 @@ export const postSchema: Record<string, any> = {
     image: {
       type: 'string',
       nullable: true
+    },
+    // userId: {
+    //   type: 'number'
+    // },
+    user: {
+      $ref: 'userSchema#'
+    },
+    // categoryId: {
+    //   type: 'number'
+    // },
+    category: {
+      $ref: 'categorySchema#'
     },
     createdAt: {
       type: 'string',
