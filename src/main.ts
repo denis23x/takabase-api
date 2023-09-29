@@ -56,7 +56,7 @@ export const main = async (): Promise<FastifyInstance> => {
 
   // SWAGGER
 
-  if (process.env.ENABLE_SWAGGER) {
+  if (fastifyInstance.config.ENABLE_SWAGGER) {
     await fastifyInstance.register(fastifySwagger, swaggerConfig);
     await fastifyInstance.register(fastifySwaggerUi, {
       routePrefix: '/docs'

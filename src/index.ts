@@ -8,25 +8,25 @@ import { FastifyListenOptions } from 'fastify/types/instance';
 // npx autocannon -c 1000 -d 5 -p 10 "http://127.0.0.1:5000/api/v1/categories?size=10&page=1"
 
 main()
-  .then((app: FastifyInstance) => {
+  .then((fastifyInstance: FastifyInstance) => {
     // GRACEFUL SHUTDOWN
 
-    process.on('uncaughtException', (error: any) => unexpectedErrorHandler(app, error));
-    process.on('unhandledRejection', (error: any) => unexpectedErrorHandler(app, error));
-    process.on('SIGTERM', () => gracefullyShutdown(app));
-    process.on('SIGINT', () => gracefullyShutdown(app));
+    process.on('uncaughtException', (error: any) => unexpectedErrorHandler(fastifyInstance, error));
+    process.on('unhandledRejection', (error: any) => unexpectedErrorHandler(fastifyInstance, error));
+    process.on('SIGTERM', () => gracefullyShutdown(fastifyInstance));
+    process.on('SIGINT', () => gracefullyShutdown(fastifyInstance));
 
     const options: FastifyListenOptions = {
-      port: Number(process.env.APP_PORT),
-      host: process.env.APP_HOST
+      port: Number(fastifyInstance.config.APP_PORT),
+      host: fastifyInstance.config.APP_HOST
     };
 
     // PROCESS
 
-    app
+    fastifyInstance
       .listen(options)
-      .then(() => app.log.info('Ready, Waiting for connections...'))
-      .catch((error: any) => app.log.error(error));
+      .then(() => fastifyInstance.log.info('Ready, Waiting for connections...'))
+      .catch((error: any) => fastifyInstance.log.error(error));
   })
   .catch((error: any) => {
     console.error(error);

@@ -1,16 +1,8 @@
 /** @format */
 
 import fp from 'fastify-plugin';
-import { FastifyInstance, FastifyPluginAsync } from 'fastify';
+import { FastifyInstance, FastifyPluginAsync, FastifyReply } from 'fastify';
 import { Prisma, PrismaClient } from '../database/client';
-import * as process from 'process';
-
-declare module 'fastify' {
-  interface FastifyInstance {
-    prisma: PrismaClient;
-    prismaService: any;
-  }
-}
 
 const prismaPlugin: FastifyPluginAsync = fp(async function prismaPlugin(fastifyInstance: FastifyInstance) {
   const options: Prisma.PrismaClientOptions = {
@@ -19,7 +11,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function prismaPlugin(fastifyI
 
   /** https://www.prisma.io/docs/concepts/components/prisma-client/working-with-prismaclient/logging */
 
-  if (process.env.APP_PRISMA_LOG === 'debug') {
+  if (fastifyInstance.config.APP_PRISMA_LOG === 'debug') {
     options.errorFormat = 'pretty';
     options.log = ['query', 'info', 'warn', 'error'];
   }
@@ -63,10 +55,38 @@ const prismaPlugin: FastifyPluginAsync = fp(async function prismaPlugin(fastifyI
       createdAt: true,
       updatedAt: true,
       deletedAt: false
-    })
+    }),
+    getResponseError: (reply: FastifyReply, error: Prisma.PrismaClientKnownRequestError): FastifyReply => {
+      const prismaErrorReference: string = 'https://prisma.io/docs/reference/api-reference/error-reference';
+      const prismaErrorMessage: string = [prismaErrorReference, error.code.toLowerCase()].join('#');
+
+      switch (error.code) {
+        case 'P2025': {
+          return reply.status(404).send({
+            error: 'Not found',
+            message: prismaErrorMessage,
+            statusCode: 404
+          });
+        }
+        case 'P2002': {
+          return reply.status(400).send({
+            error: 'Bad Request',
+            message: prismaErrorMessage,
+            statusCode: 400
+          });
+        }
+        default: {
+          return reply.status(500).send({
+            error: 'Internal Server Error',
+            message: prismaErrorMessage,
+            statusCode: 500
+          });
+        }
+      }
+    }
   });
 
-  fastifyInstance.addHook('onClose', async (instance: FastifyInstance) => {
+  fastifyInstance.addHook('onClose', async (instance: FastifyInstance): Promise<void> => {
     await instance.prisma.$disconnect();
   });
 });

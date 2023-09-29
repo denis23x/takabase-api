@@ -21,3 +21,13 @@ export type CRUDIdRequest = {
     scope?: string[];
   };
 };
+
+export type PostCategory = {
+  Body: {
+    name: string;
+    description?: string;
+  };
+  Headers: {
+    userId: number;
+  };
+};

@@ -1,10 +1,10 @@
 /** @format */
 
 import { FastifyInstance, FastifyRequest } from 'fastify';
-import type { Prisma } from '../../database/client';
+import type { Prisma, Category } from '../../database/client';
 import { CRUDAllRequest } from '../../types/requests';
 
-export default async function (fastify: FastifyInstance) {
+export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'GET',
     url: '/',
@@ -65,7 +65,7 @@ export default async function (fastify: FastifyInstance) {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CRUDAllRequest>, reply) {
+    handler: async function (request: FastifyRequest<CRUDAllRequest>, reply): Promise<any> {
       const { userId, search, order, scope, size, page }: Record<string, any> = request.query;
 
       const categoryFindManyArgs: Prisma.CategoryFindManyArgs = {
@@ -151,12 +151,17 @@ export default async function (fastify: FastifyInstance) {
         }
       }
 
-      const data: any[] = await request.server.prisma.category.findMany(categoryFindManyArgs);
-
-      return reply.status(200).send({
-        data,
-        statusCode: 200
-      });
+      return request.server.prisma.category
+        .findMany(categoryFindManyArgs)
+        .then((categoryList: Category[]) => {
+          return reply.status(200).send({
+            data: categoryList,
+            statusCode: 200
+          });
+        })
+        .catch((error: Error) => {
+          return reply.server.prismaService.getResponseError(reply, error);
+        });
     }
   });
 }
