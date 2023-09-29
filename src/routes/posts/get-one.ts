@@ -1,10 +1,10 @@
 /** @format */
 
-import { FastifyInstance, FastifyRequest } from 'fastify';
-import type { Prisma } from '../../database/client';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { Prisma, Post } from '../../database/client';
 import { CRUDIdRequest } from '../../types/requests';
 
-export default async function (fastify: FastifyInstance) {
+export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'GET',
     url: '/:id',
@@ -47,11 +47,11 @@ export default async function (fastify: FastifyInstance) {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CRUDIdRequest>, reply) {
+    handler: async function (request: FastifyRequest<CRUDIdRequest>, reply: FastifyReply): Promise<any> {
       const { id }: Record<string, number> = request.params;
       const { scope }: Record<string, any> = request.query;
 
-      const postFindUniqueArgs: Prisma.PostFindUniqueArgs = {
+      const postFindUniqueOrThrowArgs: Prisma.PostFindUniqueOrThrowArgs = {
         select: request.server.prismaService.getPostSelect(),
         where: {
           id
@@ -60,13 +60,10 @@ export default async function (fastify: FastifyInstance) {
 
       /** Scope */
 
-      console.log(request.query);
-      console.log(scope);
-
       if (scope) {
         if (scope.includes('category')) {
-          postFindUniqueArgs.select = {
-            ...postFindUniqueArgs.select,
+          postFindUniqueOrThrowArgs.select = {
+            ...postFindUniqueOrThrowArgs.select,
             category: {
               select: request.server.prismaService.getCategorySelect()
             }
@@ -74,8 +71,8 @@ export default async function (fastify: FastifyInstance) {
         }
 
         if (scope.includes('user')) {
-          postFindUniqueArgs.select = {
-            ...postFindUniqueArgs.select,
+          postFindUniqueOrThrowArgs.select = {
+            ...postFindUniqueOrThrowArgs.select,
             user: {
               select: request.server.prismaService.getUserSelect()
             }
@@ -83,20 +80,17 @@ export default async function (fastify: FastifyInstance) {
         }
       }
 
-      const data: any = await request.server.prisma.post.findUnique(postFindUniqueArgs);
-
-      if (data === null) {
-        return reply.status(404).send({
-          error: 'Not Found',
-          message: 'Post not found',
-          statusCode: 404
+      return request.server.prisma.post
+        .findUniqueOrThrow(postFindUniqueOrThrowArgs)
+        .then((post: Post) => {
+          return reply.status(200).send({
+            data: post,
+            statusCode: 200
+          });
+        })
+        .catch((error: Error) => {
+          return reply.server.prismaService.getResponseError(reply, error);
         });
-      }
-
-      return reply.status(200).send({
-        data,
-        statusCode: 200
-      });
     }
   });
 }

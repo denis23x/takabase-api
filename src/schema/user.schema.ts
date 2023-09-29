@@ -27,7 +27,8 @@ export const userSchema: Record<string, any> = {
       nullable: true
     },
     email: {
-      type: 'string'
+      type: 'string',
+      format: 'email'
     },
     emailConfirmed: {
       type: 'boolean'

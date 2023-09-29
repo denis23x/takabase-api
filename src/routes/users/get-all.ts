@@ -1,10 +1,10 @@
 /** @format */
 
-import { FastifyInstance, FastifyRequest } from 'fastify';
-import type { Prisma } from '../../database/client';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { Prisma, User } from '../../database/client';
 import { CRUDAllRequest } from '../../types/requests';
 
-export default async function (fastify: FastifyInstance) {
+export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'GET',
     url: '/',
@@ -65,7 +65,7 @@ export default async function (fastify: FastifyInstance) {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CRUDAllRequest>, reply) {
+    handler: async function (request: FastifyRequest<CRUDAllRequest>, reply: FastifyReply): Promise<any> {
       const { name, search, order, scope, size, page }: Record<string, any> = request.query;
 
       const userFindManyArgs: Prisma.UserFindManyArgs = {
@@ -81,6 +81,7 @@ export default async function (fastify: FastifyInstance) {
 
       if (name) {
         userFindManyArgs.where = {
+          ...userFindManyArgs.where,
           name
         };
       }
@@ -89,6 +90,7 @@ export default async function (fastify: FastifyInstance) {
 
       if (search) {
         userFindManyArgs.where = {
+          ...userFindManyArgs.where,
           name: {
             search: search + '*'
           }
@@ -97,6 +99,7 @@ export default async function (fastify: FastifyInstance) {
         /** Default relevant order */
 
         userFindManyArgs.orderBy = {
+          ...userFindManyArgs.orderBy,
           _relevance: {
             fields: ['name'],
             sort: 'asc',
@@ -153,12 +156,17 @@ export default async function (fastify: FastifyInstance) {
         }
       }
 
-      const data: any[] = await request.server.prisma.user.findMany(userFindManyArgs);
-
-      return reply.status(200).send({
-        data,
-        statusCode: 200
-      });
+      return request.server.prisma.user
+        .findMany(userFindManyArgs)
+        .then((userList: User[]) => {
+          return reply.status(200).send({
+            data: userList,
+            statusCode: 200
+          });
+        })
+        .catch((error: Error) => {
+          return reply.server.prismaService.getResponseError(reply, error);
+        });
     }
   });
 }

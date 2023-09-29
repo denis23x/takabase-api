@@ -1,10 +1,10 @@
 /** @format */
 
-import { FastifyInstance, FastifyRequest } from 'fastify';
-import type { Prisma } from '../../database/client';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { Prisma, Post } from '../../database/client';
 import { CRUDAllRequest } from '../../types/requests';
 
-export default async function (fastify: FastifyInstance) {
+export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'GET',
     url: '/',
@@ -68,7 +68,7 @@ export default async function (fastify: FastifyInstance) {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CRUDAllRequest>, reply) {
+    handler: async function (request: FastifyRequest<CRUDAllRequest>, reply: FastifyReply): Promise<any> {
       const { userId, categoryId, search, order, scope, size, page }: Record<string, any> = request.query;
 
       const postFindManyArgs: Prisma.PostFindManyArgs = {
@@ -100,6 +100,7 @@ export default async function (fastify: FastifyInstance) {
 
       if (search) {
         postFindManyArgs.where = {
+          ...postFindManyArgs.where,
           name: {
             search: search + '*'
           },
@@ -111,6 +112,7 @@ export default async function (fastify: FastifyInstance) {
         /** Default relevant order */
 
         postFindManyArgs.orderBy = {
+          ...postFindManyArgs.orderBy,
           _relevance: {
             fields: ['name', 'description'],
             sort: 'asc',
@@ -161,12 +163,17 @@ export default async function (fastify: FastifyInstance) {
         }
       }
 
-      const data: any[] = await request.server.prisma.post.findMany(postFindManyArgs);
-
-      return reply.status(200).send({
-        data,
-        statusCode: 200
-      });
+      return request.server.prisma.post
+        .findMany(postFindManyArgs)
+        .then((postList: Post[]) => {
+          return reply.status(200).send({
+            data: postList,
+            statusCode: 200
+          });
+        })
+        .catch((error: Error) => {
+          return reply.server.prismaService.getResponseError(reply, error);
+        });
     }
   });
 }

@@ -1,6 +1,6 @@
 /** @format */
 
-import { FastifyInstance, FastifyRequest } from 'fastify';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, Category } from '../../database/client';
 import { CRUDAllRequest } from '../../types/requests';
 
@@ -65,7 +65,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CRUDAllRequest>, reply): Promise<any> {
+    handler: async function (request: FastifyRequest<CRUDAllRequest>, reply: FastifyReply): Promise<any> {
       const { userId, search, order, scope, size, page }: Record<string, any> = request.query;
 
       const categoryFindManyArgs: Prisma.CategoryFindManyArgs = {
@@ -90,6 +90,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       if (search) {
         categoryFindManyArgs.where = {
+          ...categoryFindManyArgs.where,
           name: {
             search: search + '*'
           }
@@ -98,6 +99,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         /** Default relevant order */
 
         categoryFindManyArgs.orderBy = {
+          ...categoryFindManyArgs.orderBy,
           _relevance: {
             fields: ['name'],
             sort: 'asc',
