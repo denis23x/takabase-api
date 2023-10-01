@@ -7,10 +7,10 @@ import { CRUDIdRequest } from '../../types/requests';
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'DELETE',
-    url: '/:id',
+    url: ':id',
     schema: {
       tags: ['Posts'],
-      description: 'Removes an specific post from the database',
+      description: 'Removes specific Post from the database',
       security: [
         {
           Authorization: ['token']

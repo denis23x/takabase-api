@@ -7,7 +7,7 @@ import { PUTPost } from '../../types/requests';
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'PUT',
-    url: '/:id',
+    url: ':id',
     schema: {
       tags: ['Posts'],
       description: 'Updates a Post',

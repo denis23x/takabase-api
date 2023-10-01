@@ -7,7 +7,7 @@ import { POSTUser } from '../../types/requests';
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'POST',
-    url: '/',
+    url: '',
     onRequest: fastify.authenticate,
     schema: {
       tags: ['Users'],

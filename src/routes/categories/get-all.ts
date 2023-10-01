@@ -7,7 +7,7 @@ import { CRUDAllRequest } from '../../types/requests';
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'GET',
-    url: '/',
+    url: '',
     schema: {
       querystring: {
         type: 'object',

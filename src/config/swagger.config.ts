@@ -18,6 +18,10 @@ export const swaggerConfig: SwaggerOptions = {
     produces: ['application/json'],
     tags: [
       {
+        name: 'Authorization',
+        description: 'Authorization end-points'
+      },
+      {
         name: 'Categories',
         description: 'Category related end-points'
       },
@@ -31,10 +35,10 @@ export const swaggerConfig: SwaggerOptions = {
       }
     ],
     securityDefinitions: {
-      Authorization_Token: {
+      Authorization: {
         type: 'apiKey',
-        name: 'Authorization',
-        in: 'header'
+        name: 'token',
+        in: 'cookie'
       }
     }
   }

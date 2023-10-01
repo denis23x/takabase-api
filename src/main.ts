@@ -9,7 +9,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 
-import { envConfig } from './lib/env.config';
+import { envConfig } from './config/env.config';
 import { corsConfig } from './config/cors.config';
 import { loggerConfig } from './config/logger.config';
 import { compressConfig } from './config/compress.config';

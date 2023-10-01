@@ -22,6 +22,18 @@ export const envConfig: Record<string, any> = {
         type: 'string',
         default: 'debug'
       },
+      JWT_SECRET: {
+        type: 'string',
+        default: 'jwt-secret'
+      },
+      COOKIE_NAME: {
+        type: 'string',
+        default: 'cookie-name'
+      },
+      COOKIE_SECRET: {
+        type: 'string',
+        default: 'cookie-secret'
+      },
       ENABLE_SWAGGER: {
         type: 'boolean',
         default: true

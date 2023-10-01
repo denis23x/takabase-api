@@ -7,7 +7,7 @@ import { CRUDIdRequest } from '../../types/requests';
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'GET',
-    url: '/:id',
+    url: ':id',
     schema: {
       params: {
         $ref: 'requestParameterIdSchema#'

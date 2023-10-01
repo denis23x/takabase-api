@@ -7,6 +7,9 @@ declare module 'fastify' {
       APP_PORT: number;
       APP_HOST: string;
       APP_PRISMA_LOG: string;
+      JWT_SECRET: string;
+      COOKIE_NAME: string;
+      COOKIE_SECRET: string;
       ENABLE_SWAGGER: boolean;
       MYSQL_DATABASE: boolean;
       MYSQL_USER: boolean;
