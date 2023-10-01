@@ -11,6 +11,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     schema: {
       tags: ['Users'],
       description: 'Creates a new User',
+      security: [
+        {
+          Authorization_Token: ['Authorization']
+        }
+      ],
       body: {
         type: 'object',
         properties: {
@@ -60,12 +65,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<POSTUser>, reply: FastifyReply): Promise<any> {
-      const { ...userCreateInput }: Record<string, any> = request.body;
+      const userCreateInput: Prisma.UserCreateInput = request.body;
 
       const userCreateArgs: Prisma.UserCreateArgs = {
         select: request.server.prismaService.getUserSelect(),
         data: {
-          ...(userCreateInput as Prisma.UserCreateInput),
+          ...userCreateInput,
           settings: {
             create: {}
           }

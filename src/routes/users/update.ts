@@ -1,21 +1,24 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { Prisma, Category } from '../../database/client';
-import { POSTCategory } from '../../types/requests';
+import type { Prisma, User } from '../../database/client';
+import { PUTUser } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
-    method: 'POST',
-    url: '/',
+    method: 'PUT',
+    url: '/:id',
     schema: {
-      tags: ['Categories'],
-      description: 'Creates a new Category',
+      tags: ['Users'],
+      description: 'Updates a User',
       security: [
         {
           Authorization_Token: ['Authorization']
         }
       ],
+      params: {
+        $ref: 'requestParameterIdSchema#'
+      },
       headers: {
         type: 'object',
         properties: {
@@ -32,16 +35,22 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           },
           description: {
             type: 'string'
+          },
+          avatar: {
+            type: 'string'
+          },
+          email: {
+            type: 'string',
+            format: 'email'
           }
-        },
-        required: ['name']
+        }
       },
       response: {
-        201: {
+        200: {
           type: 'object',
           properties: {
             data: {
-              $ref: 'categorySchema#'
+              $ref: 'userSchema#'
             },
             statusCode: {
               type: 'number'
@@ -56,29 +65,27 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<POSTCategory>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<PUTUser>, reply: FastifyReply): Promise<any> {
       const { userid }: Record<string, any> = request.headers;
 
-      const categoryCreateInput: Prisma.CategoryCreateInput = request.body;
+      const userUpdateInput: Prisma.UserUpdateInput = request.body;
 
-      const categoryCreateArgs: Prisma.CategoryCreateArgs = {
-        select: request.server.prismaService.getCategorySelect(),
+      const userUpdateArgs: Prisma.UserUpdateArgs = {
+        select: request.server.prismaService.getUserSelect(),
+        where: {
+          id: userid
+        },
         data: {
-          ...categoryCreateInput,
-          user: {
-            connect: {
-              id: Number(userid)
-            }
-          }
+          ...userUpdateInput
         }
       };
 
-      return request.server.prisma.category
-        .create(categoryCreateArgs)
-        .then((category: Category) => {
-          return reply.status(201).send({
-            data: category,
-            statusCode: 201
+      return request.server.prisma.user
+        .update(userUpdateArgs)
+        .then((user: User) => {
+          return reply.status(200).send({
+            data: user,
+            statusCode: 200
           });
         })
         .catch((error: Error) => {

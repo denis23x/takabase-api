@@ -2,20 +2,23 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, Post } from '../../database/client';
-import { POSTPost } from '../../types/requests';
+import { PUTPost } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
-    method: 'POST',
-    url: '/',
+    method: 'PUT',
+    url: '/:id',
     schema: {
       tags: ['Posts'],
-      description: 'Creates a new Post',
+      description: 'Updates a Post',
       security: [
         {
           Authorization_Token: ['Authorization']
         }
       ],
+      params: {
+        $ref: 'requestParameterIdSchema#'
+      },
       headers: {
         type: 'object',
         properties: {
@@ -37,17 +40,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             type: 'string'
           },
           image: {
-            type: 'string',
-            nullable: true
+            type: 'string'
           },
           categoryId: {
             type: 'number'
           }
-        },
-        required: ['name', 'description', 'markdown', 'categoryId']
+        }
       },
       response: {
-        201: {
+        200: {
           type: 'object',
           properties: {
             data: {
@@ -66,12 +67,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<POSTPost>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<PUTPost>, reply: FastifyReply): Promise<any> {
+      const { id }: Record<string, number> = request.params;
+
       const { userid }: Record<string, any> = request.headers;
 
-      const postCreateInput: Prisma.PostCreateInput & Record<string, any> = request.body;
+      const postUpdateInput: Prisma.PostUpdateInput = request.body;
 
-      const postCreateArgs: Prisma.PostCreateArgs = {
+      const postUpdateArgs: Prisma.PostUpdateArgs = {
         select: {
           ...request.server.prismaService.getPostSelect(),
           category: {
@@ -81,27 +84,21 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             select: request.server.prismaService.getUserSelect()
           }
         },
+        where: {
+          userId: userid,
+          id
+        },
         data: {
-          ...postCreateInput,
-          user: {
-            connect: {
-              id: Number(userid)
-            }
-          },
-          category: {
-            connect: {
-              id: Number(postCreateInput.categoryId)
-            }
-          }
+          ...postUpdateInput
         }
       };
 
       return request.server.prisma.post
-        .create(postCreateArgs)
+        .update(postUpdateArgs)
         .then((post: Post) => {
-          return reply.status(201).send({
+          return reply.status(200).send({
             data: post,
-            statusCode: 201
+            statusCode: 200
           });
         })
         .catch((error: Error) => {

@@ -1,5 +1,7 @@
 /** @format */
 
+import type { Prisma } from '../database/client';
+
 export type CRUDAllRequest = {
   Querystring: {
     name?: string;
@@ -22,36 +24,56 @@ export type CRUDIdRequest = {
   };
 };
 
+// CATEGORY
+
 export type POSTCategory = {
-  Body: {
-    name: string;
-    description?: string;
-  };
   Headers: {
     userId: number;
   };
+  Body: Prisma.CategoryCreateInput;
 };
+
+export type PUTCategory = {
+  Headers: {
+    userId: number;
+  };
+  Params: {
+    id: number;
+  };
+  Body: Prisma.CategoryUpdateInput;
+};
+
+// POST
 
 export type POSTPost = {
-  Body: {
-    name: string;
-    description: string;
-    markdown: string;
-    image?: string;
-    categoryId: number;
-  };
+  Body: Prisma.PostCreateInput;
   Headers: {
     userId: number;
   };
 };
 
-export type POSTUser = {
-  Body: {
-    name: string;
-    email: string;
-    terms: boolean;
-    facebookId?: string;
-    githubId?: string;
-    googleId?: string;
+export type PUTPost = {
+  Headers: {
+    userId: number;
   };
+  Params: {
+    id: number;
+  };
+  Body: Prisma.PostUpdateInput;
+};
+
+// USER
+
+export type POSTUser = {
+  Body: Prisma.UserCreateInput;
+};
+
+export type PUTUser = {
+  Headers: {
+    userId: number;
+  };
+  Params: {
+    id: number;
+  };
+  Body: Prisma.UserUpdateInput;
 };

@@ -2,20 +2,23 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, Category } from '../../database/client';
-import { POSTCategory } from '../../types/requests';
+import { PUTCategory } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
-    method: 'POST',
-    url: '/',
+    method: 'PUT',
+    url: '/:id',
     schema: {
       tags: ['Categories'],
-      description: 'Creates a new Category',
+      description: 'Updates a Category',
       security: [
         {
           Authorization_Token: ['Authorization']
         }
       ],
+      params: {
+        $ref: 'requestParameterIdSchema#'
+      },
       headers: {
         type: 'object',
         properties: {
@@ -37,7 +40,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         required: ['name']
       },
       response: {
-        201: {
+        200: {
           type: 'object',
           properties: {
             data: {
@@ -56,29 +59,30 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<POSTCategory>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<PUTCategory>, reply: FastifyReply): Promise<any> {
+      const { id }: Record<string, number> = request.params;
+
       const { userid }: Record<string, any> = request.headers;
 
-      const categoryCreateInput: Prisma.CategoryCreateInput = request.body;
+      const categoryUpdateInput: Prisma.CategoryUpdateInput = request.body;
 
-      const categoryCreateArgs: Prisma.CategoryCreateArgs = {
+      const categoryUpdateArgs: Prisma.CategoryUpdateArgs = {
         select: request.server.prismaService.getCategorySelect(),
+        where: {
+          userId: userid,
+          id
+        },
         data: {
-          ...categoryCreateInput,
-          user: {
-            connect: {
-              id: Number(userid)
-            }
-          }
+          ...categoryUpdateInput
         }
       };
 
       return request.server.prisma.category
-        .create(categoryCreateArgs)
+        .update(categoryUpdateArgs)
         .then((category: Category) => {
-          return reply.status(201).send({
+          return reply.status(200).send({
             data: category,
-            statusCode: 201
+            statusCode: 200
           });
         })
         .catch((error: Error) => {
