@@ -6,27 +6,27 @@ import { CRUDIdRequest } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
-    method: 'GET',
+    method: 'DELETE',
     url: '/:id',
     schema: {
+      tags: ['Categories'],
+      description: 'Removes an specific category from the database',
+      security: [
+        {
+          Authorization_Token: ['Authorization']
+        }
+      ],
       params: {
         $ref: 'requestParameterIdSchema#'
       },
-      querystring: {
+      headers: {
         type: 'object',
         properties: {
-          scope: {
-            type: 'array',
-            collectionFormat: 'multi',
-            items: {
-              type: 'string'
-            },
-            default: ['user', 'posts']
+          userId: {
+            type: 'number'
           }
         }
       },
-      tags: ['Categories'],
-      description: 'Get a single category',
       response: {
         200: {
           type: 'object',
@@ -39,7 +39,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
           }
         },
-        404: {
+        400: {
           $ref: 'responseErrorSchema#'
         },
         500: {
@@ -50,42 +50,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     handler: async function (request: FastifyRequest<CRUDIdRequest>, reply: FastifyReply): Promise<any> {
       const { id }: Record<string, number> = request.params;
 
-      const { scope }: Record<string, any> = request.query;
-
-      const categoryFindUniqueOrThrowArgs: Prisma.CategoryFindUniqueOrThrowArgs = {
+      const categoryDeleteArgs: Prisma.CategoryDeleteArgs = {
         select: request.server.prismaService.getCategorySelect(),
         where: {
           id
         }
       };
 
-      /** Scope */
-
-      if (scope) {
-        if (scope.includes('user')) {
-          categoryFindUniqueOrThrowArgs.select = {
-            ...categoryFindUniqueOrThrowArgs.select,
-            user: {
-              select: request.server.prismaService.getUserSelect()
-            }
-          };
-        }
-
-        if (scope.includes('posts')) {
-          categoryFindUniqueOrThrowArgs.select = {
-            ...categoryFindUniqueOrThrowArgs.select,
-            posts: {
-              select: request.server.prismaService.getPostSelect(),
-              orderBy: {
-                id: 'desc'
-              }
-            }
-          };
-        }
-      }
-
       return request.server.prisma.category
-        .findUniqueOrThrow(categoryFindUniqueOrThrowArgs)
+        .delete(categoryDeleteArgs)
         .then((category: Category) => {
           return reply.status(200).send({
             data: category,

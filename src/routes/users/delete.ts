@@ -6,27 +6,27 @@ import { CRUDIdRequest } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
-    method: 'GET',
+    method: 'DELETE',
     url: '/:id',
     schema: {
+      tags: ['Users'],
+      description: 'Removes an specific user from the database',
+      security: [
+        {
+          Authorization_Token: ['Authorization']
+        }
+      ],
       params: {
         $ref: 'requestParameterIdSchema#'
       },
-      querystring: {
+      headers: {
         type: 'object',
         properties: {
-          scope: {
-            type: 'array',
-            collectionFormat: 'multi',
-            items: {
-              type: 'string'
-            },
-            default: ['categories', 'posts']
+          userId: {
+            type: 'number'
           }
         }
       },
-      tags: ['Users'],
-      description: 'Get a single user',
       response: {
         200: {
           type: 'object',
@@ -39,7 +39,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
           }
         },
-        404: {
+        400: {
           $ref: 'responseErrorSchema#'
         },
         500: {
@@ -47,48 +47,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CRUDIdRequest>, reply: FastifyReply): Promise<void> {
+    handler: async function (request: FastifyRequest<CRUDIdRequest>, reply: FastifyReply): Promise<any> {
       const { id }: Record<string, number> = request.params;
 
-      const { scope }: Record<string, any> = request.query;
-
-      const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {
+      const userDeleteArgs: Prisma.UserDeleteArgs = {
         select: request.server.prismaService.getUserSelect(),
         where: {
           id
         }
       };
 
-      /** Scope */
-
-      if (scope) {
-        if (scope.includes('categories')) {
-          userFindUniqueOrThrowArgs.select = {
-            ...userFindUniqueOrThrowArgs.select,
-            categories: {
-              select: request.server.prismaService.getCategorySelect(),
-              orderBy: {
-                id: 'desc'
-              }
-            }
-          };
-        }
-
-        if (scope.includes('posts')) {
-          userFindUniqueOrThrowArgs.select = {
-            ...userFindUniqueOrThrowArgs.select,
-            posts: {
-              select: request.server.prismaService.getPostSelect(),
-              orderBy: {
-                id: 'desc'
-              }
-            }
-          };
-        }
-      }
-
       return request.server.prisma.user
-        .findUniqueOrThrow(userFindUniqueOrThrowArgs)
+        .delete(userDeleteArgs)
         .then((user: User) => {
           return reply.status(200).send({
             data: user,
