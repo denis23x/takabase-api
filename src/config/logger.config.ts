@@ -17,7 +17,7 @@ const environmentConfigs: Record<string, PinoLoggerOptions | boolean> = {
   production: true
 };
 
-function getConfig(): PinoLoggerOptions | boolean {
+const getConfig = (): PinoLoggerOptions | boolean => {
   const env: string = process.env.NODE_ENV || 'development';
 
   switch (env) {
@@ -28,6 +28,6 @@ function getConfig(): PinoLoggerOptions | boolean {
     default:
       return false;
   }
-}
+};
 
-export default getConfig();
+export const loggerConfig: PinoLoggerOptions | boolean = getConfig();

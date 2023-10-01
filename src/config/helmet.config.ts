@@ -1,7 +1,9 @@
 /** @format */
 
+import { FastifyHelmetOptions } from '@fastify/helmet';
+
 // https://github.com/fastify/fastify-helmet
 
-export default {
+export const helmetConfig: FastifyHelmetOptions = {
   global: true
 };

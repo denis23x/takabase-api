@@ -1,6 +1,6 @@
 /** @format */
 
-const Config: Record<string, any> = {
+export const envConfig: Record<string, any> = {
   confKey: 'config',
   schema: {
     type: 'object',
@@ -49,5 +49,3 @@ const Config: Record<string, any> = {
   },
   dotenv: true
 };
-
-export default Config;

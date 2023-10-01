@@ -5,16 +5,20 @@ import fastifyEnv from '@fastify/env';
 import fastifyCors from '@fastify/cors';
 import fastifyCompress from '@fastify/compress';
 import fastifyHelmet from '@fastify/helmet';
+import fastifyCookie from '@fastify/cookie';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 
-import envConfig from './lib/env.config';
-import corsConfig from './config/cors.config';
-import loggerConfig from './config/logger.config';
-import compressConfig from './config/compress.config';
-import prismaPlugin from './plugins/prisma.plugin';
-import helmetConfig from './config/helmet.config';
+import { envConfig } from './lib/env.config';
+import { corsConfig } from './config/cors.config';
+import { loggerConfig } from './config/logger.config';
+import { compressConfig } from './config/compress.config';
+import { helmetConfig } from './config/helmet.config';
+import { cookieConfig } from './config/cookie.config';
 import { swaggerConfig } from './config/swagger.config';
+
+import jwtPlugin from './plugins/jwt.plugin';
+import prismaPlugin from './plugins/prisma.plugin';
 
 import categoriesRoutes from './routes/categories.routes';
 import postsRoutes from './routes/posts.routes';
@@ -44,6 +48,9 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(fastifyCors, corsConfig);
   await fastifyInstance.register(fastifyCompress, compressConfig);
   await fastifyInstance.register(fastifyHelmet, helmetConfig);
+  await fastifyInstance.register(fastifyCookie, cookieConfig);
+
+  await fastifyInstance.register(jwtPlugin);
   await fastifyInstance.register(prismaPlugin);
 
   // JSON SCHEMAS
