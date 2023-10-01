@@ -8,12 +8,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'POST',
     url: '/',
+    onRequest: fastify.authenticate,
     schema: {
       tags: ['Categories'],
       description: 'Creates a new Category',
       security: [
         {
-          Authorization_Token: ['Authorization']
+          Authorization: ['token']
         }
       ],
       headers: {

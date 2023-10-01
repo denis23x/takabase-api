@@ -13,7 +13,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Updates a User',
       security: [
         {
-          Authorization_Token: ['Authorization']
+          Authorization: ['token']
         }
       ],
       params: {

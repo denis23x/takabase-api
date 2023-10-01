@@ -20,6 +20,7 @@ import { swaggerConfig } from './config/swagger.config';
 import jwtPlugin from './plugins/jwt.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
 
+import authorizationRoutes from './routes/authorization.routes';
 import categoriesRoutes from './routes/categories.routes';
 import postsRoutes from './routes/posts.routes';
 import usersRoutes from './routes/users.routes';
@@ -74,6 +75,9 @@ export const main = async (): Promise<FastifyInstance> => {
 
   await fastifyInstance.register(
     async (api: FastifyInstance): Promise<void> => {
+      api.register(authorizationRoutes, {
+        prefix: '/authorization'
+      });
       api.register(categoriesRoutes, {
         prefix: '/categories'
       });

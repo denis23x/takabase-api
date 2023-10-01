@@ -1,8 +1,5 @@
 /** @format */
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { FastifyInstance } from 'fastify';
-
 declare module 'fastify' {
   interface FastifyInstance {
     config: {
@@ -19,3 +16,5 @@ declare module 'fastify' {
     };
   }
 }
+
+export {};
