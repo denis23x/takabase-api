@@ -11,11 +11,12 @@ declare module 'fastify' {
       COOKIE_NAME: string;
       COOKIE_SECRET: string;
       ENABLE_SWAGGER: boolean;
-      MYSQL_DATABASE: boolean;
-      MYSQL_USER: boolean;
-      MYSQL_PASSWORD: boolean;
-      MYSQL_HOST: boolean;
-      MYSQL_DATABASE_URL: boolean;
+      MYSQL_ROOT_PASSWORD: string;
+      MYSQL_DATABASE: string;
+      MYSQL_USER: string;
+      MYSQL_PASSWORD: string;
+      MYSQL_HOST: string;
+      MYSQL_DATABASE_URL: string;
     };
   }
 }

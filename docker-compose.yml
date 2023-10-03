@@ -1,0 +1,47 @@
+version: "3.9"
+services:
+  app-fastify-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    depends_on:
+      app-fastify-mysql:
+        condition: service_healthy
+    container_name: app-fastify-api
+    restart: unless-stopped
+    tty: true
+    ports:
+      - ${APP_PORT}:${APP_PORT}
+    volumes:
+      - .:/usr/src/app/
+    networks:
+      - api-fastify-network
+    command: npm run start
+  app-fastify-mysql:
+    image: mysql:8
+    container_name: app-fastify-mysql
+    restart: unless-stopped
+    tty: true
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_USER}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u ${MYSQL_USER} --password=${MYSQL_PASSWORD}
+      interval: 3s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - app-fastify-mysql-data:/var/lib/mysql/
+      - ./src/database/mysql:/docker-entrypoint-initdb.d/
+    networks:
+      - api-fastify-network
+
+networks:
+  api-fastify-network:
+    driver: bridge
+
+volumes:
+  app-fastify-mysql-data:
+    driver: local

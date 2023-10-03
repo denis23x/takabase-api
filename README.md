@@ -1,3 +1,11 @@
+make up
+
+- make exec
+    - npx prisma migrate dev
+    - npx prisma db seed (optional)
+
+---
+
 # 🚀 RESTfull APIs boilerplate using Fastify
 
 Fastify provides high-performance web framework capabilities and is well-suited for building scalable APIs. It's lightweight and designed to handle a high volume of requests.

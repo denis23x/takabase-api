@@ -16,7 +16,7 @@ export const envConfig: Record<string, any> = {
       },
       APP_HOST: {
         type: 'string',
-        default: '127.0.0.1'
+        default: '0.0.0.0'
       },
       APP_PRISMA_LOG: {
         type: 'string',
@@ -41,6 +41,10 @@ export const envConfig: Record<string, any> = {
       MYSQL_DATABASE: {
         type: 'string',
         default: 'dbname'
+      },
+      MYSQL_ROOT_PASSWORD: {
+        type: 'string',
+        default: 'root'
       },
       MYSQL_USER: {
         type: 'string',
