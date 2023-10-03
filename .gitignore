@@ -1,3 +1,8 @@
+# Upload
+upload/**
+!upload/**/.gitkeep
+!upload/seed
+
 # Compiled Output
 /dist
 /node_modules
