@@ -22,6 +22,10 @@ export const envConfig: Record<string, any> = {
         type: 'string',
         default: 'debug'
       },
+      APP_STORAGE: {
+        type: 'string',
+        default: 'disk'
+      },
       JWT_SECRET: {
         type: 'string',
         default: 'jwt-secret'

@@ -13,6 +13,8 @@ services:
     tty: true
     ports:
       - ${APP_PORT}:${APP_PORT}
+      - "5555:5555"
+      - "9229:9229"
     volumes:
       - .:/usr/src/app/
     networks:

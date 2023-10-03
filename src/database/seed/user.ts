@@ -17,6 +17,7 @@ declare const process: {
 
 export const userRaw = async (): Promise<any> => {
   // @ts-ignore
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const prisma: PrismaClient<any> = new PrismaClient();
 
   /**
@@ -25,17 +26,17 @@ export const userRaw = async (): Promise<any> => {
    */
 
   // prettier-ignore
-  const avatarPathBucket: string[] = ['https://firebasestorage.googleapis.com/v0/b/draft-ssr.appspot.com/o/upload%2Fseed%2F'];
-  const avatarPathDisk: string[] = [process.env.APP_ORIGIN, 'images', 'seed'];
+  const avatarPathBucket: string[] = ['https://firebasestorage.googleapis.com/v0/b/draft-ssr.appspot.com/o/upload', 'seed'];
+  const avatarPathDisk: string[] = ['http://0.0.0.0:4400', 'upload', 'images', 'seed'];
 
-  const avatarPathMap: any = {
-    bucket: avatarPathBucket,
-    disk: avatarPathDisk
-  };
+  const avatarPathMap = (appStorage: string): any => {
+    const imageFile: string = faker.number.int({ min: 1, max: 128 }) + '.webp?alt=media';
+    const imageMap: any = {
+      bucket: [...avatarPathBucket, imageFile].join('%2F'),
+      disk: [...avatarPathDisk, imageFile].join('/')
+    };
 
-  const avatarPath: string = avatarPathMap[process.env.APP_STORAGE].join('');
-  const avatarFile = (): string => {
-    return [avatarPath, faker.number.int({ min: 1, max: 128 }) + '.webp?alt=media'].join('');
+    return imageMap[appStorage];
   };
 
   const raw: any[] = [
@@ -57,7 +58,7 @@ export const userRaw = async (): Promise<any> => {
       email,
       emailConfirmed: false,
       description: faker.datatype.boolean() ? faker.person.jobTitle() : null,
-      avatar: faker.datatype.boolean() ? avatarFile() : null,
+      avatar: faker.datatype.boolean() ? avatarPathMap(process.env.APP_STORAGE) : null,
       password: await hash(email, 10)
     });
   }

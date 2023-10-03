@@ -29,17 +29,17 @@ export const postRaw = async (): Promise<any> => {
   });
 
   // prettier-ignore
-  const imagePathBucket: string[] = ['https://firebasestorage.googleapis.com/v0/b/draft-ssr.appspot.com/o/upload%2Fseed%2F'];
-  const imagePathDisk: string[] = [process.env.APP_ORIGIN, 'images', 'seed'];
+  const imagePathBucket: string[] = ['https://firebasestorage.googleapis.com/v0/b/draft-ssr.appspot.com/o/upload', 'seed'];
+  const imagePathDisk: string[] = ['http://0.0.0.0:4400', 'upload', 'images', 'seed'];
 
-  const imagePathMap: any = {
-    bucket: imagePathBucket,
-    disk: imagePathDisk
-  };
+  const imagePathMap = (appStorage: string): any => {
+    const imageFile: string = faker.number.int({ min: 1, max: 128 }) + '.webp?alt=media';
+    const imageMap: any = {
+      bucket: [...imagePathBucket, imageFile].join('%2F'),
+      disk: [...imagePathDisk, imageFile].join('/')
+    };
 
-  const imagePath: string = imagePathMap[process.env.APP_STORAGE].join('');
-  const imageFile = (): string => {
-    return [imagePath, faker.number.int({ min: 1, max: 128 }) + '.webp?alt=media'].join('');
+    return imageMap[appStorage];
   };
 
   const raw: any[] = [];
@@ -52,7 +52,7 @@ export const postRaw = async (): Promise<any> => {
       name: faker.music.songName(),
       description: faker.lorem.sentence(),
       markdown: faker.lorem.paragraphs(10),
-      image: faker.datatype.boolean() ? imageFile() : null,
+      image: faker.datatype.boolean() ? imagePathMap(process.env.APP_STORAGE) : null,
       userId: category.userId,
       categoryId: category.id
     });
