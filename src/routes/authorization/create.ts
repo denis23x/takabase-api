@@ -3,6 +3,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { POSTCategory } from '../../types/requests';
 import { CookieSerializeOptions } from '@fastify/cookie';
+import { cookieConfigResponse } from '../../config/cookie.config';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -41,22 +42,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         denis: '123'
       });
 
-      const configList: Record<string, CookieSerializeOptions> = {
-        development: {
-          path: '/',
-          httpOnly: true
-        },
-        production: {
-          domain: request.server.config.APP_HOST,
-          path: '/',
-          secure: true,
-          httpOnly: true,
-          sameSite: true
-        }
+      const cookieOptions: CookieSerializeOptions = {
+        ...cookieConfigResponse[request.server.config.NODE_ENV],
+        expires: new Date(Date.now() + Number(request.server.config.JWT_TTL))
       };
 
       reply
-        .setCookie(request.server.config.COOKIE_NAME, token, configList[request.server.config.NODE_ENV])
+        .setCookie(request.server.config.JWT_NAME, token, cookieOptions)
         .code(200)
         .send({
           data: {

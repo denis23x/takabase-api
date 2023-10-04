@@ -1,9 +1,26 @@
 /** @format */
 
-import { FastifyCookieOptions } from '@fastify/cookie';
+import { CookieSerializeOptions, FastifyCookieOptions } from '@fastify/cookie';
 
 // https://github.com/fastify/fastify-cookie
 
 export const cookieConfig: FastifyCookieOptions = {
-  secret: String(process.env.COOKIE_SECRET)
+  secret: process.env.COOKIE_SECRET
+};
+
+export const cookieConfigResponse: Record<string, CookieSerializeOptions> = {
+  development: {
+    domain: process.env.COOKIE_DOMAIN,
+    path: '/',
+    secure: false,
+    httpOnly: true,
+    sameSite: false
+  },
+  production: {
+    domain: process.env.COOKIE_DOMAIN,
+    path: '/',
+    secure: true,
+    httpOnly: true,
+    sameSite: true
+  }
 };

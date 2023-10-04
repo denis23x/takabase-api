@@ -1,6 +1,10 @@
 /** @format */
 
-export const envConfig: Record<string, any> = {
+import { FastifyEnvOptions } from '@fastify/env';
+
+// https://github.com/fastify/fastify-env
+
+export const envConfig: FastifyEnvOptions = {
   confKey: 'config',
   schema: {
     type: 'object',
@@ -26,17 +30,25 @@ export const envConfig: Record<string, any> = {
         type: 'string',
         default: 'disk'
       },
+      JWT_NAME: {
+        type: 'string',
+        default: 'jwt-token'
+      },
       JWT_SECRET: {
         type: 'string',
         default: 'jwt-secret'
       },
-      COOKIE_NAME: {
-        type: 'string',
-        default: 'cookie-name'
+      JWT_TTL: {
+        type: 'number',
+        default: 2678400000
       },
       COOKIE_SECRET: {
         type: 'string',
         default: 'cookie-secret'
+      },
+      COOKIE_DOMAIN: {
+        type: 'string',
+        default: 'localhost'
       },
       ENABLE_SWAGGER: {
         type: 'boolean',
