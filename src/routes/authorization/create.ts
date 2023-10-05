@@ -1,7 +1,7 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { POSTCategory } from '../../types/requests';
+import { POSTAuthorization } from '../../types/requests';
 import { CookieSerializeOptions } from '@fastify/cookie';
 import { cookieConfigResponse } from '../../config/cookie.config';
 
@@ -12,6 +12,19 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     schema: {
       tags: ['Authorization'],
       description: 'Creates a new Token',
+      body: {
+        type: 'object',
+        properties: {
+          uid: {
+            type: 'string'
+          },
+          email: {
+            type: 'string',
+            format: 'email'
+          }
+        },
+        required: ['uid', 'email']
+      },
       response: {
         200: {
           type: 'object',
@@ -37,10 +50,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<POSTCategory>, reply: FastifyReply): Promise<any> {
-      const token: string = request.server.jwt.sign({
-        denis: '123'
-      });
+    handler: async function (request: FastifyRequest<POSTAuthorization>, reply: FastifyReply): Promise<any> {
+      const tokenJWT: string = request.server.jwt.sign(request.body);
 
       const cookieOptions: CookieSerializeOptions = {
         ...cookieConfigResponse[request.server.config.NODE_ENV],
@@ -48,11 +59,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       };
 
       reply
-        .setCookie(request.server.config.JWT_NAME, token, cookieOptions)
+        .setCookie(request.server.config.JWT_NAME, tokenJWT, cookieOptions)
         .code(200)
         .send({
           data: {
-            token: token
+            token: tokenJWT
           },
           statusCode: 200
         });

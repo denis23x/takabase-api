@@ -9,7 +9,7 @@ const jwtPlugin: FastifyPluginAsync = fp(async function prismaPlugin(fastifyInst
     secret: fastifyInstance.config.JWT_SECRET,
     cookie: {
       cookieName: fastifyInstance.config.JWT_NAME,
-      signed: false
+      signed: true
     },
     sign: {
       expiresIn: String(fastifyInstance.config.JWT_TTL) + 'ms'

@@ -9,9 +9,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'DELETE',
     url: '',
+    onRequest: fastify.authenticate,
     schema: {
       tags: ['Authorization'],
       description: 'Removes specific Token',
+      security: [
+        {
+          Authorization: ['token']
+        }
+      ],
       response: {
         200: {
           type: 'object',
