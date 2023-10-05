@@ -8,6 +8,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'DELETE',
     url: ':id',
+    onRequest: fastify.authenticate,
     schema: {
       tags: ['Posts'],
       description: 'Removes specific Post from the database',

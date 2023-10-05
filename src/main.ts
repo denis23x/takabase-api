@@ -37,6 +37,8 @@ import { FastifyInstance } from 'fastify/types/instance';
 
 export const main = async (): Promise<FastifyInstance> => {
   const fastifyInstance: FastifyInstance = fastify({
+    ignoreTrailingSlash: true,
+    ignoreDuplicateSlashes: true,
     ajv: {
       customOptions: {
         keywords: ['collectionFormat']
@@ -79,16 +81,16 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(
     async (api: FastifyInstance): Promise<void> => {
       api.register(authorizationRoutes, {
-        prefix: '/authorization'
+        prefix: '/authorization/'
       });
       api.register(categoriesRoutes, {
-        prefix: '/categories'
+        prefix: '/categories/'
       });
       api.register(postsRoutes, {
-        prefix: '/posts'
+        prefix: '/posts/'
       });
       api.register(usersRoutes, {
-        prefix: '/users'
+        prefix: '/users/'
       });
     },
     {

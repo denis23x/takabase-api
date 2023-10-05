@@ -24,6 +24,15 @@ export type CRUDIdRequest = {
   };
 };
 
+// AUTH
+
+export type POSTAuthorization = {
+  Body: {
+    uid: string;
+    email: string;
+  };
+};
+
 // CATEGORY
 
 export type POSTCategory = {

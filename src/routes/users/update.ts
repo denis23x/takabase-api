@@ -8,6 +8,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'PUT',
     url: ':id',
+    onRequest: fastify.authenticate,
     schema: {
       tags: ['Users'],
       description: 'Updates a User',
