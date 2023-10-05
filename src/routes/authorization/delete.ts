@@ -44,21 +44,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<POSTCategory>, reply: FastifyReply): Promise<any> {
-      const token: string = request.server.jwt.sign({
-        denis: '123'
-      });
-
       const cookieOptions: CookieSerializeOptions = {
         ...cookieConfigResponse[request.server.config.NODE_ENV],
         expires: new Date()
       };
 
       reply
-        .setCookie(request.server.config.JWT_NAME, token, cookieOptions)
+        .clearCookie('jwt-token', cookieOptions)
+        .clearCookie('jwt-user', cookieOptions)
         .code(200)
         .send({
           data: {
-            token: token
+            token: 'ok!'
           },
           statusCode: 200
         });

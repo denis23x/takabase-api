@@ -59,11 +59,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       };
 
       reply
-        .setCookie(request.server.config.JWT_NAME, tokenJWT, cookieOptions)
+        .setCookie('jwt-token', tokenJWT, cookieOptions)
         .code(200)
         .send({
           data: {
-            token: tokenJWT
+            token: 'ok!'
           },
           statusCode: 200
         });

@@ -8,7 +8,7 @@ const jwtPlugin: FastifyPluginAsync = fp(async function prismaPlugin(fastifyInst
   fastifyInstance.register(fastifyJwt, {
     secret: fastifyInstance.config.JWT_SECRET,
     cookie: {
-      cookieName: fastifyInstance.config.JWT_NAME,
+      cookieName: 'jwt-token',
       signed: true
     },
     sign: {

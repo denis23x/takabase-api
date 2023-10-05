@@ -30,10 +30,6 @@ export const envConfig: FastifyEnvOptions = {
         type: 'string',
         default: 'disk'
       },
-      JWT_NAME: {
-        type: 'string',
-        default: 'jwt-token'
-      },
       JWT_SECRET: {
         type: 'string',
         default: 'jwt-secret'
