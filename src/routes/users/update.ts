@@ -44,7 +44,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             type: 'string',
             format: 'email'
           }
-        }
+        },
+        additionalProperties: false
       },
       response: {
         200: {

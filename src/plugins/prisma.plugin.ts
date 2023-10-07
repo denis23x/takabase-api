@@ -49,16 +49,13 @@ const prismaPlugin: FastifyPluginAsync = fp(async function prismaPlugin(fastifyI
       name: true,
       description: true,
       avatar: true,
-      email: false,
-      emailConfirmed: false,
-      password: false,
       createdAt: true,
       updatedAt: true,
       deletedAt: false
     }),
     getResponseError: (reply: FastifyReply, error: Prisma.PrismaClientKnownRequestError): FastifyReply => {
       const prismaErrorReference: string = 'https://prisma.io/docs/reference/api-reference/error-reference';
-      const prismaErrorMessage: string = [prismaErrorReference, error.code.toLowerCase()].join('#');
+      const prismaErrorMessage: string = [prismaErrorReference, error.code?.toLowerCase()].join('#');
 
       switch (error.code) {
         case 'P2025': {

@@ -45,7 +45,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             type: 'number'
           }
         },
-        required: ['name', 'description', 'markdown', 'categoryId']
+        required: ['name', 'description', 'markdown', 'categoryId'],
+        additionalProperties: false
       },
       response: {
         201: {

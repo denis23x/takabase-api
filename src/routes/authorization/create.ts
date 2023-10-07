@@ -15,15 +15,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       body: {
         type: 'object',
         properties: {
-          uid: {
+          firebaseId: {
             type: 'string'
-          },
-          email: {
-            type: 'string',
-            format: 'email'
           }
         },
-        required: ['uid', 'email']
+        required: ['firebaseId'],
+        additionalProperties: false
       },
       response: {
         200: {
@@ -51,7 +48,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<POSTAuthorization>, reply: FastifyReply): Promise<any> {
-      const tokenJWT: string = request.server.jwt.sign(request.body);
+      const { firebaseId }: Record<string, string> = request.body;
+
+      const tokenJWT: string = request.server.jwt.sign({ firebaseId });
 
       const cookieOptions: CookieSerializeOptions = {
         ...cookieConfigResponse[request.server.config.NODE_ENV],

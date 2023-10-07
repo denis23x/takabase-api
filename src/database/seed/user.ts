@@ -1,6 +1,5 @@
 /** @format */
 
-import { hash } from 'bcryptjs';
 import { faker } from '@faker-js/faker';
 import { PrismaClient } from '../client';
 
@@ -42,24 +41,20 @@ export const userRaw = async (): Promise<any> => {
   const raw: any[] = [
     {
       name: 'moderator',
-      email: 'moder@moder.com',
-      emailConfirmed: false,
       description: 'The moderator',
+      firebaseId: 'seed-moderator',
       avatar: null,
-      password: await hash('moder@moder.com', 10)
+      terms: true
     }
   ];
 
   for (let i: number = 0; i < 19; i++) {
-    const email: string = faker.internet.email().toLowerCase();
-
     raw.push({
       name: faker.internet.userName(),
-      email,
-      emailConfirmed: false,
       description: faker.datatype.boolean() ? faker.person.jobTitle() : null,
+      firebaseId: ['seed', i].join('-'),
       avatar: faker.datatype.boolean() ? avatarPathMap(process.env.APP_STORAGE) : null,
-      password: await hash(email, 10)
+      terms: true
     });
   }
 

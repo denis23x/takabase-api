@@ -46,7 +46,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           categoryId: {
             type: 'number'
           }
-        }
+        },
+        additionalProperties: false
       },
       response: {
         200: {

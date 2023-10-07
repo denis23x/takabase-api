@@ -23,12 +23,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           name: {
             type: 'string'
           },
-          email: {
-            type: 'string',
-            format: 'email'
-          },
           terms: {
-            type: 'boolean'
+            const: true
+          },
+          firebaseId: {
+            type: 'string'
           },
           facebookId: {
             type: 'string',
@@ -43,7 +42,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             nullable: true
           }
         },
-        required: ['name', 'email', 'terms']
+        required: ['name', 'terms'],
+        additionalProperties: false
       },
       response: {
         201: {

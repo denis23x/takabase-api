@@ -28,8 +28,7 @@ export type CRUDIdRequest = {
 
 export type POSTAuthorization = {
   Body: {
-    uid: string;
-    email: string;
+    firebaseId: string;
   };
 };
 

@@ -51,7 +51,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       reply
         .clearCookie('jwt-token', cookieOptions)
-        .clearCookie('jwt-user', cookieOptions)
         .code(200)
         .send({
           data: {
