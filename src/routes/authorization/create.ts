@@ -2,6 +2,7 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { POSTAuthorization } from '../../types/requests';
+import type { Prisma, User } from '../../database/client';
 import { CookieSerializeOptions } from '@fastify/cookie';
 import { cookieConfigResponse } from '../../config/cookie.config';
 
@@ -27,12 +28,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           type: 'object',
           properties: {
             data: {
-              type: 'object',
-              properties: {
-                token: {
-                  type: 'string'
-                }
-              }
+              $ref: 'userSchema#'
             },
             statusCode: {
               type: 'number'
@@ -50,21 +46,33 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     handler: async function (request: FastifyRequest<POSTAuthorization>, reply: FastifyReply): Promise<any> {
       const { firebaseId }: Record<string, string> = request.body;
 
-      const tokenJWT: string = request.server.jwt.sign({ firebaseId });
-
-      const cookieOptions: CookieSerializeOptions = {
-        ...cookieConfigResponse[request.server.config.NODE_ENV],
-        expires: new Date(Date.now() + Number(request.server.config.JWT_TTL))
+      const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {
+        select: {
+          ...request.server.prismaService.getUserSelect(),
+          firebaseId: true
+        },
+        where: {
+          firebaseId
+        }
       };
 
-      reply
-        .setCookie('jwt-token', tokenJWT, cookieOptions)
-        .code(200)
-        .send({
-          data: {
-            token: 'ok!'
-          },
-          statusCode: 200
+      return request.server.prisma.user
+        .findUniqueOrThrow(userFindUniqueOrThrowArgs)
+        .then((user: User) => {
+          const jwt: string = request.server.jwt.sign(user);
+
+          const cookieOptions: CookieSerializeOptions = {
+            ...cookieConfigResponse[request.server.config.NODE_ENV],
+            expires: new Date(Date.now() + Number(request.server.config.JWT_TTL))
+          };
+
+          return reply.setCookie('jwt-token', jwt, cookieOptions).status(200).send({
+            data: user,
+            statusCode: 200
+          });
+        })
+        .catch((error: Error) => {
+          return reply.server.prismaService.getResponseError(reply, error);
         });
     }
   });

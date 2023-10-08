@@ -11,6 +11,9 @@ export const userSchema: Record<string, any> = {
       type: 'string',
       nullable: true
     },
+    firebaseId: {
+      type: 'string'
+    },
     facebookId: {
       type: 'string',
       nullable: true
@@ -26,18 +29,7 @@ export const userSchema: Record<string, any> = {
       type: 'string',
       nullable: true
     },
-    email: {
-      type: 'string',
-      format: 'email'
-    },
-    emailConfirmed: {
-      type: 'boolean'
-    },
     avatar: {
-      type: 'string',
-      nullable: true
-    },
-    password: {
       type: 'string',
       nullable: true
     },

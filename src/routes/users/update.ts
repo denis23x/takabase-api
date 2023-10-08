@@ -39,10 +39,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           },
           avatar: {
             type: 'string'
-          },
-          email: {
-            type: 'string',
-            format: 'email'
           }
         },
         additionalProperties: false

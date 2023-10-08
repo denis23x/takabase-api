@@ -8,15 +8,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'POST',
     url: '',
-    onRequest: fastify.authenticate,
     schema: {
       tags: ['Users'],
       description: 'Creates a new User',
-      security: [
-        {
-          Authorization: ['token']
-        }
-      ],
       body: {
         type: 'object',
         properties: {
@@ -26,6 +20,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           terms: {
             const: true
           },
+          // TODO: protect this endpoint
           firebaseId: {
             type: 'string'
           },
