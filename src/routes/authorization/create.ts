@@ -59,7 +59,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       return request.server.prisma.user
         .findUniqueOrThrow(userFindUniqueOrThrowArgs)
         .then((user: User) => {
-          const jwt: string = request.server.jwt.sign(user);
+          const jwt: string = request.server.jwt.sign({
+            id: user.id,
+            firebaseId: user.firebaseId
+          });
 
           const cookieOptions: CookieSerializeOptions = {
             ...cookieConfigResponse[request.server.config.NODE_ENV],
