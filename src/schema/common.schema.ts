@@ -26,3 +26,36 @@ export const requestParameterIdSchema: Record<string, any> = {
   },
   required: ['id']
 };
+
+export const requestQueryParameterSchema: Record<string, any> = {
+  $id: 'requestQueryParameterSchema',
+  type: 'object',
+  properties: {
+    search: {
+      type: 'string',
+      minLength: 3,
+      maxLength: 9
+    },
+    order: {
+      type: 'string',
+      enum: ['newest', 'oldest']
+    },
+    scope: {
+      type: 'array',
+      collectionFormat: 'multi',
+      items: {
+        type: 'string'
+      },
+      default: ['user', 'posts']
+    },
+    page: {
+      type: 'number',
+      default: 1
+    },
+    size: {
+      type: 'number',
+      default: 10
+    }
+  },
+  required: ['page', 'size']
+};

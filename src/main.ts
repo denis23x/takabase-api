@@ -27,7 +27,7 @@ import categoriesRoutes from './routes/categories.routes';
 import postsRoutes from './routes/posts.routes';
 import usersRoutes from './routes/users.routes';
 
-import { requestParameterIdSchema, responseErrorSchema } from './schema/common.schema';
+import { requestParameterIdSchema, requestQueryParameterSchema, responseErrorSchema } from './schema/common.schema';
 
 import { categorySchema } from './schema/category.schema';
 import { postSchema } from './schema/post.schema';
@@ -61,8 +61,12 @@ export const main = async (): Promise<FastifyInstance> => {
 
   // JSON SCHEMAS
 
+  /** https://json-schema.org/understanding-json-schema/structuring#retrieval-uri */
+
   fastifyInstance.addSchema(requestParameterIdSchema);
+  fastifyInstance.addSchema(requestQueryParameterSchema);
   fastifyInstance.addSchema(responseErrorSchema);
+
   fastifyInstance.addSchema(categorySchema);
   fastifyInstance.addSchema(postSchema);
   fastifyInstance.addSchema(userSchema);

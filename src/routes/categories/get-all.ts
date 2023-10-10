@@ -1,7 +1,7 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { Prisma, Category } from '../../database/client';
+import { Prisma, Category } from '../../database/client';
 import { CRUDAllRequest } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
@@ -153,16 +153,16 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
 
-      return request.server.prisma.category
+      await reply.server.prisma.category
         .findMany(categoryFindManyArgs)
         .then((categoryList: Category[]) => {
-          return reply.status(200).send({
+          reply.status(200).send({
             data: categoryList,
             statusCode: 200
           });
         })
         .catch((error: Error) => {
-          return reply.server.prismaService.getResponseError(reply, error);
+          reply.server.prismaService.getResponseError(reply, error);
         });
     }
   });

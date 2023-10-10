@@ -1,8 +1,9 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { Prisma, Category } from '../../database/client';
-import { CRUDIdRequest } from '../../types/requests';
+import { Prisma, Category } from '../../database/client';
+import { DELETECategory } from '../../types/requests';
+import { UserType } from '@fastify/jwt';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -19,14 +20,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       ],
       params: {
         $ref: 'requestParameterIdSchema#'
-      },
-      headers: {
-        type: 'object',
-        properties: {
-          userId: {
-            type: 'number'
-          }
-        }
       },
       response: {
         200: {
@@ -48,26 +41,29 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CRUDIdRequest>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<DELETECategory>, reply: FastifyReply): Promise<any> {
       const { id }: Record<string, number> = request.params;
+
+      const currentUser: UserType = request.user;
 
       const categoryDeleteArgs: Prisma.CategoryDeleteArgs = {
         select: request.server.prismaService.getCategorySelect(),
         where: {
+          userId: Number(currentUser.id),
           id
         }
       };
 
-      return request.server.prisma.category
+      await reply.server.prisma.category
         .delete(categoryDeleteArgs)
         .then((category: Category) => {
-          return reply.status(200).send({
+          reply.status(200).send({
             data: category,
             statusCode: 200
           });
         })
         .catch((error: Error) => {
-          return reply.server.prismaService.getResponseError(reply, error);
+          reply.server.prismaService.getResponseError(reply, error);
         });
     }
   });

@@ -34,22 +34,21 @@ export type POSTAuthorization = {
 
 // CATEGORY
 
-export type POSTCategory = {
-  Headers: {
-    userId: number;
-  };
-  Body: Prisma.CategoryCreateInput;
-};
-
-export type PUTCategory = {
-  Headers: {
-    userId: number;
-  };
+export interface ID {
   Params: {
     id: number;
   };
+}
+
+export interface POSTCategory {
+  Body: Prisma.CategoryCreateInput;
+}
+
+export interface PUTCategory extends ID {
   Body: Prisma.CategoryUpdateInput;
-};
+}
+
+export interface DELETECategory extends ID {}
 
 // POST
 

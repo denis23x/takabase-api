@@ -1,8 +1,9 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { Prisma, Category } from '../../database/client';
+import { Prisma, Category } from '../../database/client';
 import { PUTCategory } from '../../types/requests';
+import { UserType } from '@fastify/jwt';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -19,14 +20,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       ],
       params: {
         $ref: 'requestParameterIdSchema#'
-      },
-      headers: {
-        type: 'object',
-        properties: {
-          userId: {
-            type: 'number'
-          }
-        }
       },
       body: {
         type: 'object',
@@ -64,14 +57,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     handler: async function (request: FastifyRequest<PUTCategory>, reply: FastifyReply): Promise<any> {
       const { id }: Record<string, number> = request.params;
 
-      const { userid }: Record<string, any> = request.headers;
+      const currentUser: UserType = request.user;
 
       const categoryUpdateInput: Prisma.CategoryUpdateInput = request.body;
 
       const categoryUpdateArgs: Prisma.CategoryUpdateArgs = {
         select: request.server.prismaService.getCategorySelect(),
         where: {
-          userId: userid,
+          userId: Number(currentUser.id),
           id
         },
         data: {
@@ -79,16 +72,16 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       };
 
-      return request.server.prisma.category
+      await reply.server.prisma.category
         .update(categoryUpdateArgs)
         .then((category: Category) => {
-          return reply.status(200).send({
+          reply.status(200).send({
             data: category,
             statusCode: 200
           });
         })
         .catch((error: Error) => {
-          return reply.server.prismaService.getResponseError(reply, error);
+          reply.server.prismaService.getResponseError(reply, error);
         });
     }
   });

@@ -1,8 +1,9 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { Prisma, Category } from '../../database/client';
+import { Prisma, Category } from '../../database/client';
 import { POSTCategory } from '../../types/requests';
+import { UserType } from '@fastify/jwt';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -17,14 +18,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           Authorization: ['token']
         }
       ],
-      headers: {
-        type: 'object',
-        properties: {
-          userId: {
-            type: 'number'
-          }
-        }
-      },
       body: {
         type: 'object',
         properties: {
@@ -59,32 +52,32 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<POSTCategory>, reply: FastifyReply): Promise<any> {
-      const { userid }: Record<string, any> = request.headers;
+      const currentUser: UserType = request.user;
 
-      const categoryCreateInput: Prisma.CategoryCreateInput = request.body;
-
-      const categoryCreateArgs: Prisma.CategoryCreateArgs = {
-        select: request.server.prismaService.getCategorySelect(),
-        data: {
-          ...categoryCreateInput,
-          user: {
-            connect: {
-              id: Number(userid)
-            }
+      const categoryCreateInput: Prisma.CategoryCreateInput = {
+        ...request.body,
+        user: {
+          connect: {
+            id: Number(currentUser.id)
           }
         }
       };
 
-      return request.server.prisma.category
+      const categoryCreateArgs: Prisma.CategoryCreateArgs = {
+        select: request.server.prismaService.getCategorySelect(),
+        data: categoryCreateInput
+      };
+
+      await reply.server.prisma.category
         .create(categoryCreateArgs)
         .then((category: Category) => {
-          return reply.status(201).send({
+          reply.status(201).send({
             data: category,
             statusCode: 201
           });
         })
         .catch((error: Error) => {
-          return reply.server.prismaService.getResponseError(reply, error);
+          reply.server.prismaService.getResponseError(reply, error);
         });
     }
   });

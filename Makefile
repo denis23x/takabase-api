@@ -5,8 +5,8 @@ up:
 down:
 	docker compose down
 build:
-	docker build -t draft-fastify:latest .
+	docker build -t app-fastify-api:latest .
 rm:
-	docker rm -f app-api app-mysql
+	docker rm -f app-fastify-api app-fastify-mysql
 exec:
 	docker exec -it app-fastify-api sh
