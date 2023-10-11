@@ -2,7 +2,7 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Category } from '../../database/client';
-import { CRUDAllRequest } from '../../types/requests';
+import { GetAllRequest } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -10,38 +10,22 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     url: '',
     schema: {
       querystring: {
-        type: 'object',
-        properties: {
-          search: {
-            type: 'string',
-            minLength: 3,
-            maxLength: 9
+        allOf: [
+          {
+            type: 'object',
+            properties: {
+              userId: {
+                type: 'number'
+              }
+            }
           },
-          userId: {
-            type: 'number'
+          {
+            $ref: 'requestQueryParameterSchema#'
           },
-          order: {
-            type: 'string',
-            enum: ['newest', 'oldest']
-          },
-          scope: {
-            type: 'array',
-            collectionFormat: 'multi',
-            items: {
-              type: 'string'
-            },
-            default: ['user', 'posts']
-          },
-          page: {
-            type: 'number',
-            default: 1
-          },
-          size: {
-            type: 'number',
-            default: 10
+          {
+            $ref: 'requestQueryParameterScopeSchema#'
           }
-        },
-        required: ['page', 'size']
+        ]
       },
       tags: ['Categories'],
       description: 'List all categories, paginated',
@@ -65,7 +49,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CRUDAllRequest>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<GetAllRequest>, reply: FastifyReply): Promise<any> {
       const { userId, search, order, scope, size, page }: Record<string, any> = request.query;
 
       const categoryFindManyArgs: Prisma.CategoryFindManyArgs = {
@@ -156,13 +140,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       await reply.server.prisma.category
         .findMany(categoryFindManyArgs)
         .then((categoryList: Category[]) => {
-          reply.status(200).send({
+          return reply.status(200).send({
             data: categoryList,
             statusCode: 200
           });
         })
         .catch((error: Error) => {
-          reply.server.prismaService.getResponseError(reply, error);
+          return reply.server.prismaService.getResponseError(reply, error);
         });
     }
   });

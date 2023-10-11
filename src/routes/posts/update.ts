@@ -1,8 +1,8 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { Prisma, Post } from '../../database/client';
-import { PUTPost } from '../../types/requests';
+import { Prisma, Post } from '../../database/client';
+import { UpdatePost } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -19,14 +19,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       ],
       params: {
         $ref: 'requestParameterIdSchema#'
-      },
-      headers: {
-        type: 'object',
-        properties: {
-          userId: {
-            type: 'number'
-          }
-        }
       },
       body: {
         type: 'object',
@@ -69,7 +61,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<PUTPost>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<UpdatePost>, reply: FastifyReply): Promise<any> {
       const { id }: Record<string, number> = request.params;
 
       const { userid }: Record<string, any> = request.headers;

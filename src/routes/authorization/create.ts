@@ -1,8 +1,8 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { POSTAuthorization } from '../../types/requests';
-import type { Prisma, User } from '../../database/client';
+import { CreateAuthorization } from '../../types/requests';
+import { Prisma, User } from '../../database/client';
 import { CookieSerializeOptions } from '@fastify/cookie';
 import { cookieConfigResponse } from '../../config/cookie.config';
 
@@ -43,7 +43,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<POSTAuthorization>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<CreateAuthorization>, reply: FastifyReply): Promise<any> {
       const { firebaseId }: Record<string, string> = request.body;
 
       const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {
@@ -56,7 +56,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       };
 
-      return request.server.prisma.user
+      await reply.server.prisma.user
         .findUniqueOrThrow(userFindUniqueOrThrowArgs)
         .then((user: User) => {
           const jwt: string = request.server.jwt.sign({

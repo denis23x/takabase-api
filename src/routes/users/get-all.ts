@@ -1,8 +1,8 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { Prisma, User } from '../../database/client';
-import { CRUDAllRequest } from '../../types/requests';
+import { Prisma, User } from '../../database/client';
+import { GetAllRequest } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -10,38 +10,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     url: '',
     schema: {
       querystring: {
-        type: 'object',
-        properties: {
-          name: {
-            type: 'string'
+        allOf: [
+          {
+            $ref: 'requestQueryParameterSchema#'
           },
-          search: {
-            type: 'string',
-            minLength: 3,
-            maxLength: 9
-          },
-          order: {
-            type: 'string',
-            enum: ['newest', 'oldest']
-          },
-          scope: {
-            type: 'array',
-            collectionFormat: 'multi',
-            items: {
-              type: 'string'
-            },
-            default: ['categories', 'posts']
-          },
-          page: {
-            type: 'number',
-            default: 1
-          },
-          size: {
-            type: 'number',
-            default: 10
+          {
+            $ref: 'requestQueryParameterScopeSchema#'
           }
-        },
-        required: ['page', 'size']
+        ]
       },
       tags: ['Users'],
       description: 'List all users, paginated',
@@ -65,7 +41,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CRUDAllRequest>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<GetAllRequest>, reply: FastifyReply): Promise<any> {
       const { name, search, order, scope, size, page }: Record<string, any> = request.query;
 
       const userFindManyArgs: Prisma.UserFindManyArgs = {
@@ -156,7 +132,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
 
-      return request.server.prisma.user
+      await reply.server.prisma.user
         .findMany(userFindManyArgs)
         .then((userList: User[]) => {
           return reply.status(200).send({

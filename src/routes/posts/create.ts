@@ -1,8 +1,8 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { Prisma, Post } from '../../database/client';
-import { POSTPost } from '../../types/requests';
+import { Prisma, Post } from '../../database/client';
+import { CreatePost } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -17,14 +17,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           Authorization: ['token']
         }
       ],
-      headers: {
-        type: 'object',
-        properties: {
-          userId: {
-            type: 'number'
-          }
-        }
-      },
       body: {
         type: 'object',
         properties: {
@@ -68,7 +60,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<POSTPost>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<CreatePost>, reply: FastifyReply): Promise<any> {
       const { userid }: Record<string, any> = request.headers;
 
       const postCreateInput: Prisma.PostCreateInput & Record<string, any> = request.body;
@@ -98,7 +90,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       };
 
-      return request.server.prisma.post
+      await reply.server.prisma.post
         .create(postCreateArgs)
         .then((post: Post) => {
           return reply.status(201).send({

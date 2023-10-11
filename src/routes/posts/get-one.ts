@@ -1,8 +1,8 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { Prisma, Post } from '../../database/client';
-import { CRUDIdRequest } from '../../types/requests';
+import { Prisma, Post } from '../../database/client';
+import { GetOneRequest } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -13,17 +13,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         $ref: 'requestParameterIdSchema#'
       },
       querystring: {
-        type: 'object',
-        properties: {
-          scope: {
-            type: 'array',
-            collectionFormat: 'multi',
-            items: {
-              type: 'string'
-            },
-            default: ['category', 'user']
+        allOf: [
+          {
+            $ref: 'requestQueryParameterScopeSchema#'
           }
-        }
+        ]
       },
       tags: ['Posts'],
       description: 'Get a single post',
@@ -47,7 +41,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CRUDIdRequest>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<GetOneRequest>, reply: FastifyReply): Promise<any> {
       const { id }: Record<string, number> = request.params;
 
       const { scope }: Record<string, any> = request.query;
@@ -81,7 +75,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
 
-      return request.server.prisma.post
+      await reply.server.prisma.post
         .findUniqueOrThrow(postFindUniqueOrThrowArgs)
         .then((post: Post) => {
           return reply.status(200).send({

@@ -1,8 +1,8 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { Prisma, User } from '../../database/client';
-import { PUTUser } from '../../types/requests';
+import { Prisma, User } from '../../database/client';
+import { UpdateUser } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -19,14 +19,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       ],
       params: {
         $ref: 'requestParameterIdSchema#'
-      },
-      headers: {
-        type: 'object',
-        properties: {
-          userId: {
-            type: 'number'
-          }
-        }
       },
       body: {
         type: 'object',
@@ -63,7 +55,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<PUTUser>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<UpdateUser>, reply: FastifyReply): Promise<any> {
       const { userid }: Record<string, any> = request.headers;
 
       const userUpdateInput: Prisma.UserUpdateInput = request.body;
@@ -78,7 +70,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       };
 
-      return request.server.prisma.user
+      await reply.server.prisma.user
         .update(userUpdateArgs)
         .then((user: User) => {
           return reply.status(200).send({

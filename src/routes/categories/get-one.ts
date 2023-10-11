@@ -2,7 +2,7 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Category } from '../../database/client';
-import { CRUDIdRequest } from '../../types/requests';
+import { GetOneRequest } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -13,17 +13,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         $ref: 'requestParameterIdSchema#'
       },
       querystring: {
-        type: 'object',
-        properties: {
-          scope: {
-            type: 'array',
-            collectionFormat: 'multi',
-            items: {
-              type: 'string'
-            },
-            default: ['user', 'posts']
+        allOf: [
+          {
+            $ref: 'requestQueryParameterScopeSchema#'
           }
-        }
+        ]
       },
       tags: ['Categories'],
       description: 'Get a single category',
@@ -47,7 +41,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CRUDIdRequest>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<GetOneRequest>, reply: FastifyReply): Promise<any> {
       const { id }: Record<string, number> = request.params;
 
       const { scope }: Record<string, any> = request.query;
@@ -87,13 +81,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       await reply.server.prisma.category
         .findUniqueOrThrow(categoryFindUniqueOrThrowArgs)
         .then((category: Category) => {
-          reply.status(200).send({
+          return reply.status(200).send({
             data: category,
             statusCode: 200
           });
         })
         .catch((error: Error) => {
-          reply.server.prismaService.getResponseError(reply, error);
+          return reply.server.prismaService.getResponseError(reply, error);
         });
     }
   });

@@ -9,6 +9,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
+import fastifyJwt from '@fastify/jwt';
 
 import { envConfig } from './config/env.config';
 import { corsConfig } from './config/cors.config';
@@ -18,6 +19,7 @@ import { helmetConfig } from './config/helmet.config';
 import { cookieConfig } from './config/cookie.config';
 import { staticConfig } from './config/static.config';
 import { swaggerConfig } from './config/swagger.config';
+import { jwtConfig } from './config/jwt.config';
 
 import jwtPlugin from './plugins/jwt.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
@@ -27,7 +29,12 @@ import categoriesRoutes from './routes/categories.routes';
 import postsRoutes from './routes/posts.routes';
 import usersRoutes from './routes/users.routes';
 
-import { requestParameterIdSchema, requestQueryParameterSchema, responseErrorSchema } from './schema/common.schema';
+import {
+  requestParameterIdSchema,
+  requestQueryParameterSchema,
+  requestQueryParameterScopeSchema,
+  responseErrorSchema
+} from './schema/requests.schema';
 
 import { categorySchema } from './schema/category.schema';
 import { postSchema } from './schema/post.schema';
@@ -41,7 +48,7 @@ export const main = async (): Promise<FastifyInstance> => {
     ignoreDuplicateSlashes: true,
     ajv: {
       customOptions: {
-        keywords: ['collectionFormat']
+        keywords: ['collectionFormat', 'example']
       }
     },
     logger: loggerConfig
@@ -55,6 +62,7 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(fastifyHelmet, helmetConfig);
   await fastifyInstance.register(fastifyCookie, cookieConfig);
   await fastifyInstance.register(fastifyStatic, staticConfig);
+  await fastifyInstance.register(fastifyJwt, jwtConfig);
 
   await fastifyInstance.register(jwtPlugin);
   await fastifyInstance.register(prismaPlugin);
@@ -65,6 +73,7 @@ export const main = async (): Promise<FastifyInstance> => {
 
   fastifyInstance.addSchema(requestParameterIdSchema);
   fastifyInstance.addSchema(requestQueryParameterSchema);
+  fastifyInstance.addSchema(requestQueryParameterScopeSchema);
   fastifyInstance.addSchema(responseErrorSchema);
 
   fastifyInstance.addSchema(categorySchema);

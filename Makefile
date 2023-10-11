@@ -1,7 +1,7 @@
 .PHONY: up down build rm exec
 
 up:
-	docker-compose up --remove-orphans
+	docker compose up --remove-orphans
 down:
 	docker compose down
 build:

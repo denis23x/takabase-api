@@ -1,7 +1,6 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { POSTCategory } from '../../types/requests';
 import { CookieSerializeOptions } from '@fastify/cookie';
 import { cookieConfigResponse } from '../../config/cookie.config';
 
@@ -43,7 +42,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<POSTCategory>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest, reply: FastifyReply): Promise<any> {
       const cookieOptions: CookieSerializeOptions = {
         ...cookieConfigResponse[request.server.config.NODE_ENV],
         expires: new Date()

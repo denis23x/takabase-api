@@ -21,10 +21,27 @@ export const requestParameterIdSchema: Record<string, any> = {
   type: 'object',
   properties: {
     id: {
-      type: 'number'
+      type: 'number',
+      minimum: 1
     }
   },
   required: ['id']
+};
+
+export const requestQueryParameterScopeSchema: Record<string, any> = {
+  $id: 'requestQueryParameterScopeSchema',
+  type: 'object',
+  properties: {
+    scope: {
+      type: 'array',
+      collectionFormat: 'multi',
+      items: {
+        type: 'string'
+      },
+      default: [],
+      example: ['user', 'post', 'posts', 'category', 'categories']
+    }
+  }
 };
 
 export const requestQueryParameterSchema: Record<string, any> = {
@@ -34,26 +51,20 @@ export const requestQueryParameterSchema: Record<string, any> = {
     search: {
       type: 'string',
       minLength: 3,
-      maxLength: 9
+      maxLength: 12
     },
     order: {
       type: 'string',
       enum: ['newest', 'oldest']
     },
-    scope: {
-      type: 'array',
-      collectionFormat: 'multi',
-      items: {
-        type: 'string'
-      },
-      default: ['user', 'posts']
-    },
     page: {
       type: 'number',
+      minimum: 1,
       default: 1
     },
     size: {
       type: 'number',
+      minimum: 10,
       default: 10
     }
   },

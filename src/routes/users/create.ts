@@ -1,8 +1,8 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { Prisma, User } from '../../database/client';
-import { POSTUser } from '../../types/requests';
+import { Prisma, User } from '../../database/client';
+import { CreateUser } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -20,7 +20,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           terms: {
             const: true
           },
-          // TODO: protect this endpoint
           firebaseId: {
             type: 'string'
           },
@@ -37,7 +36,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             nullable: true
           }
         },
-        required: ['name', 'terms'],
+        required: ['name', 'terms', 'firebaseId'],
         additionalProperties: false
       },
       response: {
@@ -60,7 +59,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<POSTUser>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<CreateUser>, reply: FastifyReply): Promise<any> {
       const userCreateInput: Prisma.UserCreateInput = request.body;
 
       const userCreateArgs: Prisma.UserCreateArgs = {
@@ -73,7 +72,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       };
 
-      return request.server.prisma.user
+      await reply.server.prisma.user
         .create(userCreateArgs)
         .then((user: User) => {
           return reply.status(201).send({

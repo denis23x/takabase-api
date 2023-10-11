@@ -2,7 +2,23 @@
 
 import type { Prisma } from '../database/client';
 
-export type CRUDAllRequest = {
+// GENERIC
+
+export type Id = {
+  Params: {
+    id: number;
+  };
+};
+
+// REQUEST
+
+export type DeleteRequest = {
+  Params: {
+    id: number;
+  };
+};
+
+export type GetAllRequest = {
   Querystring: {
     name?: string;
     search?: string;
@@ -15,7 +31,7 @@ export type CRUDAllRequest = {
   };
 };
 
-export type CRUDIdRequest = {
+export type GetOneRequest = {
   Params: {
     id: number;
   };
@@ -26,7 +42,7 @@ export type CRUDIdRequest = {
 
 // AUTH
 
-export type POSTAuthorization = {
+export type CreateAuthorization = {
   Body: {
     firebaseId: string;
   };
@@ -34,53 +50,30 @@ export type POSTAuthorization = {
 
 // CATEGORY
 
-export interface ID {
-  Params: {
-    id: number;
-  };
-}
-
-export interface POSTCategory {
+export interface CreateCategory {
   Body: Prisma.CategoryCreateInput;
 }
 
-export interface PUTCategory extends ID {
+export interface UpdateCategory extends Id {
   Body: Prisma.CategoryUpdateInput;
 }
 
-export interface DELETECategory extends ID {}
-
 // POST
 
-export type POSTPost = {
+export interface CreatePost {
   Body: Prisma.PostCreateInput;
-  Headers: {
-    userId: number;
-  };
-};
+}
 
-export type PUTPost = {
-  Headers: {
-    userId: number;
-  };
-  Params: {
-    id: number;
-  };
+export interface UpdatePost extends Id {
   Body: Prisma.PostUpdateInput;
-};
+}
 
 // USER
 
-export type POSTUser = {
+export interface CreateUser {
   Body: Prisma.UserCreateInput;
-};
+}
 
-export type PUTUser = {
-  Headers: {
-    userId: number;
-  };
-  Params: {
-    id: number;
-  };
+export interface UpdateUser extends Id {
   Body: Prisma.UserUpdateInput;
-};
+}

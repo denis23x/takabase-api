@@ -3,20 +3,10 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyPluginAsync, FastifyReply } from 'fastify';
 import { Prisma, PrismaClient } from '../database/client';
+import { prismaConfig } from '../config/prisma.config';
 
 const prismaPlugin: FastifyPluginAsync = fp(async function prismaPlugin(fastifyInstance: FastifyInstance) {
-  const options: Prisma.PrismaClientOptions = {
-    errorFormat: 'minimal'
-  };
-
-  /** https://www.prisma.io/docs/concepts/components/prisma-client/working-with-prismaclient/logging */
-
-  if (fastifyInstance.config.APP_PRISMA_LOG === 'debug') {
-    options.errorFormat = 'pretty';
-    options.log = ['query', 'info', 'warn', 'error'];
-  }
-
-  const prisma: PrismaClient = new PrismaClient(options);
+  const prisma: PrismaClient = new PrismaClient(prismaConfig);
 
   fastifyInstance.decorate('prisma', prisma);
   fastifyInstance.decorate('prismaService', {
