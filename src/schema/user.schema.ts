@@ -7,6 +7,20 @@ export const userSchema: Record<string, any> = {
     id: {
       type: 'number'
     },
+    name: {
+      type: 'string'
+    },
+    description: {
+      type: 'string',
+      nullable: true
+    },
+    avatar: {
+      type: 'string',
+      nullable: true
+    },
+    terms: {
+      const: true
+    },
     googleId: {
       type: 'string',
       nullable: true
@@ -20,21 +34,6 @@ export const userSchema: Record<string, any> = {
     },
     githubId: {
       type: 'string',
-      nullable: true
-    },
-    name: {
-      type: 'string'
-    },
-    description: {
-      type: 'string',
-      nullable: true
-    },
-    avatar: {
-      type: 'string',
-      nullable: true
-    },
-    terms: {
-      type: 'boolean',
       nullable: true
     },
     categories: {

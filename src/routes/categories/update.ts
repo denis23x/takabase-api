@@ -28,10 +28,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             type: 'string'
           },
           description: {
-            type: 'string'
+            type: 'string',
+            nullable: true
           }
         },
-        required: ['name'],
         additionalProperties: false
       },
       response: {

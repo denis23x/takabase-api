@@ -33,7 +33,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             type: 'string'
           },
           image: {
-            type: 'string'
+            type: 'string',
+            nullable: true
           },
           categoryId: {
             type: 'number'

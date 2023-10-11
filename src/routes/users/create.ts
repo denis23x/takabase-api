@@ -17,6 +17,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           name: {
             type: 'string'
           },
+          description: {
+            type: 'string',
+            nullable: true
+          },
+          avatar: {
+            type: 'string',
+            nullable: true
+          },
           terms: {
             const: true
           },

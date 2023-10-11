@@ -11,8 +11,7 @@ export const postSchema: Record<string, any> = {
       type: 'string'
     },
     description: {
-      type: 'string',
-      nullable: true
+      type: 'string'
     },
     markdown: {
       type: 'string'
@@ -24,12 +23,12 @@ export const postSchema: Record<string, any> = {
     // userId: {
     //   type: 'number'
     // },
-    user: {
-      $ref: 'userSchema#'
-    },
     // categoryId: {
     //   type: 'number'
     // },
+    user: {
+      $ref: 'userSchema#'
+    },
     category: {
       $ref: 'categorySchema#'
     },
