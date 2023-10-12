@@ -3,7 +3,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Category } from '../../database/client';
 import { DeleteRequest } from '../../types/requests';
-import { UserType } from '@fastify/jwt';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -42,15 +41,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<DeleteRequest>, reply: FastifyReply): Promise<any> {
-      const { id }: Record<string, number> = request.params;
-
-      const currentUser: UserType = request.user;
-
       const categoryDeleteArgs: Prisma.CategoryDeleteArgs = {
         select: request.server.prismaService.getCategorySelect(),
         where: {
-          userId: Number(currentUser.id),
-          id
+          userId: Number(request.user.id),
+          id: Number(request.params.id)
         }
       };
 

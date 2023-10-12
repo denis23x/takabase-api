@@ -3,7 +3,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Category } from '../../database/client';
 import { UpdateCategory } from '../../types/requests';
-import { UserType } from '@fastify/jwt';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -55,21 +54,17 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<UpdateCategory>, reply: FastifyReply): Promise<any> {
-      const { id }: Record<string, number> = request.params;
-
-      const currentUser: UserType = request.user;
-
-      const categoryUpdateInput: Prisma.CategoryUpdateInput = request.body;
+      const categoryUpdateInput: Prisma.CategoryUpdateInput = {
+        ...request.body
+      };
 
       const categoryUpdateArgs: Prisma.CategoryUpdateArgs = {
         select: request.server.prismaService.getCategorySelect(),
         where: {
-          userId: Number(currentUser.id),
-          id
+          userId: Number(request.user.id),
+          id: Number(request.params.id)
         },
-        data: {
-          ...categoryUpdateInput
-        }
+        data: categoryUpdateInput
       };
 
       await reply.server.prisma.category

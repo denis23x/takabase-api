@@ -48,12 +48,12 @@ export const requestQueryParameterSchema: Record<string, any> = {
   $id: 'requestQueryParameterSchema',
   type: 'object',
   properties: {
-    search: {
+    query: {
       type: 'string',
-      minLength: 3,
-      maxLength: 12
+      minLength: 2,
+      maxLength: 24
     },
-    order: {
+    orderBy: {
       type: 'string',
       enum: ['newest', 'oldest']
     },

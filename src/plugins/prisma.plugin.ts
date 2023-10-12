@@ -43,6 +43,88 @@ const prismaPlugin: FastifyPluginAsync = fp(async function prismaPlugin(fastifyI
       updatedAt: true,
       deletedAt: false
     }),
+    setScope: (anyManyArgs: any, scope: string[]): any => {
+      const getSelect = (value: string): any => {
+        switch (value) {
+          case 'category': {
+            return {
+              category: {
+                select: fastifyInstance.prismaService.getCategorySelect()
+              }
+            };
+          }
+          case 'categories': {
+            return {
+              categories: {
+                select: fastifyInstance.prismaService.getCategorySelect(),
+                orderBy: {
+                  id: 'desc'
+                }
+              }
+            };
+          }
+          case 'posts': {
+            return {
+              posts: {
+                select: fastifyInstance.prismaService.getPostSelect(),
+                orderBy: {
+                  id: 'desc'
+                }
+              }
+            };
+          }
+          case 'user': {
+            return {
+              user: {
+                select: fastifyInstance.prismaService.getUserSelect()
+              }
+            };
+          }
+          default: {
+            return undefined;
+          }
+        }
+      };
+
+      let anyManyArgsSelect: any = {
+        ...anyManyArgs.select
+      };
+
+      scope.forEach((value: string) => {
+        anyManyArgsSelect = {
+          ...anyManyArgsSelect,
+          ...getSelect(value)
+        };
+      });
+
+      return anyManyArgsSelect;
+    },
+    setOrderBy: (anyManyArgs: any, orderBy: string): any => {
+      const getOrderBy = (): any => {
+        switch (orderBy) {
+          case 'newest': {
+            return {
+              id: 'desc'
+            };
+          }
+          case 'oldest': {
+            return {
+              id: 'asc'
+            };
+          }
+          default: {
+            return undefined;
+          }
+        }
+      };
+
+      const anyManyArgsEntries: any[] = Object.entries({ ...anyManyArgs.orderBy, ...getOrderBy() });
+      const anyManyArgsOrderBy: any = anyManyArgsEntries.map(([key, value]: any[]) => ({
+        [key]: value
+      }));
+
+      return anyManyArgsOrderBy;
+    },
     getResponseError: (reply: FastifyReply, error: Prisma.PrismaClientKnownRequestError): FastifyReply => {
       const prismaErrorReference: string = 'https://prisma.io/docs/reference/api-reference/error-reference';
       const prismaErrorMessage: string = [prismaErrorReference, error.code?.toLowerCase()].join('#');

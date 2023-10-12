@@ -63,11 +63,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<UpdatePost>, reply: FastifyReply): Promise<any> {
-      const { id }: Record<string, number> = request.params;
-
-      const { userid }: Record<string, any> = request.headers;
-
-      const postUpdateInput: Prisma.PostUpdateInput = request.body;
+      const postUpdateInput: Prisma.PostUpdateInput = {
+        ...request.body
+      };
 
       const postUpdateArgs: Prisma.PostUpdateArgs = {
         select: {
@@ -80,12 +78,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           }
         },
         where: {
-          userId: userid,
-          id
+          userId: Number(request.user.id),
+          id: Number(request.params.id)
         },
-        data: {
-          ...postUpdateInput
-        }
+        data: postUpdateInput
       };
 
       return request.server.prisma.post

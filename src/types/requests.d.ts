@@ -21,10 +21,10 @@ export type DeleteRequest = {
 export type GetAllRequest = {
   Querystring: {
     name?: string;
-    search?: string;
+    query?: string;
     userId?: number;
     categoryId?: number;
-    order?: string;
+    orderBy?: string;
     scope?: string[];
     page: number;
     size: number;

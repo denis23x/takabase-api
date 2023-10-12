@@ -42,43 +42,19 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<GetOneRequest>, reply: FastifyReply): Promise<void> {
-      const { id }: Record<string, number> = request.params;
-
       const { scope }: Record<string, any> = request.query;
 
       const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {
         select: request.server.prismaService.getUserSelect(),
         where: {
-          id
+          id: Number(request.user.id)
         }
       };
 
       /** Scope */
 
       if (scope) {
-        if (scope.includes('categories')) {
-          userFindUniqueOrThrowArgs.select = {
-            ...userFindUniqueOrThrowArgs.select,
-            categories: {
-              select: request.server.prismaService.getCategorySelect(),
-              orderBy: {
-                id: 'desc'
-              }
-            }
-          };
-        }
-
-        if (scope.includes('posts')) {
-          userFindUniqueOrThrowArgs.select = {
-            ...userFindUniqueOrThrowArgs.select,
-            posts: {
-              select: request.server.prismaService.getPostSelect(),
-              orderBy: {
-                id: 'desc'
-              }
-            }
-          };
-        }
+        userFindUniqueOrThrowArgs.select = request.server.prismaService.setScope(userFindUniqueOrThrowArgs, scope);
       }
 
       await reply.server.prisma.user

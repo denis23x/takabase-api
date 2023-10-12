@@ -41,12 +41,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<DeleteRequest>, reply: FastifyReply): Promise<any> {
-      const { id }: Record<string, number> = request.params;
-
       const userDeleteArgs: Prisma.UserDeleteArgs = {
         select: request.server.prismaService.getUserSelect(),
         where: {
-          id
+          id: Number(request.user.id)
         }
       };
 

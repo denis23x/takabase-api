@@ -61,9 +61,20 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<CreatePost>, reply: FastifyReply): Promise<any> {
-      const { userid }: Record<string, any> = request.headers;
-
-      const postCreateInput: Prisma.PostCreateInput & Record<string, any> = request.body;
+      const postCreateInput: Prisma.PostCreateInput = {
+        ...request.body,
+        user: {
+          connect: {
+            id: Number(request.user.id)
+          }
+        },
+        category: {
+          connect: {
+            // @ts-ignore
+            id: Number(request.body.categoryId)
+          }
+        }
+      };
 
       const postCreateArgs: Prisma.PostCreateArgs = {
         select: {
@@ -75,19 +86,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             select: request.server.prismaService.getUserSelect()
           }
         },
-        data: {
-          ...postCreateInput,
-          user: {
-            connect: {
-              id: Number(userid)
-            }
-          },
-          category: {
-            connect: {
-              id: Number(postCreateInput.categoryId)
-            }
-          }
-        }
+        data: postCreateInput
       };
 
       await reply.server.prisma.post

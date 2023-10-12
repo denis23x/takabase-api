@@ -43,22 +43,6 @@ model Settings {
   @@index([userId])
 }
 
-model Session {
-  id          Int      @id @default(autoincrement()) @db.Int
-  userId      Int      @db.Int
-  ua          String   @db.VarChar(255)
-  fingerprint String   @db.VarChar(255)
-  refresh     String   @default(uuid()) @db.VarChar(255)
-  expires     String   @db.VarChar(255)
-  ip          String   @db.VarChar(255)
-  createdAt   DateTime @default(now()) @db.DateTime(6)
-  updatedAt   DateTime @default(now()) @db.DateTime(6)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([fingerprint, userId])
-  @@index([userId])
-}
-
 model User {
   id          Int        @id @default(autoincrement()) @db.Int
   googleId    String?    @db.VarChar(255)
@@ -74,7 +58,6 @@ model User {
   terms       Boolean    @default(true) @db.TinyInt
   categories  Category[]
   posts       Post[]
-  sessions    Session[]
   feedbacks   Feedback[]
   settings    Settings?
 
@@ -94,7 +77,7 @@ model Category {
 
   @@unique([name, userId])
   @@index([userId])
-  @@fulltext([name])
+  @@fulltext([name, description])
 }
 
 model Post {

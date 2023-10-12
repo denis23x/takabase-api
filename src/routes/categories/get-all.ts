@@ -50,7 +50,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<GetAllRequest>, reply: FastifyReply): Promise<any> {
-      const { userId, search, order, scope, size, page }: Record<string, any> = request.query;
+      const { userId, query, orderBy, scope, size, page }: Record<string, any> = request.query;
 
       const categoryFindManyArgs: Prisma.CategoryFindManyArgs = {
         select: request.server.prismaService.getCategorySelect(),
@@ -72,69 +72,39 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       /** Search */
 
-      if (search) {
+      if (query) {
         categoryFindManyArgs.where = {
           ...categoryFindManyArgs.where,
           name: {
-            search: search + '*'
+            search: query + '*'
+          },
+          description: {
+            search: query + '*'
           }
         };
 
         /** Default relevant order */
 
         categoryFindManyArgs.orderBy = {
-          ...categoryFindManyArgs.orderBy,
+          // ...categoryFindManyArgs.orderBy,
           _relevance: {
-            fields: ['name'],
+            fields: ['name', 'description'],
             sort: 'asc',
-            search
+            search: query
           }
         };
       }
 
       /** Order */
 
-      if (order) {
-        categoryFindManyArgs.orderBy = {
-          ...categoryFindManyArgs.orderBy,
-          id: order === 'newest' ? 'desc' : 'asc'
-        };
-
-        /** For full text search make CategoryOrderByWithRelationAndSearchRelevanceInput[] */
-
-        categoryFindManyArgs.orderBy = Object.entries(categoryFindManyArgs.orderBy).map((entry: any) => {
-          const key: string = entry[0];
-          const value: any = entry[1];
-
-          return {
-            [key]: value
-          };
-        });
+      if (orderBy) {
+        categoryFindManyArgs.orderBy = request.server.prismaService.setOrderBy(categoryFindManyArgs, orderBy);
       }
 
       /** Scope */
 
       if (scope) {
-        if (scope.includes('user')) {
-          categoryFindManyArgs.select = {
-            ...categoryFindManyArgs.select,
-            user: {
-              select: request.server.prismaService.getUserSelect()
-            }
-          };
-        }
-
-        if (scope.includes('posts')) {
-          categoryFindManyArgs.select = {
-            ...categoryFindManyArgs.select,
-            posts: {
-              select: request.server.prismaService.getPostSelect(),
-              orderBy: {
-                id: 'desc'
-              }
-            }
-          };
-        }
+        categoryFindManyArgs.select = request.server.prismaService.setScope(categoryFindManyArgs, scope);
       }
 
       await reply.server.prisma.category

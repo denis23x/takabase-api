@@ -58,18 +58,16 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<UpdateUser>, reply: FastifyReply): Promise<any> {
-      const { userid }: Record<string, any> = request.headers;
-
-      const userUpdateInput: Prisma.UserUpdateInput = request.body;
+      const userUpdateInput: Prisma.UserUpdateInput = {
+        ...request.body
+      };
 
       const userUpdateArgs: Prisma.UserUpdateArgs = {
         select: request.server.prismaService.getUserSelect(),
         where: {
-          id: userid
+          id: Number(request.user.id)
         },
-        data: {
-          ...userUpdateInput
-        }
+        data: userUpdateInput
       };
 
       await reply.server.prisma.user
