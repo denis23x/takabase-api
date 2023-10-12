@@ -125,7 +125,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function prismaPlugin(fastifyI
 
       return anyManyArgsOrderBy;
     },
-    getResponseError: (reply: FastifyReply, error: Prisma.PrismaClientKnownRequestError): FastifyReply => {
+    setError: (reply: FastifyReply, error: Prisma.PrismaClientKnownRequestError): FastifyReply => {
       const prismaErrorReference: string = 'https://prisma.io/docs/reference/api-reference/error-reference';
       const prismaErrorMessage: string = [prismaErrorReference, error.code?.toLowerCase()].join('#');
 

@@ -105,7 +105,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           });
         })
         .catch((error: Error) => {
-          return reply.server.prismaService.getResponseError(reply, error);
+          return reply.server.prismaService.setError(reply, error);
         });
     }
   });
