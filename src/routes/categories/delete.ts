@@ -20,6 +20,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       params: {
         $ref: 'requestParameterIdSchema#'
       },
+      querystring: {
+        type: 'object',
+        properties: {
+          categoryId: {
+            type: 'number'
+          }
+        },
+        additionalProperties: false
+      },
       response: {
         200: {
           type: 'object',
@@ -41,6 +50,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<DeleteRequest>, reply: FastifyReply): Promise<any> {
+      const { categoryId }: Record<string, any> = request.query;
+
       const categoryDeleteArgs: Prisma.CategoryDeleteArgs = {
         select: request.server.prismaService.getCategorySelect(),
         where: {
@@ -48,6 +59,22 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           id: Number(request.params.id)
         }
       };
+
+      if (categoryId) {
+        const postUpdateManyArgs: Prisma.PostUpdateManyArgs = {
+          where: {
+            userId: Number(request.user.id),
+            categoryId: Number(request.params.id)
+          },
+          data: {
+            categoryId
+          }
+        };
+
+        await reply.server.prisma.post.updateMany(postUpdateManyArgs).catch((error: Error) => {
+          return reply.server.prismaService.setError(reply, error);
+        });
+      }
 
       await reply.server.prisma.category
         .delete(categoryDeleteArgs)

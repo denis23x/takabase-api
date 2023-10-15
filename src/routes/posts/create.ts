@@ -61,8 +61,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<CreatePost>, reply: FastifyReply): Promise<any> {
+      const { categoryId, ...requestBody } = request.body;
+
       const postCreateInput: Prisma.PostCreateInput = {
-        ...request.body,
+        ...requestBody,
         user: {
           connect: {
             id: Number(request.user.id)
@@ -70,8 +72,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         },
         category: {
           connect: {
-            // @ts-ignore
-            id: Number(request.body.categoryId)
+            id: Number(categoryId)
           }
         }
       };

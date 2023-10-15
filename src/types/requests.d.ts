@@ -16,6 +16,9 @@ export type DeleteRequest = {
   Params: {
     id: number;
   };
+  Querystring: {
+    categoryId?: number;
+  };
 };
 
 export type GetAllRequest = {
@@ -61,7 +64,7 @@ export interface UpdateCategory extends Id {
 // POST
 
 export interface CreatePost {
-  Body: Prisma.PostCreateInput;
+  Body: Prisma.PostCreateInput & Record<string, number>;
 }
 
 export interface UpdatePost extends Id {
