@@ -1,11 +1,30 @@
 -- CreateTable
+CREATE TABLE `Feedback` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `userId` INTEGER NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `description` VARCHAR(255) NULL,
+    `createdAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `updatedAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `deletedAt` DATETIME(6) NULL,
+
+    INDEX `Feedback_userId_idx`(`userId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `Settings` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `userId` INTEGER NOT NULL,
-    `theme` VARCHAR(255) NOT NULL,
-    `language` VARCHAR(255) NOT NULL,
-    `buttons` VARCHAR(255) NOT NULL,
-    `monospace` BOOLEAN NOT NULL,
+    `theme` VARCHAR(255) NOT NULL DEFAULT 'light',
+    `themePrism` VARCHAR(255) NOT NULL DEFAULT 'default',
+    `themeBackground` VARCHAR(255) NOT NULL DEFAULT 'slanted-gradient',
+    `language` VARCHAR(255) NOT NULL DEFAULT 'en-US',
+    `pageScrollToTop` BOOLEAN NOT NULL DEFAULT false,
+    `pageScrollInfinite` BOOLEAN NOT NULL DEFAULT true,
+    `pageRedirectHome` BOOLEAN NOT NULL DEFAULT true,
+    `windowButtonPosition` VARCHAR(255) NOT NULL DEFAULT 'left',
+    `markdownMonospace` BOOLEAN NOT NULL DEFAULT true,
     `createdAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `updatedAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
 
@@ -15,39 +34,23 @@ CREATE TABLE `Settings` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Session` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `userId` INTEGER NOT NULL,
-    `ua` VARCHAR(255) NOT NULL,
-    `fingerprint` VARCHAR(255) NOT NULL,
-    `refresh` VARCHAR(255) NOT NULL,
-    `expires` VARCHAR(255) NOT NULL,
-    `ip` VARCHAR(255) NOT NULL,
-    `createdAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    `updatedAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-
-    INDEX `Session_userId_idx`(`userId`),
-    UNIQUE INDEX `Session_fingerprint_userId_key`(`fingerprint`, `userId`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `User` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `googleId` VARCHAR(255) NULL,
+    `firebaseId` VARCHAR(255) NOT NULL,
     `facebookId` VARCHAR(255) NULL,
     `name` VARCHAR(255) NOT NULL,
-    `description` VARCHAR(255) NOT NULL,
+    `description` VARCHAR(255) NULL,
     `avatar` VARCHAR(255) NULL,
-    `email` VARCHAR(255) NOT NULL,
-    `password` VARCHAR(255) NULL,
     `createdAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `updatedAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `deletedAt` DATETIME(6) NULL,
     `githubId` VARCHAR(255) NULL,
+    `terms` BOOLEAN NOT NULL DEFAULT true,
 
+    UNIQUE INDEX `User_firebaseId_key`(`firebaseId`),
     UNIQUE INDEX `User_name_key`(`name`),
-    UNIQUE INDEX `User_email_key`(`email`),
+    FULLTEXT INDEX `User_name_idx`(`name`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -56,13 +59,14 @@ CREATE TABLE `Category` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `userId` INTEGER NOT NULL,
     `name` VARCHAR(255) NOT NULL,
-    `description` VARCHAR(255) NOT NULL,
+    `description` VARCHAR(255) NULL,
     `createdAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `updatedAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `deletedAt` DATETIME(6) NULL,
 
     INDEX `Category_userId_idx`(`userId`),
     UNIQUE INDEX `Category_name_userId_key`(`name`, `userId`),
+    FULLTEXT INDEX `Category_name_description_idx`(`name`, `description`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -81,21 +85,7 @@ CREATE TABLE `Post` (
 
     INDEX `Post_categoryId_idx`(`categoryId`),
     INDEX `Post_userId_idx`(`userId`),
-    UNIQUE INDEX `Post_name_userId_categoryId_key`(`name`, `userId`, `categoryId`),
+    UNIQUE INDEX `Post_name_categoryId_key`(`name`, `categoryId`),
+    FULLTEXT INDEX `Post_name_description_idx`(`name`, `description`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- AddForeignKey
-ALTER TABLE `Settings` ADD CONSTRAINT `Settings_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Session` ADD CONSTRAINT `Session_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Category` ADD CONSTRAINT `Category_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Post` ADD CONSTRAINT `Post_categoryId_fkey` FOREIGN KEY (`categoryId`) REFERENCES `Category`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Post` ADD CONSTRAINT `Post_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

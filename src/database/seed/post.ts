@@ -52,7 +52,7 @@ export const postRaw = async (): Promise<any> => {
       name: faker.music.songName(),
       description: faker.lorem.sentence(),
       markdown: faker.lorem.paragraphs(10),
-      image: faker.datatype.boolean() ? imagePathMap(process.env.APP_STORAGE) : null,
+      image: faker.datatype.boolean() ? imagePathMap(String(process.env.APP_STORAGE)) : null,
       userId: category.userId,
       categoryId: category.id
     });

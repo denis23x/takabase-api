@@ -53,7 +53,7 @@ export const userRaw = async (): Promise<any> => {
       name: faker.internet.userName(),
       description: faker.datatype.boolean() ? faker.person.jobTitle() : null,
       firebaseId: ['seed', i].join('-'),
-      avatar: faker.datatype.boolean() ? avatarPathMap(process.env.APP_STORAGE) : null,
+      avatar: faker.datatype.boolean() ? avatarPathMap(String(process.env.APP_STORAGE)) : null,
       terms: true
     });
   }

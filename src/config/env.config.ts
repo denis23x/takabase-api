@@ -20,7 +20,7 @@ export const envConfig: FastifyEnvOptions = {
       },
       APP_HOST: {
         type: 'string',
-        default: '0.0.0.0'
+        default: 'localhost'
       },
       APP_PRISMA_LOG: {
         type: 'string',
@@ -48,7 +48,7 @@ export const envConfig: FastifyEnvOptions = {
       },
       ENABLE_SWAGGER: {
         type: 'boolean',
-        default: true
+        default: false
       },
       MYSQL_DATABASE: {
         type: 'string',

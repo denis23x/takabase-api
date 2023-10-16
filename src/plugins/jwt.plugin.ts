@@ -7,7 +7,7 @@ const jwtPlugin: FastifyPluginAsync = fp(async function prismaPlugin(fastifyInst
   fastifyInstance.decorate('authenticate', async function (request: FastifyRequest, reply: FastifyReply) {
     try {
       await request.jwtVerify({
-        onlyCookie: false
+        onlyCookie: true
       });
     } catch (error: any) {
       reply.code(401).send({
