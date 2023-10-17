@@ -3,6 +3,14 @@
 import { main } from './main';
 import { FastifyInstance } from 'fastify';
 import { FastifyListenOptions } from 'fastify/types/instance';
+import { HttpsFunction, onRequest, Request } from 'firebase-functions/v2/https';
+import * as express from 'express';
+// import { setGlobalOptions } from 'firebase-functions/v2';
+
+// Set the maximum instances to 10 for all functions
+// setGlobalOptions({
+//   maxInstances: 10
+// });
 
 const exitHandler = (app: FastifyInstance, exitCode: number): void => {
   app.close(() => {
@@ -56,3 +64,11 @@ main()
 
     process.exit(1);
   });
+
+export const api: HttpsFunction = onRequest(async (request: Request, response: express.Response) => {
+  const fastifyInstance: FastifyInstance = await main();
+
+  await fastifyInstance.ready();
+
+  fastifyInstance.server.emit('request', request, response);
+});

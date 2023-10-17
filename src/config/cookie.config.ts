@@ -15,7 +15,7 @@ export const cookieConfigResponse: Record<string, CookieSerializeOptions> = {
     signed: true,
     secure: false,
     httpOnly: true,
-    sameSite: false
+    sameSite: 'none'
   },
   production: {
     domain: String(process.env.COOKIE_DOMAIN),
@@ -23,6 +23,6 @@ export const cookieConfigResponse: Record<string, CookieSerializeOptions> = {
     signed: true,
     secure: true,
     httpOnly: true,
-    sameSite: true
+    sameSite: 'none'
   }
 };

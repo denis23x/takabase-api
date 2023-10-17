@@ -1,6 +1,6 @@
 /** @format */
 
-import fastify from 'fastify';
+import fastify, { FastifyRequest } from 'fastify';
 import fastifyEnv from '@fastify/env';
 import fastifyCors from '@fastify/cors';
 import fastifyCompress from '@fastify/compress';
@@ -41,6 +41,7 @@ import { postSchema } from './schema/post.schema';
 import { userSchema } from './schema/user.schema';
 
 import { FastifyInstance } from 'fastify/types/instance';
+import { ContentTypeParserDoneFunction } from 'fastify/types/content-type-parser';
 
 export const main = async (): Promise<FastifyInstance> => {
   const fastifyInstance: FastifyInstance = fastify({
@@ -69,8 +70,6 @@ export const main = async (): Promise<FastifyInstance> => {
 
   // JSON SCHEMAS
 
-  /** https://json-schema.org/understanding-json-schema/structuring#retrieval-uri */
-
   fastifyInstance.addSchema(requestParameterIdSchema);
   fastifyInstance.addSchema(requestQueryParameterSchema);
   fastifyInstance.addSchema(requestQueryParameterScopeSchema);
@@ -86,6 +85,15 @@ export const main = async (): Promise<FastifyInstance> => {
     await fastifyInstance.register(fastifySwagger, swaggerConfig);
     await fastifyInstance.register(fastifySwaggerUi, {
       routePrefix: '/docs'
+    });
+  }
+
+  // GCP ISSUE
+
+  // prettier-ignore
+  if (fastifyInstance.config.NODE_ENV === 'production') {
+    fastifyInstance.addContentTypeParser('application/json', {}, (request: FastifyRequest, body: any, done: ContentTypeParserDoneFunction) => {
+      done(null, body.body);
     });
   }
 
