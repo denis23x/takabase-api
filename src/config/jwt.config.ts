@@ -1,10 +1,13 @@
 /** @format */
 
 import { FastifyJWTOptions } from '@fastify/jwt';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 // https://github.com/fastify/fastify-jwt
 
-export const jwtConfigList: Record<string, FastifyJWTOptions> = {
+const jwtConfigList: Record<string, FastifyJWTOptions> = {
   development: {
     secret: 'secret',
     sign: {

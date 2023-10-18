@@ -1,10 +1,13 @@
 /** @format */
 
 import { CookieSerializeOptions, FastifyCookieOptions } from '@fastify/cookie';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 // https://github.com/fastify/fastify-cookie
 
-export const cookieConfigList: Record<string, FastifyCookieOptions> = {
+const cookieConfigList: Record<string, FastifyCookieOptions> = {
   development: {
     secret: 'secret'
   },
@@ -13,7 +16,7 @@ export const cookieConfigList: Record<string, FastifyCookieOptions> = {
   }
 };
 
-export const cookieOptionsList: Record<string, CookieSerializeOptions> = {
+const cookieOptionsList: Record<string, CookieSerializeOptions> = {
   development: {
     domain: 'localhost',
     path: '/',

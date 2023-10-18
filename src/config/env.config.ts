@@ -71,5 +71,6 @@ export const envConfig: FastifyEnvOptions = {
       }
     }
   },
-  dotenv: true
+  dotenv: true,
+  data: process.env
 };

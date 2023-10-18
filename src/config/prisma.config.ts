@@ -1,6 +1,9 @@
 /** @format */
 
 import { Prisma } from '../database/client';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 // https://www.prisma.io/docs/concepts/components/prisma-client/working-with-prismaclient/logging
 

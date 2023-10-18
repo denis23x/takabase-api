@@ -1,10 +1,13 @@
 /** @format */
 
 import { FastifyCorsOptions } from '@fastify/cors';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 // https://github.com/fastify/fastify-cors
 
-export const corsConfigList: Record<string, FastifyCorsOptions> = {
+const corsConfigList: Record<string, FastifyCorsOptions> = {
   development: {
     origin: ['http://localhost:4200'],
     methods: ['GET', 'POST', 'PUT', 'DELETE']

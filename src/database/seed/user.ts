@@ -2,6 +2,9 @@
 
 import { faker } from '@faker-js/faker';
 import { PrismaClient } from '../client';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 /** TS Issue */
 

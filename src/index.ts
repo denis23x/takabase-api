@@ -5,12 +5,16 @@ import { FastifyInstance } from 'fastify';
 import { FastifyListenOptions } from 'fastify/types/instance';
 import { HttpsFunction, onRequest, Request } from 'firebase-functions/v2/https';
 import * as express from 'express';
-// import { setGlobalOptions } from 'firebase-functions/v2';
+import { setGlobalOptions } from 'firebase-functions/v2';
 
-// Set the maximum instances to 10 for all functions
-// setGlobalOptions({
-//   maxInstances: 10
-// });
+// FIREBASE
+
+setGlobalOptions({
+  region: 'us-central1',
+  minInstances: 0,
+  maxInstances: 10,
+  memory: '256MiB'
+});
 
 const exitHandler = (app: FastifyInstance, exitCode: number): void => {
   app.close(() => {
@@ -47,7 +51,7 @@ main()
 
     const options: FastifyListenOptions = {
       port: Number(fastifyInstance.config.APP_PORT),
-      host: fastifyInstance.config.APP_HOST
+      host: String(fastifyInstance.config.APP_HOST)
     };
 
     // PROCESS

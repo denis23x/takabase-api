@@ -1,6 +1,9 @@
 /** @format */
 
 import { PinoLoggerOptions } from 'fastify/types/logger';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 const loggerConfigList: Record<string, PinoLoggerOptions | boolean> = {
   development: {
