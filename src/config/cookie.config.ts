@@ -4,15 +4,19 @@ import { CookieSerializeOptions, FastifyCookieOptions } from '@fastify/cookie';
 
 // https://github.com/fastify/fastify-cookie
 
-export const cookieConfig: FastifyCookieOptions = {
-  secret: String(process.env.COOKIE_SECRET)
+export const cookieConfigList: Record<string, FastifyCookieOptions> = {
+  development: {
+    secret: 'secret'
+  },
+  production: {
+    secret: String(process.env.COOKIE_SECRET)
+  }
 };
 
-export const cookieConfigResponse: Record<string, CookieSerializeOptions> = {
+export const cookieOptionsList: Record<string, CookieSerializeOptions> = {
   development: {
-    domain: String(process.env.COOKIE_DOMAIN),
+    domain: 'localhost',
     path: '/',
-    signed: true,
     secure: false,
     httpOnly: true,
     sameSite: 'none'
@@ -20,9 +24,12 @@ export const cookieConfigResponse: Record<string, CookieSerializeOptions> = {
   production: {
     domain: String(process.env.COOKIE_DOMAIN),
     path: '/',
-    signed: true,
     secure: true,
     httpOnly: true,
     sameSite: 'none'
   }
 };
+
+export const cookieConfig: FastifyCookieOptions = cookieConfigList[String(process.env.NODE_ENV)];
+
+export const cookieOptions: CookieSerializeOptions = cookieOptionsList[String(process.env.NODE_ENV)];

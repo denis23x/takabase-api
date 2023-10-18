@@ -6,7 +6,6 @@ declare module 'fastify' {
       NODE_ENV: 'development' | 'production';
       APP_PORT: number;
       APP_HOST: string;
-      APP_PRISMA_LOG: 'debug' | 'minimal';
       APP_STORAGE: 'disk' | 'bucket';
       JWT_SECRET: string;
       JWT_TTL: number;

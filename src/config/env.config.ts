@@ -22,17 +22,13 @@ export const envConfig: FastifyEnvOptions = {
         type: 'string',
         default: 'localhost'
       },
-      APP_PRISMA_LOG: {
-        type: 'string',
-        default: 'debug'
-      },
       APP_STORAGE: {
         type: 'string',
         default: 'disk'
       },
       JWT_SECRET: {
         type: 'string',
-        default: 'jwt-secret'
+        default: 'secret'
       },
       JWT_TTL: {
         type: 'number',
@@ -40,7 +36,7 @@ export const envConfig: FastifyEnvOptions = {
       },
       COOKIE_SECRET: {
         type: 'string',
-        default: 'cookie-secret'
+        default: 'secret'
       },
       COOKIE_DOMAIN: {
         type: 'string',

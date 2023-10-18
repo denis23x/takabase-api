@@ -6,9 +6,8 @@ import { Prisma, PrismaClient } from '../database/client';
 import { prismaConfig } from '../config/prisma.config';
 
 const prismaPlugin: FastifyPluginAsync = fp(async function prismaPlugin(fastifyInstance: FastifyInstance) {
-  const prisma: PrismaClient = new PrismaClient(prismaConfig);
+  fastifyInstance.decorate('prisma', new PrismaClient(prismaConfig));
 
-  fastifyInstance.decorate('prisma', prisma);
   fastifyInstance.decorate('prismaService', {
     getCategorySelect: (): Prisma.CategorySelect => ({
       id: true,
