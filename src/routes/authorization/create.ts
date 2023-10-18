@@ -3,8 +3,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { CreateAuthorization } from '../../types/requests';
 import { Prisma, User } from '../../database/client';
-import { CookieSerializeOptions } from '@fastify/cookie';
-import { cookieConfigResponse } from '../../config/cookie.config';
+import { randomUUID } from 'crypto';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -28,7 +27,19 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           type: 'object',
           properties: {
             data: {
-              $ref: 'userSchema#'
+              allOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    bearer: {
+                      type: 'string'
+                    }
+                  }
+                },
+                {
+                  $ref: 'userSchema#'
+                }
+              ]
             },
             statusCode: {
               type: 'number'
@@ -47,10 +58,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const { firebaseId }: Record<string, string> = request.body;
 
       const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {
-        select: {
-          ...request.server.prismaService.getUserSelect(),
-          firebaseId: true
-        },
+        select: request.server.prismaService.getUserSelect(),
         where: {
           firebaseId
         }
@@ -59,23 +67,46 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       await reply.server.prisma.user
         .findUniqueOrThrow(userFindUniqueOrThrowArgs)
         .then((user: User) => {
-          const jwt: string = request.server.jwt.sign({
-            id: user.id,
-            firebaseId: user.firebaseId
-          });
-
-          const cookieOptions: CookieSerializeOptions = {
-            ...cookieConfigResponse[request.server.config.NODE_ENV],
-            expires: new Date(Date.now() + Number(request.server.config.JWT_TTL))
-          };
-
-          return reply.setCookie('jwt-token', jwt, cookieOptions).status(200).send({
-            data: user,
+          return reply.status(200).send({
+            data: {
+              ...user,
+              bearer: reply.server.authenticateHandler.signUser(user)
+            },
             statusCode: 200
           });
         })
-        .catch((error: Error) => {
-          return reply.server.prismaService.setError(reply, error);
+        .catch((error: any) => {
+          if (error.code === 'P2025' && error.name === 'NotFoundError') {
+            // TODO: add check in firebase database for provided firebaseId
+
+            const userCreateInput: Prisma.UserCreateInput = {
+              name: randomUUID(),
+              firebaseId: firebaseId,
+              settings: {
+                create: {}
+              }
+            };
+
+            const userCreateArgs: Prisma.UserCreateArgs = {
+              select: request.server.prismaService.getUserSelect(),
+              data: userCreateInput
+            };
+
+            return reply.server.prisma.user
+              .create(userCreateArgs)
+              .then((user: User) => {
+                return reply.status(200).send({
+                  data: {
+                    ...user,
+                    bearer: reply.server.authenticateHandler.signUser(user)
+                  },
+                  statusCode: 200
+                });
+              })
+              .catch((error: Error) => {
+                return reply.server.prismaService.setError(reply, error);
+              });
+          }
         });
     }
   });
