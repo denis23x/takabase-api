@@ -10,6 +10,7 @@ import fastifyStatic from '@fastify/static';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import fastifyJwt from '@fastify/jwt';
+import fastifyRateLimit from '@fastify/rate-limit';
 
 import { envConfig } from './config/env.config';
 import { corsConfig } from './config/cors.config';
@@ -20,6 +21,7 @@ import { cookieConfig } from './config/cookie.config';
 import { staticConfig } from './config/static.config';
 import { swaggerConfig } from './config/swagger.config';
 import { jwtConfig } from './config/jwt.config';
+import { rateLimitConfig } from './config/rate-limit.config';
 
 import jwtPlugin from './plugins/jwt.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
@@ -64,6 +66,13 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(fastifyCookie, cookieConfig);
   await fastifyInstance.register(fastifyStatic, staticConfig);
   await fastifyInstance.register(fastifyJwt, jwtConfig);
+  await fastifyInstance.register(fastifyRateLimit, rateLimitConfig);
+
+  fastifyInstance.addHook('onRequest', (request, reply, done) => {
+    setTimeout(() => {
+      done();
+    }, 3000);
+  });
 
   await fastifyInstance.register(jwtPlugin);
   await fastifyInstance.register(prismaPlugin);

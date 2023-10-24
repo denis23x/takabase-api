@@ -9,7 +9,7 @@ dotenv.config();
 
 const corsConfigList: Record<string, FastifyCorsOptions> = {
   development: {
-    origin: ['http://localhost:4200'],
+    origin: ['http://localhost:4200', 'http://localhost:4000', 'http://172.20.10.5:4200'],
     methods: ['GET', 'POST', 'PUT', 'DELETE']
   },
   production: {
