@@ -15,6 +15,17 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       querystring: {
         allOf: [
           {
+            type: 'object',
+            properties: {
+              categoryId: {
+                type: 'number'
+              },
+              userId: {
+                type: 'number'
+              }
+            }
+          },
+          {
             $ref: 'requestQueryParameterScopeSchema#'
           }
         ]
@@ -42,7 +53,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<GetOneRequest>, reply: FastifyReply): Promise<any> {
-      const { scope }: Record<string, any> = request.query;
+      const { userId, categoryId, scope }: Record<string, any> = request.query;
 
       const postFindUniqueOrThrowArgs: Prisma.PostFindUniqueOrThrowArgs = {
         select: {
@@ -53,6 +64,22 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           id: Number(request.params.id)
         }
       };
+
+      /** Filter */
+
+      if (userId) {
+        postFindUniqueOrThrowArgs.where = {
+          ...postFindUniqueOrThrowArgs.where,
+          userId
+        };
+      }
+
+      if (categoryId) {
+        postFindUniqueOrThrowArgs.where = {
+          ...postFindUniqueOrThrowArgs.where,
+          categoryId
+        };
+      }
 
       /** Scope */
 

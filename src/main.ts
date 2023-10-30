@@ -1,6 +1,6 @@
 /** @format */
 
-import fastify, { FastifyRequest } from 'fastify';
+import fastify, { FastifyReply, FastifyRequest, HookHandlerDoneFunction } from 'fastify';
 import fastifyEnv from '@fastify/env';
 import fastifyCors from '@fastify/cors';
 import fastifyCompress from '@fastify/compress';
@@ -68,12 +68,6 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(fastifyJwt, jwtConfig);
   await fastifyInstance.register(fastifyRateLimit, rateLimitConfig);
 
-  fastifyInstance.addHook('onRequest', (request, reply, done) => {
-    setTimeout(() => {
-      done();
-    }, 3000);
-  });
-
   await fastifyInstance.register(jwtPlugin);
   await fastifyInstance.register(prismaPlugin);
 
@@ -97,10 +91,21 @@ export const main = async (): Promise<FastifyInstance> => {
     });
   }
 
+  // FOR SKELETON TESTING SLOW DOWN QUERIES
+
+  if (fastifyInstance.config.NODE_ENV === 'development') {
+    // prettier-ignore
+    fastifyInstance.addHook('onRequest', (request: FastifyRequest, reply: FastifyReply, done: HookHandlerDoneFunction) => {
+      setTimeout(() => {
+        done();
+      }, 1000);
+    });
+  }
+
   // GCP ISSUE
 
-  // prettier-ignore
   if (fastifyInstance.config.NODE_ENV === 'production') {
+    // prettier-ignore
     fastifyInstance.addContentTypeParser('application/json', {}, (request: FastifyRequest, body: any, done: ContentTypeParserDoneFunction) => {
       done(null, body.body);
     });

@@ -13,7 +13,7 @@ const corsConfigList: Record<string, FastifyCorsOptions> = {
     methods: ['GET', 'POST', 'PUT', 'DELETE']
   },
   production: {
-    origin: ['https://draft-ssr.web.app'],
+    origin: ['http://localhost:4200', 'http://localhost:4000', 'https://draft-ssr.web.app'],
     methods: ['GET', 'POST', 'PUT', 'DELETE']
   }
 };
