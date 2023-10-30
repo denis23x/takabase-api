@@ -20,12 +20,6 @@ export const postSchema: Record<string, any> = {
       type: 'string',
       nullable: true
     },
-    // userId: {
-    //   type: 'number'
-    // },
-    // categoryId: {
-    //   type: 'number'
-    // },
     user: {
       $ref: 'userSchema#'
     },

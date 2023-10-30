@@ -14,9 +14,6 @@ export const categorySchema: Record<string, any> = {
       type: 'string',
       nullable: true
     },
-    // userId: {
-    //   type: 'number'
-    // },
     user: {
       $ref: 'userSchema#'
     },
