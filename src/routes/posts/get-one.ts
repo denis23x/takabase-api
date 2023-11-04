@@ -22,6 +22,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               },
               userId: {
                 type: 'number'
+              },
+              userName: {
+                type: 'string',
+                pattern: '^\\S*$'
               }
             }
           },
@@ -53,7 +57,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<GetOneRequest>, reply: FastifyReply): Promise<any> {
-      const { userId, categoryId, scope }: Record<string, any> = request.query;
+      const { userId, userName, categoryId, scope }: Record<string, any> = request.query;
 
       const postFindUniqueOrThrowArgs: Prisma.PostFindUniqueOrThrowArgs = {
         select: {
@@ -71,6 +75,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         postFindUniqueOrThrowArgs.where = {
           ...postFindUniqueOrThrowArgs.where,
           userId
+        };
+      }
+
+      if (userName) {
+        postFindUniqueOrThrowArgs.where = {
+          ...postFindUniqueOrThrowArgs.where,
+          user: {
+            name: userName
+          }
         };
       }
 
