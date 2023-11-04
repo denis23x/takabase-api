@@ -24,7 +24,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         type: 'object',
         properties: {
           name: {
-            type: 'string'
+            type: 'string',
+            pattern: '^\\S*$'
           },
           description: {
             type: 'string',
