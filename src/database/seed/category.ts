@@ -15,7 +15,7 @@ export const categoryRaw = async (): Promise<any> => {
 
   const raw: any[] = [];
 
-  for (let i: number = 0; i < usersDB.length * 10; i++) {
+  for (let i: number = 0; i < usersDB.length * 5; i++) {
     const user: User = usersDB[faker.number.int({ min: 0, max: usersDB.length - 1 })];
 
     raw.push({

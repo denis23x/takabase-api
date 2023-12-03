@@ -32,7 +32,7 @@ export const userRaw = async (): Promise<any> => {
   const avatarPathDisk: string[] = ['http://0.0.0.0:4400', 'upload', 'images', 'seed'];
 
   const avatarPathMap = (appStorage: string): any => {
-    const imageFile: string = faker.number.int({ min: 1, max: 128 }) + '.webp?alt=media';
+    const imageFile: string = faker.number.int({ min: 1, max: 32 }) + '.webp?alt=media';
     const imageMap: any = {
       bucket: [...avatarPathBucket, imageFile].join('%2F'),
       disk: [...avatarPathDisk, imageFile].join('/')
@@ -51,7 +51,7 @@ export const userRaw = async (): Promise<any> => {
     }
   ];
 
-  for (let i: number = 0; i < 19; i++) {
+  for (let i: number = 0; i < 9; i++) {
     raw.push({
       name: faker.internet.userName(),
       description: faker.datatype.boolean() ? faker.person.jobTitle() : null,

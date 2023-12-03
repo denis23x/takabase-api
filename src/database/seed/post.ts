@@ -36,7 +36,7 @@ export const postRaw = async (): Promise<any> => {
   const imagePathDisk: string[] = ['http://0.0.0.0:4400', 'upload', 'images', 'seed'];
 
   const imagePathMap = (appStorage: string): any => {
-    const imageFile: string = faker.number.int({ min: 1, max: 128 }) + '.webp?alt=media';
+    const imageFile: string = faker.number.int({ min: 1, max: 32 }) + '.webp?alt=media';
     const imageMap: any = {
       bucket: [...imagePathBucket, imageFile].join('%2F'),
       disk: [...imagePathDisk, imageFile].join('/')
