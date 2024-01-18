@@ -24,25 +24,6 @@ model Feedback {
   @@index([userId])
 }
 
-model Settings {
-  id                   Int      @id @default(autoincrement()) @db.Int
-  userId               Int      @unique @db.Int
-  theme                String   @default("light") @db.VarChar(255)
-  themePrism           String   @default("default") @db.VarChar(255)
-  themeBackground      String   @default("slanted-gradient") @db.VarChar(255)
-  language             String   @default("en-US") @db.VarChar(255)
-  pageScrollToTop      Boolean  @default(false) @db.TinyInt
-  pageScrollInfinite   Boolean  @default(true) @db.TinyInt
-  pageRedirectHome     Boolean  @default(true) @db.TinyInt
-  windowButtonPosition String   @default("left") @db.VarChar(255)
-  markdownMonospace    Boolean  @default(true) @db.TinyInt
-  createdAt            DateTime @default(now()) @db.DateTime(6)
-  updatedAt            DateTime @default(now()) @db.DateTime(6)
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-}
-
 model User {
   id          Int        @id @default(autoincrement()) @db.Int
   googleId    String?    @db.VarChar(255)
@@ -59,7 +40,6 @@ model User {
   categories  Category[]
   posts       Post[]
   feedbacks   Feedback[]
-  settings    Settings?
 
   @@fulltext([name])
 }

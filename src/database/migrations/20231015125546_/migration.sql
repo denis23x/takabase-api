@@ -16,7 +16,7 @@ CREATE TABLE `Feedback` (
 CREATE TABLE `Settings` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `userId` INTEGER NOT NULL,
-    `theme` VARCHAR(255) NOT NULL DEFAULT 'light',
+    `theme` VARCHAR(255) NOT NULL DEFAULT 'auto',
     `themePrism` VARCHAR(255) NOT NULL DEFAULT 'default',
     `themeBackground` VARCHAR(255) NOT NULL DEFAULT 'slanted-gradient',
     `language` VARCHAR(255) NOT NULL DEFAULT 'en-US',

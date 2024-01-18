@@ -18,7 +18,7 @@ export const settingsRaw = async (): Promise<any> => {
     const user: User = usersDB[i];
 
     raw.push({
-      theme: 'light',
+      theme: 'auto',
       themePrism: 'default',
       themeBackground: 'slanted-gradient',
       language: 'en-US',
