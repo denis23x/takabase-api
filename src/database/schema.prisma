@@ -11,19 +11,6 @@ datasource db {
   relationMode = "prisma"
 }
 
-model Feedback {
-  id          Int       @id @default(autoincrement()) @db.Int
-  userId      Int       @db.Int
-  name        String    @db.VarChar(255)
-  description String?   @db.VarChar(255)
-  createdAt   DateTime  @default(now()) @db.DateTime(6)
-  updatedAt   DateTime  @default(now()) @db.DateTime(6)
-  deletedAt   DateTime? @db.DateTime(6)
-  user        User      @relation(fields: [userId], references: [id], onDelete: NoAction)
-
-  @@index([userId])
-}
-
 model User {
   id          Int        @id @default(autoincrement()) @db.Int
   googleId    String?    @db.VarChar(255)
@@ -39,7 +26,6 @@ model User {
   terms       Boolean    @default(true) @db.TinyInt
   categories  Category[]
   posts       Post[]
-  feedbacks   Feedback[]
 
   @@fulltext([name])
 }

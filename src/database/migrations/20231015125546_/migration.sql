@@ -1,39 +1,4 @@
 -- CreateTable
-CREATE TABLE `Feedback` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `userId` INTEGER NOT NULL,
-    `name` VARCHAR(255) NOT NULL,
-    `description` VARCHAR(255) NULL,
-    `createdAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    `updatedAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    `deletedAt` DATETIME(6) NULL,
-
-    INDEX `Feedback_userId_idx`(`userId`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `Settings` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `userId` INTEGER NOT NULL,
-    `theme` VARCHAR(255) NOT NULL DEFAULT 'auto',
-    `themePrism` VARCHAR(255) NOT NULL DEFAULT 'default',
-    `themeBackground` VARCHAR(255) NOT NULL DEFAULT 'slanted-gradient',
-    `language` VARCHAR(255) NOT NULL DEFAULT 'en-US',
-    `pageScrollToTop` BOOLEAN NOT NULL DEFAULT false,
-    `pageScrollInfinite` BOOLEAN NOT NULL DEFAULT true,
-    `pageRedirectHome` BOOLEAN NOT NULL DEFAULT true,
-    `windowButtonPosition` VARCHAR(255) NOT NULL DEFAULT 'left',
-    `markdownMonospace` BOOLEAN NOT NULL DEFAULT true,
-    `createdAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    `updatedAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-
-    UNIQUE INDEX `Settings_userId_key`(`userId`),
-    INDEX `Settings_userId_idx`(`userId`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `User` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `googleId` VARCHAR(255) NULL,
