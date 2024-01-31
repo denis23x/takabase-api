@@ -2,7 +2,7 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Category } from '../../database/client';
-import { UpdateCategory } from '../../types/requests';
+import { CategoryUpdateDto } from '../../types/dto/category/category-update';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -53,7 +53,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<UpdateCategory>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<CategoryUpdateDto>, reply: FastifyReply): Promise<any> {
       const categoryUpdateInput: Prisma.CategoryUpdateInput = {
         ...request.body
       };

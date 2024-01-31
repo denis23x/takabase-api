@@ -1,7 +1,6 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { CreateAuthorization } from '../../types/requests';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -65,7 +64,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CreateAuthorization>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<any>, reply: FastifyReply): Promise<any> {
       return reply.status(500).send({
         error: 'Undefined',
         message: 'Undefined',

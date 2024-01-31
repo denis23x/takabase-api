@@ -2,7 +2,7 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Post } from '../../database/client';
-import { CreatePost } from '../../types/requests';
+import { PostCreateDto } from '../../types/dto/post/post-create';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -60,7 +60,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CreatePost>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<PostCreateDto>, reply: FastifyReply): Promise<any> {
       const { categoryId, ...requestBody } = request.body;
 
       const postCreateInput: Prisma.PostCreateInput = {

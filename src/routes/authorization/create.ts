@@ -1,9 +1,9 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { CreateAuthorization } from '../../types/requests';
 import { Prisma, User } from '../../database/client';
 import { randomUUID } from 'crypto';
+import { AuthorizationLoginDto } from '../../types/dto/authorization/authorization-login';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -54,7 +54,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CreateAuthorization>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<AuthorizationLoginDto>, reply: FastifyReply): Promise<any> {
       const { firebaseId }: Record<string, string> = request.body;
 
       const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {

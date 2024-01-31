@@ -2,7 +2,7 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Category } from '../../database/client';
-import { CreateCategory } from '../../types/requests';
+import { CategoryCreateDto } from '../../types/dto/category/category-create';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -51,7 +51,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CreateCategory>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<CategoryCreateDto>, reply: FastifyReply): Promise<any> {
       const categoryCreateInput: Prisma.CategoryCreateInput = {
         ...request.body,
         user: {

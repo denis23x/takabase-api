@@ -2,7 +2,7 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Post } from '../../database/client';
-import { UpdatePost } from '../../types/requests';
+import { PostUpdateDto } from '../../types/dto/post/post-update';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -62,7 +62,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<UpdatePost>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<PostUpdateDto>, reply: FastifyReply): Promise<any> {
       const postUpdateInput: Prisma.PostUpdateInput = {
         ...request.body
       };

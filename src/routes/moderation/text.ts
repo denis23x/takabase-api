@@ -2,7 +2,7 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { ModerationCreateParams, ModerationCreateResponse } from 'openai/src/resources/moderations';
-import { Moderation } from '../../types/moderation';
+import { ModerationTextDto } from '../../types/dto/moderation/moderation-text';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -16,6 +16,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           {
             type: 'object',
             properties: {
+              model: {
+                type: 'string'
+              },
               input: {
                 type: 'string'
               }
@@ -26,6 +29,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           {
             type: 'object',
             properties: {
+              model: {
+                type: 'string'
+              },
               input: {
                 type: 'array',
                 items: {
@@ -58,12 +64,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<Moderation>, reply: FastifyReply): Promise<any> {
-      const { input }: Record<string, string | string[]> = request.body;
-
+    handler: async function (request: FastifyRequest<ModerationTextDto>, reply: FastifyReply): Promise<any> {
       const moderationCreateParams: ModerationCreateParams = {
-        model: 'text-moderation-stable',
-        input
+        ...request.body
       };
 
       await reply.server.openai.moderations

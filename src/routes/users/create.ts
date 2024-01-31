@@ -2,7 +2,7 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, User } from '../../database/client';
-import { CreateUser } from '../../types/requests';
+import { UserCreateDto } from '../../types/dto/user/user-create';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -68,7 +68,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CreateUser>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<UserCreateDto>, reply: FastifyReply): Promise<any> {
       const userCreateInput: Prisma.UserCreateInput = {
         ...request.body,
         settings: {
