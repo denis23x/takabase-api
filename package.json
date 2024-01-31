@@ -39,12 +39,13 @@
     "@fastify/rate-limit": "^8.0.3",
     "@fastify/static": "^6.11.2",
     "@fastify/swagger": "^8.3.1",
-    "@fastify/swagger-ui": "^1.8.0",
+    "@fastify/swagger-ui": "^2.1.0",
     "@prisma/client": "^5.3.1",
     "dotenv": "^16.0.3",
     "fastify": "^4.15.0",
     "firebase-admin": "^11.8.0",
-    "firebase-functions": "^4.3.1"
+    "firebase-functions": "^4.3.1",
+    "openai": "^4.26.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.1.0",

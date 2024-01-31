@@ -24,10 +24,12 @@ import { jwtConfig } from './config/jwt.config';
 import { rateLimitConfig } from './config/rate-limit.config';
 
 import jwtPlugin from './plugins/jwt.plugin';
+import openaiPlugin from './plugins/openai.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
 
 import authorizationRoutes from './routes/authorization.routes';
 import categoriesRoutes from './routes/categories.routes';
+import moderationRoutes from './routes/moderation.routes';
 import postsRoutes from './routes/posts.routes';
 import usersRoutes from './routes/users.routes';
 
@@ -39,6 +41,7 @@ import {
 } from './schema/requests.schema';
 
 import { categorySchema } from './schema/category.schema';
+import { moderationSchema } from './schema/moderation.schema';
 import { postSchema } from './schema/post.schema';
 import { userSchema } from './schema/user.schema';
 
@@ -69,6 +72,7 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(fastifyRateLimit, rateLimitConfig);
 
   await fastifyInstance.register(jwtPlugin);
+  await fastifyInstance.register(openaiPlugin);
   await fastifyInstance.register(prismaPlugin);
 
   // JSON SCHEMAS
@@ -79,6 +83,7 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(responseErrorSchema);
 
   fastifyInstance.addSchema(categorySchema);
+  fastifyInstance.addSchema(moderationSchema);
   fastifyInstance.addSchema(postSchema);
   fastifyInstance.addSchema(userSchema);
 
@@ -120,6 +125,9 @@ export const main = async (): Promise<FastifyInstance> => {
       });
       api.register(categoriesRoutes, {
         prefix: '/categories/'
+      });
+      api.register(moderationRoutes, {
+        prefix: '/moderation/'
       });
       api.register(postsRoutes, {
         prefix: '/posts/'

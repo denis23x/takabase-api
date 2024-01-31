@@ -12,6 +12,7 @@ declare module 'fastify' {
       COOKIE_SECRET: string;
       COOKIE_DOMAIN: string;
       ENABLE_SWAGGER: boolean;
+      OPENAI_API_KEY: string;
       MYSQL_ROOT_PASSWORD: string;
       MYSQL_DATABASE: string;
       MYSQL_USER: string;

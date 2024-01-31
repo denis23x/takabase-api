@@ -46,6 +46,10 @@ export const envConfig: FastifyEnvOptions = {
         type: 'boolean',
         default: false
       },
+      OPENAI_API_KEY: {
+        type: 'string',
+        default: 'key'
+      },
       MYSQL_DATABASE: {
         type: 'string',
         default: 'dbname'
