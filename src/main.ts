@@ -33,12 +33,10 @@ import moderationRoutes from './routes/moderation.routes';
 import postsRoutes from './routes/posts.routes';
 import usersRoutes from './routes/users.routes';
 
-import {
-  requestParameterIdSchema,
-  requestQueryParameterSchema,
-  requestQueryParameterScopeSchema,
-  responseErrorSchema
-} from './schema/requests.schema';
+import { paramsIdSchema } from './schema/crud/params/params-id.schema';
+import { querystringScopeSchema } from './schema/crud/querystring/querystring-scope.schema';
+import { querystringSearchSchema } from './schema/crud/querystring/querystring-search.schema';
+import { responseErrorSchema } from './schema/crud/response/response-error.schema';
 
 import { categorySchema } from './schema/category.schema';
 import { moderationSchema } from './schema/moderation.schema';
@@ -75,12 +73,14 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(openaiPlugin);
   await fastifyInstance.register(prismaPlugin);
 
-  // JSON SCHEMAS
+  // JSON SCHEMA CRUD
 
-  fastifyInstance.addSchema(requestParameterIdSchema);
-  fastifyInstance.addSchema(requestQueryParameterSchema);
-  fastifyInstance.addSchema(requestQueryParameterScopeSchema);
+  fastifyInstance.addSchema(paramsIdSchema);
+  fastifyInstance.addSchema(querystringScopeSchema);
+  fastifyInstance.addSchema(querystringSearchSchema);
   fastifyInstance.addSchema(responseErrorSchema);
+
+  // JSON SCHEMA MODELS
 
   fastifyInstance.addSchema(categorySchema);
   fastifyInstance.addSchema(moderationSchema);

@@ -2,7 +2,7 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Post } from '../../database/client';
-import { GetAllRequest } from '../../types/requests';
+import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -27,10 +27,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
           },
           {
-            $ref: 'requestQueryParameterSchema#'
+            $ref: 'querystringSearchSchema#'
           },
           {
-            $ref: 'requestQueryParameterScopeSchema#'
+            $ref: 'querystringScopeSchema#'
           }
         ]
       },
@@ -56,7 +56,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<GetAllRequest>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<QuerystringSearch>, reply: FastifyReply): Promise<any> {
       const { userId, userName, categoryId, query, orderBy, scope, size, page }: Record<string, any> = request.query;
 
       const postFindManyArgs: Prisma.PostFindManyArgs = {

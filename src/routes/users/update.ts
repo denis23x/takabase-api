@@ -18,7 +18,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       ],
       params: {
-        $ref: 'requestParameterIdSchema#'
+        $ref: 'paramsIdSchema#'
       },
       body: {
         type: 'object',

@@ -2,7 +2,7 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Category } from '../../database/client';
-import { GetOneRequest } from '../../types/requests';
+import { QuerystringScope } from '../../types/crud/querystring/querystring-scope';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -10,7 +10,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     url: ':id',
     schema: {
       params: {
-        $ref: 'requestParameterIdSchema#'
+        $ref: 'paramsIdSchema#'
       },
       querystring: {
         allOf: [
@@ -27,7 +27,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
           },
           {
-            $ref: 'requestQueryParameterScopeSchema#'
+            $ref: 'querystringScopeSchema#'
           }
         ]
       },
@@ -53,7 +53,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<GetOneRequest>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<QuerystringScope>, reply: FastifyReply): Promise<any> {
       const { userId, userName, scope }: Record<string, any> = request.query;
 
       const categoryFindUniqueOrThrowArgs: Prisma.CategoryFindUniqueOrThrowArgs = {

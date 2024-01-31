@@ -1,8 +1,8 @@
 /** @format */
 
-import { Id } from '../../requests';
+import { ParamsId } from '../../crud/params/params-id';
 import type { Prisma } from '../../../database/client';
 
-export interface PostUpdateDto extends Id {
+export interface PostUpdateDto extends ParamsId {
   Body: Prisma.PostUpdateInput;
 }

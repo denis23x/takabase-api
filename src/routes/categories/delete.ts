@@ -2,7 +2,8 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Category } from '../../database/client';
-import { DeleteRequest } from '../../types/requests';
+import { ParamsId } from '../../types/crud/params/params-id';
+import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -18,7 +19,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       ],
       params: {
-        $ref: 'requestParameterIdSchema#'
+        $ref: 'paramsIdSchema#'
       },
       querystring: {
         type: 'object',
@@ -49,7 +50,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<DeleteRequest>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<ParamsId & QuerystringSearch>, reply: FastifyReply): Promise<any> {
       const { categoryId }: Record<string, any> = request.query;
 
       const categoryDeleteArgs: Prisma.CategoryDeleteArgs = {
