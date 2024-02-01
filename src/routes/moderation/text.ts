@@ -1,7 +1,6 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { ModerationCreateParams, ModerationCreateResponse } from 'openai/src/resources/moderations';
 import { ModerationTextDto } from '../../types/dto/moderation/moderation-text';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
@@ -65,13 +64,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<ModerationTextDto>, reply: FastifyReply): Promise<any> {
-      const moderationCreateParams: ModerationCreateParams = {
+      const moderationCreateParams: any = {
         ...request.body
       };
 
       await reply.server.openai.moderations
         .create(moderationCreateParams)
-        .then((moderationCreateResponse: ModerationCreateResponse) => {
+        .then((moderationCreateResponse: any) => {
           return reply.status(200).send({
             data: moderationCreateResponse,
             statusCode: 200

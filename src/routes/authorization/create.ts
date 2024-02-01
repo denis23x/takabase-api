@@ -81,10 +81,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             const userCreateInput: Prisma.UserCreateInput = {
               name: randomUUID(),
-              firebaseId: firebaseId,
-              settings: {
-                create: {}
-              }
+              firebaseId: firebaseId
             };
 
             const userCreateArgs: Prisma.UserCreateArgs = {

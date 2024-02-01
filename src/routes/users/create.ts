@@ -70,10 +70,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     },
     handler: async function (request: FastifyRequest<UserCreateDto>, reply: FastifyReply): Promise<any> {
       const userCreateInput: Prisma.UserCreateInput = {
-        ...request.body,
-        settings: {
-          create: {}
-        }
+        ...request.body
       };
 
       const userCreateArgs: Prisma.UserCreateArgs = {
