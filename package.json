@@ -44,8 +44,7 @@
     "dotenv": "^16.0.3",
     "fastify": "^4.15.0",
     "firebase-admin": "^11.8.0",
-    "firebase-functions": "^4.3.1",
-    "openai": "^4.26.0"
+    "firebase-functions": "^4.3.1"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.1.0",
