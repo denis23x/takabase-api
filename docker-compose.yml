@@ -1,6 +1,7 @@
 version: "3.9"
 services:
   app-fastify-api:
+    platform: linux/arm64/v8
     build:
       context: .
       dockerfile: Dockerfile
@@ -19,8 +20,9 @@ services:
       - .:/usr/src/app/
     networks:
       - api-fastify-network
-    command: npm run start
+    command: npm run start:dev
   app-fastify-mysql:
+    platform: linux/arm64/v8
     image: mysql:8
     container_name: app-fastify-mysql
     restart: unless-stopped

@@ -14,12 +14,10 @@
     "node": "18"
   },
   "scripts": {
-    "start": "nodemon src/index.ts",
+    "start:dev": "nodemon src/index.ts",
     "start:deploy": "firebase use draft-ssr && firebase deploy --only functions,hosting",
-    "generate": "npx prisma generate",
-    "generate:copy": "mkdir -p dist/database/client && cp -R src/database/client dist/database",
-    "build": "tsc -p tsconfig.json && npm run generate:copy",
-    "debug": "nodemon --inspect=0.0.0.0:9229 src/index.ts"
+    "start:debug": "nodemon --inspect=0.0.0.0:9229 src/index.ts",
+    "build:prod": "tsc -p tsconfig.json && npx prisma generate && mkdir -p dist/database/client && cp -R src/database/client dist/database"
   },
   "keywords": [
     "node",
