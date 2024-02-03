@@ -22,10 +22,6 @@ export const envConfig: FastifyEnvOptions = {
         type: 'string',
         default: 'localhost'
       },
-      APP_STORAGE: {
-        type: 'string',
-        default: 'disk'
-      },
       JWT_SECRET: {
         type: 'string',
         default: 'secret'

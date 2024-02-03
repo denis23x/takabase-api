@@ -6,17 +6,6 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-/** TS Issue */
-
-declare const process: {
-  env: {
-    APP_STORAGE: 'disk' | 'bucket';
-    APP_ORIGIN: string;
-    GCS_ORIGIN: string;
-    GCS_BUCKET: string;
-  };
-};
-
 export const postRaw = async (): Promise<any> => {
   const prisma: PrismaClient<any> = new PrismaClient();
 
@@ -32,17 +21,11 @@ export const postRaw = async (): Promise<any> => {
   });
 
   // prettier-ignore
-  const imagePathBucket: string[] = ['https://firebasestorage.googleapis.com/v0/b/draft-ssr.appspot.com/o/upload', 'seed'];
-  const imagePathDisk: string[] = ['http://0.0.0.0:4400', 'upload', 'images', 'seed'];
-
-  const imagePathMap = (appStorage: string): any => {
+  const getImagePath = (): any => {
+    const imagePathBucket: string[] = ['https://firebasestorage.googleapis.com/v0/b/draft-ssr.appspot.com/o/upload', 'seed'];
     const imageFile: string = faker.number.int({ min: 1, max: 32 }) + '.webp?alt=media';
-    const imageMap: any = {
-      bucket: [...imagePathBucket, imageFile].join('%2F'),
-      disk: [...imagePathDisk, imageFile].join('/')
-    };
 
-    return imageMap[appStorage];
+    return [...imagePathBucket, imageFile].join('%2F');
   };
 
   const raw: any[] = [];
@@ -55,7 +38,7 @@ export const postRaw = async (): Promise<any> => {
       name: faker.music.songName(),
       description: faker.lorem.sentence(),
       markdown: faker.lorem.paragraphs(10),
-      image: faker.datatype.boolean() ? imagePathMap(String(process.env.APP_STORAGE)) : null,
+      image: faker.datatype.boolean() ? getImagePath() : null,
       userId: category.userId,
       categoryId: category.id
     });

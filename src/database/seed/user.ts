@@ -6,17 +6,6 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-/** TS Issue */
-
-declare const process: {
-  env: {
-    APP_STORAGE: 'disk' | 'bucket';
-    APP_ORIGIN: string;
-    GCS_ORIGIN: string;
-    GCS_BUCKET: string;
-  };
-};
-
 export const userRaw = async (): Promise<any> => {
   // @ts-ignore
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -28,17 +17,11 @@ export const userRaw = async (): Promise<any> => {
    */
 
   // prettier-ignore
-  const avatarPathBucket: string[] = ['https://firebasestorage.googleapis.com/v0/b/draft-ssr.appspot.com/o/upload', 'seed'];
-  const avatarPathDisk: string[] = ['http://0.0.0.0:4400', 'upload', 'images', 'seed'];
+  const getAvatarPath = (): any => {
+    const avatarPathBucket: string[] = ['https://firebasestorage.googleapis.com/v0/b/draft-ssr.appspot.com/o/upload', 'seed'];
+    const avatarFile: string = faker.number.int({ min: 1, max: 32 }) + '.webp?alt=media';
 
-  const avatarPathMap = (appStorage: string): any => {
-    const imageFile: string = faker.number.int({ min: 1, max: 32 }) + '.webp?alt=media';
-    const imageMap: any = {
-      bucket: [...avatarPathBucket, imageFile].join('%2F'),
-      disk: [...avatarPathDisk, imageFile].join('/')
-    };
-
-    return imageMap[appStorage];
+    return [...avatarPathBucket, avatarFile].join('%2F');
   };
 
   const raw: any[] = [
@@ -56,7 +39,7 @@ export const userRaw = async (): Promise<any> => {
       name: faker.internet.userName(),
       description: faker.datatype.boolean() ? faker.person.jobTitle() : null,
       firebaseId: ['seed', i].join('-'),
-      avatar: faker.datatype.boolean() ? avatarPathMap(String(process.env.APP_STORAGE)) : null,
+      avatar: faker.datatype.boolean() ? getAvatarPath() : null,
       terms: true
     });
   }
