@@ -15,7 +15,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Removes specific Post from the database',
       security: [
         {
-          Authorization: ['token']
+          Authorization: []
         }
       ],
       params: {

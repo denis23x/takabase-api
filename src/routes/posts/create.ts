@@ -14,7 +14,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Creates a new Post',
       security: [
         {
-          Authorization: ['token']
+          Authorization: []
         }
       ],
       body: {

@@ -30,14 +30,6 @@ export const envConfig: FastifyEnvOptions = {
         type: 'number',
         default: 2678400000
       },
-      COOKIE_SECRET: {
-        type: 'string',
-        default: 'secret'
-      },
-      COOKIE_DOMAIN: {
-        type: 'string',
-        default: 'localhost'
-      },
       ENABLE_SWAGGER: {
         type: 'boolean',
         default: false

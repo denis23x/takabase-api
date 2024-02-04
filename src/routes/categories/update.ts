@@ -14,7 +14,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Updates a Category',
       security: [
         {
-          Authorization: ['token']
+          Authorization: []
         }
       ],
       params: {

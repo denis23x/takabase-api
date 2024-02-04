@@ -37,8 +37,8 @@ export const swaggerConfig: SwaggerOptions = {
     securityDefinitions: {
       Authorization: {
         type: 'apiKey',
-        name: 'token',
-        in: 'cookie'
+        name: 'Authorization',
+        in: 'header'
       }
     }
   }

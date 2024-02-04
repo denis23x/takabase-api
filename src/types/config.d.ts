@@ -8,8 +8,6 @@ declare module 'fastify' {
       APP_HOST: string;
       JWT_SECRET: string;
       JWT_TTL: number;
-      COOKIE_SECRET: string;
-      COOKIE_DOMAIN: string;
       ENABLE_SWAGGER: boolean;
       MYSQL_ROOT_PASSWORD: string;
       MYSQL_DATABASE: string;

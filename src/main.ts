@@ -5,7 +5,6 @@ import fastifyEnv from '@fastify/env';
 import fastifyCors from '@fastify/cors';
 import fastifyCompress from '@fastify/compress';
 import fastifyHelmet from '@fastify/helmet';
-import fastifyCookie from '@fastify/cookie';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import fastifyJwt from '@fastify/jwt';
@@ -16,7 +15,6 @@ import { corsConfig } from './config/cors.config';
 import { loggerConfig } from './config/logger.config';
 import { compressConfig } from './config/compress.config';
 import { helmetConfig } from './config/helmet.config';
-import { cookieConfig } from './config/cookie.config';
 import { swaggerConfig } from './config/swagger.config';
 import { jwtConfig } from './config/jwt.config';
 import { rateLimitConfig } from './config/rate-limit.config';
@@ -59,7 +57,6 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(fastifyCors, corsConfig);
   await fastifyInstance.register(fastifyCompress, compressConfig);
   await fastifyInstance.register(fastifyHelmet, helmetConfig);
-  await fastifyInstance.register(fastifyCookie, cookieConfig);
   await fastifyInstance.register(fastifyJwt, jwtConfig);
   await fastifyInstance.register(fastifyRateLimit, rateLimitConfig);
 
