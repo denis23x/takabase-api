@@ -5,7 +5,7 @@ import { FastifyInstance, FastifyPluginAsync, FastifyReply } from 'fastify';
 import { Prisma, PrismaClient } from '../database/client';
 import { prismaConfig } from '../config/prisma.config';
 
-const prismaPlugin: FastifyPluginAsync = fp(async function prismaPlugin(fastifyInstance: FastifyInstance) {
+const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('prisma', new PrismaClient(prismaConfig));
 
   fastifyInstance.decorate('prismaService', {

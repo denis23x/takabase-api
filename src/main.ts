@@ -24,10 +24,10 @@ import { rateLimitConfig } from './config/rate-limit.config';
 import jwtPlugin from './plugins/jwt.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
 
-import authorizationRoutes from './routes/authorization.routes';
-import categoriesRoutes from './routes/categories.routes';
-import postsRoutes from './routes/posts.routes';
-import usersRoutes from './routes/users.routes';
+import authorizationRoutes from './routes/authorization';
+import categoriesRoutes from './routes/categories';
+import postsRoutes from './routes/posts';
+import usersRoutes from './routes/users';
 
 import { paramsIdSchema } from './schema/crud/params/params-id.schema';
 import { querystringScopeSchema } from './schema/crud/querystring/querystring-scope.schema';

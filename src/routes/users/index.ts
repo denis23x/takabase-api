@@ -2,11 +2,11 @@
 
 import { FastifyInstance } from 'fastify';
 
-import createMethod from './posts/create';
-import deleteMethod from './posts/delete';
-import getAllMethod from './posts/get-all';
-import getOneMethod from './posts/get-one';
-import updateMethod from './posts/update';
+import createMethod from './create';
+import deleteMethod from './delete';
+import getAllMethod from './get-all';
+import getOneMethod from './get-one';
+import updateMethod from './update';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.register(createMethod);

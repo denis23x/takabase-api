@@ -1,9 +1,13 @@
 /** @format */
 
+import { User } from '../database/client';
+
 declare module 'fastify' {
   interface FastifyInstance {
     authenticate: any;
-    authenticateHandler: any;
+    authenticateHandler: {
+      signUser: (user: User) => string;
+    };
   }
 }
 
