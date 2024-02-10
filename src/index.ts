@@ -12,7 +12,7 @@ import { setGlobalOptions } from 'firebase-functions/v2';
 setGlobalOptions({
   region: 'us-central1',
   minInstances: 0,
-  maxInstances: 10,
+  maxInstances: 5,
   memory: '256MiB'
 });
 
