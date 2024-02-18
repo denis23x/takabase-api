@@ -1,15 +1,15 @@
 version: "3.9"
 services:
-  app-fastify-api:
+  app-takabase-api:
     platform: linux/arm64/v8
     build:
       context: .
       dockerfile: Dockerfile
       target: development
     depends_on:
-      app-fastify-mysql:
+      app-takabase-mysql:
         condition: service_healthy
-    container_name: app-fastify-api
+    container_name: app-takabase-api
     restart: unless-stopped
     tty: true
     ports:
@@ -19,12 +19,12 @@ services:
     volumes:
       - .:/usr/src/app/
     networks:
-      - api-fastify-network
+      - api-takabase-network
     command: npm run start:dev
-  app-fastify-mysql:
+  app-takabase-mysql:
     platform: linux/arm64/v8
     image: mysql:8
-    container_name: app-fastify-mysql
+    container_name: app-takabase-mysql
     restart: unless-stopped
     tty: true
     environment:
@@ -37,15 +37,15 @@ services:
       timeout: 5s
       retries: 10
     volumes:
-      - app-fastify-mysql-data:/var/lib/mysql/
+      - app-takabase-mysql-data:/var/lib/mysql/
       - ./src/database/mysql:/docker-entrypoint-initdb.d/
     networks:
-      - api-fastify-network
+      - api-takabase-network
 
 networks:
-  api-fastify-network:
+  api-takabase-network:
     driver: bridge
 
 volumes:
-  app-fastify-mysql-data:
+  app-takabase-mysql-data:
     driver: local

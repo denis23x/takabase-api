@@ -5,4 +5,4 @@ up:
 down:
 	docker compose down
 exec:
-	docker exec -it app-fastify-api sh
+	docker exec -it app-takabase-api sh

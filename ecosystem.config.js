@@ -1,9 +1,9 @@
 module.exports = [
   {
     script: "dist/main.js",
-    name: "app-fastify",
+    name: "app-takabase-api",
     exec_mode: "cluster",
-    instances: 1,
+    instances: 4,
     max_memory_restart: "256M",
   },
 ]
