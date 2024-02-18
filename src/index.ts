@@ -3,18 +3,10 @@
 import { main } from './main';
 import { FastifyInstance } from 'fastify';
 import { FastifyListenOptions } from 'fastify/types/instance';
-import { HttpsFunction, onRequest, Request } from 'firebase-functions/v2/https';
+import { HttpsFunction, onRequest, Request, HttpsOptions } from 'firebase-functions/v2/https';
 import * as express from 'express';
-import { setGlobalOptions } from 'firebase-functions/v2';
 
-// FIREBASE
-
-setGlobalOptions({
-  region: 'us-central1',
-  minInstances: 0,
-  maxInstances: 5,
-  memory: '256MiB'
-});
+/** FASTIFY */
 
 const exitHandler = (app: FastifyInstance, exitCode: number): void => {
   app.close(() => {
@@ -23,9 +15,6 @@ const exitHandler = (app: FastifyInstance, exitCode: number): void => {
     process.exit(exitCode);
   });
 };
-
-// npx kill-port 5000
-// npx autocannon -c 1000 -d 5 -p 10 "http://127.0.0.1:5000/api/v1/categories?size=10&page=1"
 
 main()
   .then((fastifyInstance: FastifyInstance) => {
@@ -69,7 +58,16 @@ main()
     process.exit(1);
   });
 
-export const api: HttpsFunction = onRequest(async (request: Request, response: express.Response) => {
+/** FIREBASE */
+
+export const apiHttpsOptions: HttpsOptions = {
+  region: 'us-central1',
+  minInstances: 0,
+  maxInstances: 4,
+  memory: '256MiB'
+};
+
+export const api: HttpsFunction = onRequest(apiHttpsOptions, async (request: Request, response: express.Response) => {
   const fastifyInstance: FastifyInstance = await main();
 
   await fastifyInstance.ready();

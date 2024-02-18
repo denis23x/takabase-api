@@ -9,11 +9,11 @@ dotenv.config();
 
 const corsConfigList: Record<string, FastifyCorsOptions> = {
   development: {
-    origin: ['http://localhost:4200', 'http://localhost:4000', 'http://172.20.10.5:4200'],
+    origin: ['https://takabase-dev.web.app', 'https://takabase-dev.firebaseapp.com', 'http://localhost:4200'],
     methods: ['GET', 'POST', 'PUT', 'DELETE']
   },
   production: {
-    origin: ['http://localhost:4200', 'http://localhost:4000', 'https://draft-ssr.web.app'],
+    origin: ['https://takabase-prod.web.app', 'https://takabase-prod.firebaseapp.com', 'https://takabase.com'],
     methods: ['GET', 'POST', 'PUT', 'DELETE']
   }
 };

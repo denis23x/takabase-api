@@ -15,7 +15,7 @@
   },
   "scripts": {
     "start:dev": "nodemon src/index.ts",
-    "start:deploy": "firebase use draft-ssr && firebase deploy --only functions:api,hosting",
+    "start:deploy": "read alias && firebase use $alias && firebase deploy --only functions:api,hosting:$alias-api",
     "start:debug": "nodemon --inspect=0.0.0.0:9229 src/index.ts",
     "start:functions": "npm run build:prod && npx @google-cloud/functions-framework --target=api",
     "build:prod": "tsc -p tsconfig.json && npx prisma generate && mkdir -p dist/database/client && cp -R src/database/client dist/database"

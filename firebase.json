@@ -1,7 +1,7 @@
 {
   "hosting": [
     {
-      "target": "draft-api",
+      "target": "takabase-dev-api",
       "public": "dist",
       "rewrites": [
         {
@@ -16,12 +16,25 @@
         "firebase.json",
         "**/.*",
         "**/node_modules/**"
+      ]
+    },
+    {
+      "target": "takabase-prod-api",
+      "public": "dist",
+      "rewrites": [
+        {
+          "source": "**",
+          "function": {
+            "functionId": "api",
+            "region": "us-central1"
+          }
+        }
       ],
-      "frameworksBackend": {
-        "region": "us-central1",
-        "maxInstances": 5,
-        "memory": "256MiB"
-      }
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ]
     }
   ],
   "functions": [

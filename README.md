@@ -15,7 +15,7 @@ Processes
 > Don't use this use docker instead
 
 - `start:dev` local dev server http://localhost:4400
-- `start:deploy` deploy to dev server https://draft-api.web.app
+- `start:deploy` deploy
 - `start:debug` local dev server with code inspection enabled for debugging
 
 Builds
