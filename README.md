@@ -1,7 +1,5 @@
 # Takabase API
 
-## Development commands
-
 Setup
 
 - `npm install`
