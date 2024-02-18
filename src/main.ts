@@ -87,7 +87,7 @@ export const main = async (): Promise<FastifyInstance> => {
 
   // FOR SKELETON TESTING SLOW DOWN QUERIES
 
-  if (fastifyInstance.config.NODE_ENV === 'development') {
+  if (fastifyInstance.config.NODE_ENV === 'localhost') {
     // prettier-ignore
     fastifyInstance.addHook('onRequest', (request: FastifyRequest, reply: FastifyReply, done: HookHandlerDoneFunction) => {
       setTimeout(() => {
@@ -98,7 +98,7 @@ export const main = async (): Promise<FastifyInstance> => {
 
   // GCP ISSUE
 
-  if (fastifyInstance.config.NODE_ENV === 'production') {
+  if (fastifyInstance.config.NODE_ENV !== 'localhost') {
     // prettier-ignore
     fastifyInstance.addContentTypeParser('application/json', {}, (request: FastifyRequest, body: any, done: ContentTypeParserDoneFunction) => {
       done(null, body.body);

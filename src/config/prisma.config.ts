@@ -8,6 +8,10 @@ dotenv.config();
 // https://www.prisma.io/docs/concepts/components/prisma-client/working-with-prismaclient/logging
 
 const prismaConfigList: Record<string, Prisma.PrismaClientOptions> = {
+  localhost: {
+    errorFormat: 'pretty',
+    log: ['warn', 'error']
+  },
   development: {
     errorFormat: 'pretty',
     log: ['warn', 'error']

@@ -1,6 +1,4 @@
-# Draft Fastify
-
----
+# Takabase API
 
 ## Development commands
 
@@ -40,7 +38,5 @@ Some configurations
 - `.env.example` app .env (also `src/config/env.config.ts`)
 - `ecosystem.config.js` process handler (production docker)
 - `firebase.json` dev deploy config
-
----
 
 Contact https://t.me/denis23x

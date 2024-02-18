@@ -8,8 +8,12 @@ dotenv.config();
 // https://github.com/fastify/fastify-cors
 
 const corsConfigList: Record<string, FastifyCorsOptions> = {
+  localhost: {
+    origin: ['http://localhost:4200'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE']
+  },
   development: {
-    origin: ['https://takabase-dev.web.app', 'https://takabase-dev.firebaseapp.com', 'http://localhost:4200'],
+    origin: ['https://takabase-dev.web.app', 'https://takabase-dev.firebaseapp.com'],
     methods: ['GET', 'POST', 'PUT', 'DELETE']
   },
   production: {

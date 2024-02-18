@@ -1,6 +1,6 @@
 {
-  "name": "draft-fastify",
-  "version": "0.0.1",
+  "name": "takabase-api",
+  "version": "1.0.0",
   "description": "Node backend project",
   "author": "Denis Iakimenko",
   "private": true,

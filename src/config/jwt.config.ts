@@ -8,6 +8,12 @@ dotenv.config();
 // https://github.com/fastify/fastify-jwt
 
 const jwtConfigList: Record<string, FastifyJWTOptions> = {
+  localhost: {
+    secret: 'secret',
+    sign: {
+      expiresIn: '1339200000ms'
+    }
+  },
   development: {
     secret: 'secret',
     sign: {
