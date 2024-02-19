@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 COPY --chown=node:node package*.json ./
 COPY --chown=node:node .npmrc ./
 
-ENV NODE_ENV=development
+ENV NODE_ENV=localhost
 
 RUN npm i
 
