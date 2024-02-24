@@ -19,8 +19,8 @@ export const categoryRaw = async (): Promise<any> => {
     const user: User = usersDB[faker.number.int({ min: 0, max: usersDB.length - 1 })];
 
     raw.push({
-      name: faker.commerce.department(),
-      description: faker.datatype.boolean() ? faker.lorem.sentence() : null,
+      name: faker.commerce.productName(),
+      description: faker.datatype.boolean() ? faker.commerce.productDescription() : null,
       userId: user.id
     });
   }

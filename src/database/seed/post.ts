@@ -22,10 +22,10 @@ export const postRaw = async (): Promise<any> => {
 
   // prettier-ignore
   const getImagePath = (): any => {
-    const imagePathBucket: string[] = ['https://firebasestorage.googleapis.com/v0/b/draft-ssr.appspot.com/o/upload', 'seed'];
-    const imageFile: string = faker.number.int({ min: 1, max: 32 }) + '.webp?alt=media';
+    const imagePath: string = String(process.env.APP_SEED);
+    const imageFile: string = faker.number.int({ min: 1, max: 32 }) + '.webp';
 
-    return [...imagePathBucket, imageFile].join('%2F');
+    return [imagePath, imageFile].join('%2F');
   };
 
   const raw: any[] = [];
@@ -35,8 +35,8 @@ export const postRaw = async (): Promise<any> => {
     const category: Category = categoriesDB[categoryIndex];
 
     raw.push({
-      name: faker.music.songName(),
-      description: faker.lorem.sentence(),
+      name: faker.commerce.productName(),
+      description: faker.commerce.productDescription(),
       markdown: faker.lorem.paragraphs(10),
       image: faker.datatype.boolean() ? getImagePath() : null,
       userId: category.userId,

@@ -18,26 +18,18 @@ export const userRaw = async (): Promise<any> => {
 
   // prettier-ignore
   const getAvatarPath = (): any => {
-    const avatarPathBucket: string[] = ['https://firebasestorage.googleapis.com/v0/b/draft-ssr.appspot.com/o/upload', 'seed'];
-    const avatarFile: string = faker.number.int({ min: 1, max: 32 }) + '.webp?alt=media';
+    const avatarPath: string = String(process.env.APP_SEED);
+    const avatarFile: string = faker.number.int({ min: 1, max: 32 }) + '.webp';
 
-    return [...avatarPathBucket, avatarFile].join('%2F');
+    return [avatarPath, avatarFile].join('%2F');
   };
 
-  const raw: any[] = [
-    {
-      name: 'moderator',
-      description: 'The moderator',
-      firebaseId: 'seed-moderator',
-      avatar: null,
-      terms: true
-    }
-  ];
+  const raw: any[] = [];
 
-  for (let i: number = 0; i < 9; i++) {
+  for (let i: number = 0; i < 5; i++) {
     raw.push({
       name: faker.internet.userName(),
-      description: faker.datatype.boolean() ? faker.person.jobTitle() : null,
+      description: faker.datatype.boolean() ? faker.person.bio() : null,
       firebaseId: ['seed', i].join('-'),
       avatar: faker.datatype.boolean() ? getAvatarPath() : null,
       terms: true
