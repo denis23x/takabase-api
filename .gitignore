@@ -48,3 +48,6 @@ lerna-debug.log*
 .firebase
 *-debug.log
 .runtimeconfig.json
+
+# Husky
+.husky
