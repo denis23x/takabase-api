@@ -23,6 +23,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           name: {
             type: 'string'
           },
+          firebaseId: {
+            type: 'string'
+          },
           description: {
             type: 'string'
           },
@@ -89,6 +92,25 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         },
         data: postCreateInput
       };
+
+      /** Handle Firebase Storage Images */
+
+      const postMarkdown: string = String(postCreateArgs.data.markdown);
+      const postFirebaseId: string = String(postCreateArgs.data.firebaseId);
+
+      const imageListTemp: string[] = request.server.storageService.getMarkdownTempImageList(postMarkdown);
+      const imageListPost: string[] = await request.server.storageService.getBucketTempTransfer(
+        postFirebaseId,
+        imageListTemp
+      );
+
+      /** Update markdown */
+
+      postCreateArgs.data.markdown = request.server.storageService.getMarkdownTempImageListRewrite(
+        postMarkdown,
+        imageListTemp,
+        imageListPost
+      );
 
       await reply.server.prisma.post
         .create(postCreateArgs)
