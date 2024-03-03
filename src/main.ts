@@ -21,6 +21,7 @@ import { rateLimitConfig } from './config/rate-limit.config';
 
 import jwtPlugin from './plugins/jwt.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
+import storagePlugin from './plugins/storage.plugin';
 
 import authorizationRoutes from './routes/authorization';
 import categoriesRoutes from './routes/categories';
@@ -62,6 +63,7 @@ export const main = async (): Promise<FastifyInstance> => {
 
   await fastifyInstance.register(jwtPlugin);
   await fastifyInstance.register(prismaPlugin);
+  await fastifyInstance.register(storagePlugin);
 
   // JSON SCHEMA CRUD
 

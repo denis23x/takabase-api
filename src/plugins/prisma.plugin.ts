@@ -21,6 +21,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
     getPostSelect: (): Prisma.PostSelect => ({
       id: true,
       name: true,
+      firebaseId: true,
       description: true,
       markdown: false,
       image: true,

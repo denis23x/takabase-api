@@ -37,6 +37,7 @@ export const postRaw = async (): Promise<any> => {
     raw.push({
       name: faker.commerce.productName(),
       description: faker.commerce.productDescription(),
+      firebaseId: ['seed', i].join('-'),
       markdown: faker.lorem.paragraphs(10),
       image: faker.datatype.boolean() ? getImagePath() : null,
       userId: category.userId,

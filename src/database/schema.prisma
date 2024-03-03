@@ -49,6 +49,7 @@ model Category {
 model Post {
   id          Int       @id @default(autoincrement()) @db.Int
   name        String    @db.VarChar(255)
+  firebaseId  String    @unique @db.VarChar(255)
   description String    @db.VarChar(255)
   markdown    String    @db.Text
   image       String?   @db.VarChar(255)

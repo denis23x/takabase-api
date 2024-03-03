@@ -39,6 +39,7 @@ CREATE TABLE `Category` (
 CREATE TABLE `Post` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(255) NOT NULL,
+    `firebaseId` VARCHAR(255) NOT NULL,
     `description` VARCHAR(255) NOT NULL,
     `markdown` TEXT NOT NULL,
     `image` VARCHAR(255) NULL,
@@ -48,6 +49,7 @@ CREATE TABLE `Post` (
     `updatedAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `deletedAt` DATETIME(6) NULL,
 
+    UNIQUE INDEX `Post_firebaseId_key`(`firebaseId`),
     INDEX `Post_categoryId_idx`(`categoryId`),
     INDEX `Post_userId_idx`(`userId`),
     UNIQUE INDEX `Post_name_categoryId_key`(`name`, `categoryId`),

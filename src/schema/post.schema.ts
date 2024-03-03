@@ -10,6 +10,9 @@ export const postSchema: Record<string, any> = {
     name: {
       type: 'string'
     },
+    firebaseId: {
+      type: 'string'
+    },
     description: {
       type: 'string'
     },
