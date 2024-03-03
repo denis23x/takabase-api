@@ -83,6 +83,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const postCreateArgs: Prisma.PostCreateArgs = {
         select: {
           ...request.server.prismaService.getPostSelect(),
+          markdown: true,
           category: {
             select: request.server.prismaService.getCategorySelect()
           },
