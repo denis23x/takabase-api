@@ -104,7 +104,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // prettier-ignore
       // Get the temporary images from the bucket and save them as permanent images
-      const markdownImageList: string[] = await request.server.storageService.getBucketTempTransfer(postFirebaseId, markdownImageListTemp);
+      const markdownImageList: string[] = await request.server.storageService.getBucketTempImageListTransfer(postFirebaseId, markdownImageListTemp);
 
       // prettier-ignore
       // Rewrite the markdown to replace the temporary images with the permanent images
