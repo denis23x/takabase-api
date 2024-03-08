@@ -20,10 +20,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       body: {
         type: 'object',
         properties: {
-          name: {
+          firebaseId: {
             type: 'string'
           },
-          firebaseId: {
+          name: {
             type: 'string'
           },
           description: {
@@ -94,30 +94,30 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         data: postCreateInput
       };
 
-      /** Handle Firebase Storage Images */
+      /** Update markdown images */
 
       const postMarkdown: string = String(postCreateArgs.data.markdown);
       const postFirebaseId: string = String(postCreateArgs.data.firebaseId);
 
-      const imageListTemp: string[] = request.server.storageService.getMarkdownTempImageList(postMarkdown);
-      const imageListPost: string[] = await request.server.storageService.getBucketTempTransfer(
-        postFirebaseId,
-        imageListTemp
-      );
+      // Get a list of temporary images from the markdown
+      const markdownImageListTemp: string[] = request.server.storageService.getMarkdownTempImageList(postMarkdown);
 
-      /** Update markdown */
+      // prettier-ignore
+      // Get the temporary images from the bucket and save them as permanent images
+      const markdownImageList: string[] = await request.server.storageService.getBucketTempTransfer(postFirebaseId, markdownImageListTemp);
 
-      postCreateArgs.data.markdown = request.server.storageService.getMarkdownTempImageListRewrite(
-        postMarkdown,
-        imageListTemp,
-        imageListPost
-      );
+      // prettier-ignore
+      // Rewrite the markdown to replace the temporary images with the permanent images
+      postCreateArgs.data.markdown = request.server.storageService.getMarkdownTempImageListRewrite(postMarkdown, markdownImageListTemp, markdownImageList);
 
       await reply.server.prisma.post
         .create(postCreateArgs)
         .then((post: Post) => {
           return reply.status(201).send({
-            data: post,
+            data: {
+              ...post,
+              markdownImageList
+            },
             statusCode: 201
           });
         })

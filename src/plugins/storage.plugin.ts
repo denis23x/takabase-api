@@ -13,10 +13,12 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
       return fastifyInstance.storage.bucket(bucketUrl);
     },
     getBucketTempTransfer: (postFirebaseId: string, imageListUrl: string[]): Promise<string[]> => {
+      const postBucketPath: string = ['posts', postFirebaseId].join('/');
+
       return Promise.all(
         imageListUrl.map(async (imageUrl: string): Promise<string> => {
           const source: string = decodeURIComponent(imageUrl);
-          const destination: string = decodeURIComponent(source.replace('temp', 'posts/' + postFirebaseId));
+          const destination: string = decodeURIComponent(source.replace('temp', postBucketPath));
 
           return fastifyInstance.storageService
             .getBucket()

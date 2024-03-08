@@ -7,10 +7,10 @@ export const postSchema: Record<string, any> = {
     id: {
       type: 'number'
     },
-    name: {
+    firebaseId: {
       type: 'string'
     },
-    firebaseId: {
+    name: {
       type: 'string'
     },
     description: {
@@ -18,6 +18,12 @@ export const postSchema: Record<string, any> = {
     },
     markdown: {
       type: 'string'
+    },
+    markdownImageList: {
+      type: 'array',
+      items: {
+        type: 'string'
+      }
     },
     image: {
       type: 'string',
