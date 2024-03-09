@@ -114,19 +114,19 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const markdownUpdated: string[] = request.server.storageService.getMarkdownImageList(postMarkdownUpdated);
       const markdownUpdatedPost: string[] = request.server.storageService.getMarkdownImageListPost(markdownUpdated);
 
-      await request.server.storageService.getBucketImageListPostDelete(
+      const markdownImageListDone: string[] = await request.server.storageService.getBucketImageListPostUpdate(
         userFirebaseId,
         postFirebaseId,
         markdownUpdatedPost
       );
 
-      return request.server.prisma.post
+      await request.server.prisma.post
         .update(postUpdateArgs)
         .then((post: Post) => {
           return reply.status(200).send({
             data: {
               ...post,
-              markdownImageList: markdownImageListPost
+              markdownImageList: markdownImageListDone
             },
             statusCode: 200
           });

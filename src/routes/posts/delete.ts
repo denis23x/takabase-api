@@ -1,7 +1,7 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Prisma, User } from '../../database/client';
+import { Post, Prisma } from '../../database/client';
 import { ParamsId } from '../../types/crud/params/params-id';
 import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
 
@@ -43,7 +43,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     },
     handler: async function (request: FastifyRequest<ParamsId & QuerystringSearch>, reply: FastifyReply): Promise<any> {
       const postDeleteArgs: Prisma.PostDeleteArgs = {
-        select: request.server.prismaService.getPostSelect(),
+        select: {
+          ...request.server.prismaService.getPostSelect(),
+          firebaseId: true
+        },
         where: {
           userId: Number(request.user.id),
           id: Number(request.params.id)
@@ -52,9 +55,20 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       await reply.server.prisma.post
         .delete(postDeleteArgs)
-        .then((user: User) => {
+        .then(async (post: Post) => {
+          const postFirebaseId: string = String(post.firebaseId);
+          const userFirebaseId: string = String(request.user.firebaseId);
+
+          const markdownImageListDone: string[] = await request.server.storageService.getBucketImageListPostDelete(
+            userFirebaseId,
+            postFirebaseId
+          );
+
           return reply.status(200).send({
-            data: user,
+            data: {
+              ...post,
+              markdownImageList: markdownImageListDone
+            },
             statusCode: 200
           });
         })

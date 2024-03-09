@@ -31,7 +31,7 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
         })
       );
     },
-    getBucketImageListPostDelete: async (userFirebaseId: string, postFirebaseId: string, imageListUrl: string[]): Promise<any> => {
+    getBucketImageListPost: async (userFirebaseId: string, postFirebaseId: string): Promise<string[]> => {
       const options: GetFilesOptions = {
         prefix: decodeURIComponent(['users', userFirebaseId, 'posts', postFirebaseId].join('/') + '/'),
         delimiter: '/'
@@ -41,15 +41,34 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
         .getBucket()
         .getFiles(options)
         .then((getFilesResponse: GetFilesResponse) => {
-          const imageListStorage: string[] = getFilesResponse.map((fileList: any) => (fileList.shift() as File).name);
-          const imageListMarkdown: string[] = imageListUrl.map((imageUrl: string) => decodeURIComponent(imageUrl));
-          const imageListDelete: string[] = imageListStorage.filter((markdownImage: string) => !imageListMarkdown.includes(markdownImage));
+          return getFilesResponse
+            .map((fileList: any) => (fileList.shift() as File)?.name)
+            .filter((fileList: any) => !!fileList)
+        });
+    },
+    getBucketImageListPostDelete: async (userFirebaseId: string, postFirebaseId: string): Promise<string[]> => {
+      return fastifyInstance.storageService
+        .getBucketImageListPost(userFirebaseId, postFirebaseId)
+        .then(async (imageListPost: string[]) => {
+          await Promise.all(imageListPost.map((imageUrl: string) => {
+            return fastifyInstance.storageService.getBucket().file(imageUrl).delete();
+          }));
 
-          return Promise.all(
-            imageListDelete.map(async (imageUrl: string) => {
-              return fastifyInstance.storageService.getBucket().file(imageUrl).delete();
-            })
-          );
+          return imageListPost;
+        });
+    },
+    getBucketImageListPostUpdate: async (userFirebaseId: string, postFirebaseId: string, imageListUrl: string[]): Promise<string[]> => {
+      return fastifyInstance.storageService
+        .getBucketImageListPost(userFirebaseId, postFirebaseId)
+        .then(async (imageListPost: string[]) => {
+          const imageListMarkdown: string[] = imageListUrl.map((imageUrl: string) => decodeURIComponent(imageUrl));
+          const imageListDelete: string[] = imageListPost.filter((markdownImage: string) => !imageListMarkdown.includes(markdownImage));
+
+          await Promise.all(imageListDelete.map((imageUrl: string) => {
+            return fastifyInstance.storageService.getBucket().file(imageUrl).delete();
+          }));
+
+          return imageListDelete;
         });
     },
     getBucketImageListSubstringUrl: (markdownImageList: string[]): string[] => {

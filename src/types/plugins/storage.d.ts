@@ -9,7 +9,9 @@ declare module 'fastify' {
     storageService: {
       getBucket: (bucketUrl?: string) => Bucket;
       getBucketImageListTempTransfer: (postFirebaseId: string, imageListUrl: string[]) => Promise<string[]>
-      getBucketImageListPostDelete: (userFirebaseId: string, postFirebaseId: string, imageListUrl: string[]) => Promise<any>
+      getBucketImageListPost: (userFirebaseId: string, postFirebaseId: string) => Promise<string[]>
+      getBucketImageListPostDelete: (userFirebaseId: string, postFirebaseId: string) => Promise<string[]>
+      getBucketImageListPostUpdate: (userFirebaseId: string, postFirebaseId: string, imageListUrl: string[]) => Promise<string[]>
       getBucketImageListSubstringUrl: (markdownImageList: string[]) => string[]
       getMarkdownImageList: (markdown: string) => string[]
       getMarkdownImageListFirebaseBucket: (markdownImageList: string[]) => string[]
