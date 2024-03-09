@@ -2,17 +2,19 @@
 
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { Storage, Bucket, MoveResponse, File } from '@google-cloud/storage';
+import { Storage, Bucket, MoveResponse, File, GetFilesResponse } from '@google-cloud/storage';
 import { storageConfig } from '../config/storage.config';
+import { GetFilesOptions } from '@google-cloud/storage/build/cjs/src/bucket';
 
 const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('storage', new Storage({ projectId: storageConfig.projectId }));
 
+  // prettier-ignore
   fastifyInstance.decorate('storageService', {
     getBucket: (bucketUrl: string = storageConfig.bucket): Bucket => {
       return fastifyInstance.storage.bucket(bucketUrl);
     },
-    getBucketTempTransfer: (postFirebaseId: string, imageListUrl: string[]): Promise<string[]> => {
+    getBucketImageListTempTransfer: (postFirebaseId: string, imageListUrl: string[]): Promise<string[]> => {
       const postBucketPath: string = ['posts', postFirebaseId].join('/');
 
       return Promise.all(
@@ -24,19 +26,47 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
             .getBucket()
             .file(source)
             .move(destination)
-            .then((moveResponse: MoveResponse) => (moveResponse as any[]).shift())
+            .then((moveResponse: MoveResponse) => moveResponse.shift() as File)
             .then((file: File) => String(file.id));
         })
       );
     },
-    getMarkdownTempImageList: (markdown: string): string[] => {
+    getBucketImageListPostDelete: async (userFirebaseId: string, postFirebaseId: string, imageListUrl: string[]): Promise<any> => {
+      const options: GetFilesOptions = {
+        prefix: decodeURIComponent(['users', userFirebaseId, 'posts', postFirebaseId].join('/') + '/'),
+        delimiter: '/'
+      };
+
+      return fastifyInstance.storageService
+        .getBucket()
+        .getFiles(options)
+        .then((getFilesResponse: GetFilesResponse) => {
+          const imageListStorage: string[] = getFilesResponse.map((fileList: any) => (fileList.shift() as File).name);
+          const imageListMarkdown: string[] = imageListUrl.map((imageUrl: string) => decodeURIComponent(imageUrl));
+          const imageListDelete: string[] = imageListStorage.filter((markdownImage: string) => !imageListMarkdown.includes(markdownImage));
+
+          return Promise.all(
+            imageListDelete.map(async (imageUrl: string) => {
+              return fastifyInstance.storageService.getBucket().file(imageUrl).delete();
+            })
+          );
+        });
+    },
+    getBucketImageListSubstringUrl: (markdownImageList: string[]): string[] => {
+      return markdownImageList.map((markdownImageUrl: string) => {
+        const url: URL = new URL(markdownImageUrl);
+        const pathname: string = url.pathname;
+        const index: number = pathname.indexOf('users');
+
+        return pathname.substring(index);
+      });
+    },
+    getMarkdownImageList: (markdown: string): string[] => {
       const markdownImageRegExp: RegExp = /!\[(.*?)]\((.*?)\)/g;
       const markdownImageList: RegExpMatchArray | null = markdown.match(markdownImageRegExp);
 
       if (markdownImageList?.length) {
-        /** Get clean url address */
-
-        const markdownImageListUrl: string[] = markdownImageList
+        return markdownImageList
           .map((markdownImageUrl: string) => {
             const markdownImageUrlRegExp: RegExp = /(?<=\().+?(?=\))/i;
             const markdownImageUrlList: RegExpMatchArray | null = markdownImageUrl.match(markdownImageUrlRegExp);
@@ -48,25 +78,31 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
             }
           })
           .filter((markdownImageUrl: string) => !!markdownImageUrl);
-
-        /** Filter and take move ready file path  */
-
-        return markdownImageListUrl
-          .filter((markdownImageUrl: string) => markdownImageUrl.startsWith('https://firebasestorage.googleapis.com'))
-          .filter((markdownImageUrl: string) => markdownImageUrl.includes(storageConfig.bucket))
-          .filter((markdownImageUrl: string) => markdownImageUrl.includes('temp'))
-          .map((markdownImageUrl: string) => {
-            const url: URL = new URL(markdownImageUrl);
-            const pathname: string = url.pathname;
-            const index: number = pathname.indexOf('users');
-
-            return pathname.substring(index);
-          });
       }
 
       return [];
     },
-    getMarkdownTempImageListRewrite: (markdown: string, tempList: string[], postList: string[]): string => {
+    getMarkdownImageListFirebaseBucket: (markdownImageList: string[]): string[] => {
+      return markdownImageList
+        .filter((markdownImageUrl: string) => markdownImageUrl.startsWith('https://firebasestorage.googleapis.com'))
+        .filter((markdownImageUrl: string) => markdownImageUrl.includes(storageConfig.bucket));
+    },
+    getMarkdownImageListTemp: (markdownImageList: string[]): string[] => {
+      const markdownImageListTemp: string[] = fastifyInstance.storageService
+        .getMarkdownImageListFirebaseBucket(markdownImageList)
+        .filter((markdownImageUrl: string) => markdownImageUrl.includes('temp'))
+
+      return fastifyInstance.storageService.getBucketImageListSubstringUrl(markdownImageListTemp);
+    },
+    getMarkdownImageListPost: (markdownImageList: string[]): string[] => {
+      const markdownImageListPost: string[] = fastifyInstance.storageService
+        .getMarkdownImageListFirebaseBucket(markdownImageList)
+        .filter((markdownImageUrl: string) => markdownImageUrl.includes('users'))
+        .filter((markdownImageUrl: string) => markdownImageUrl.includes('posts'));
+
+      return fastifyInstance.storageService.getBucketImageListSubstringUrl(markdownImageListPost);
+    },
+    getMarkdownImageListRewrite: (markdown: string, tempList: string[], postList: string[]): string => {
       let markdownNew: string = markdown;
 
       for (let i: number = 0; i < tempList.length; i++) {

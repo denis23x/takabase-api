@@ -99,16 +99,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const postMarkdown: string = String(postCreateArgs.data.markdown);
       const postFirebaseId: string = String(postCreateArgs.data.firebaseId);
 
-      // Get a list of temporary images from the markdown
-      const markdownImageListTemp: string[] = request.server.storageService.getMarkdownTempImageList(postMarkdown);
+      const markdownImageList: string[] = request.server.storageService.getMarkdownImageList(postMarkdown);
+      const markdownImageListTemp: string[] = request.server.storageService.getMarkdownImageListTemp(markdownImageList);
+      const markdownImageListPost: string[] = await request.server.storageService.getBucketImageListTempTransfer(
+        postFirebaseId,
+        markdownImageListTemp
+      );
 
-      // prettier-ignore
-      // Get the temporary images from the bucket and save them as permanent images
-      const markdownImageList: string[] = await request.server.storageService.getBucketTempImageListTransfer(postFirebaseId, markdownImageListTemp);
-
-      // prettier-ignore
-      // Rewrite the markdown to replace the temporary images with the permanent images
-      postCreateArgs.data.markdown = request.server.storageService.getMarkdownTempImageListRewrite(postMarkdown, markdownImageListTemp, markdownImageList);
+      postCreateArgs.data.markdown = request.server.storageService.getMarkdownImageListRewrite(
+        postMarkdown,
+        markdownImageListTemp,
+        markdownImageListPost
+      );
 
       await reply.server.prisma.post
         .create(postCreateArgs)
@@ -116,7 +118,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           return reply.status(201).send({
             data: {
               ...post,
-              markdownImageList
+              markdownImageList: markdownImageListPost
             },
             statusCode: 201
           });

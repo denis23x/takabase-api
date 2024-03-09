@@ -93,16 +93,32 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const postMarkdown: string = String(postUpdateArgs.data.markdown);
       const postFirebaseId: string = String(postUpdateArgs.data.firebaseId);
 
-      // Get a list of temporary images from the markdown
-      const markdownImageListTemp: string[] = request.server.storageService.getMarkdownTempImageList(postMarkdown);
+      const markdownImageList: string[] = request.server.storageService.getMarkdownImageList(postMarkdown);
+      const markdownImageListTemp: string[] = request.server.storageService.getMarkdownImageListTemp(markdownImageList);
+      const markdownImageListPost: string[] = await request.server.storageService.getBucketImageListTempTransfer(
+        postFirebaseId,
+        markdownImageListTemp
+      );
 
-      // prettier-ignore
-      // Get the temporary images from the bucket and save them as permanent images
-      const markdownImageList: string[] = await request.server.storageService.getBucketTempTransfer(postFirebaseId, markdownImageListTemp);
+      postUpdateArgs.data.markdown = request.server.storageService.getMarkdownImageListRewrite(
+        postMarkdown,
+        markdownImageListTemp,
+        markdownImageListPost
+      );
 
-      // prettier-ignore
-      // Rewrite the markdown to replace the temporary images with the permanent images
-      postUpdateArgs.data.markdown = request.server.storageService.getMarkdownTempImageListRewrite(postMarkdown, markdownImageListTemp, markdownImageList);
+      /** Remove markdown images (after update) */
+
+      const userFirebaseId: string = String(request.user.firebaseId);
+      const postMarkdownUpdated: string = String(postUpdateArgs.data.markdown);
+
+      const markdownUpdated: string[] = request.server.storageService.getMarkdownImageList(postMarkdownUpdated);
+      const markdownUpdatedPost: string[] = request.server.storageService.getMarkdownImageListPost(markdownUpdated);
+
+      await request.server.storageService.getBucketImageListPostDelete(
+        userFirebaseId,
+        postFirebaseId,
+        markdownUpdatedPost
+      );
 
       return request.server.prisma.post
         .update(postUpdateArgs)
@@ -110,7 +126,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           return reply.status(200).send({
             data: {
               ...post,
-              markdownImageList
+              markdownImageList: markdownImageListPost
             },
             statusCode: 200
           });
