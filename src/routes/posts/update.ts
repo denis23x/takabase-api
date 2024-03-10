@@ -101,17 +101,17 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         const markdownImageListPost: string[] = await request.server.storageService.getBucketImageListTempTransfer(postFirebaseUid, markdownImageListTemp);
 
         /** Update markdown images */
-        
+
         postUpdateArgs.data.markdown = request.server.storageService.getMarkdownImageListRewrite(postMarkdown, markdownImageListTemp, markdownImageListPost);
 
-        /** Remove markdown images (after update) */
+        /** Delete not used markdown images */
 
         const userFirebaseUid: string = String(request.user.firebaseUid);
         const postMarkdownUpdated: string = String(postUpdateArgs.data.markdown);
 
-        const markdownUpdated: string[] = request.server.storageService.getMarkdownImageList(postMarkdownUpdated);
-        const markdownUpdatedPost: string[] = request.server.storageService.getMarkdownImageListPost(markdownUpdated);
-        const markdownImageListDone: string[] = await request.server.storageService.getBucketImageListPostUpdate(userFirebaseUid, postFirebaseUid, markdownUpdatedPost);
+        const markdownImageListUpdated: string[] = request.server.storageService.getMarkdownImageList(postMarkdownUpdated);
+        const markdownImageListUpdatedPost: string[] = request.server.storageService.getMarkdownImageListPost(markdownImageListUpdated);
+        const markdownImageListUpdatedDone: string[] = await request.server.storageService.getBucketImageListPostUpdate(userFirebaseUid, postFirebaseUid, markdownImageListUpdatedPost);
 
         await prisma.post
           .update(postUpdateArgs)
@@ -119,7 +119,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             return reply.status(200).send({
               data: {
                 ...post,
-                markdownImageList: markdownImageListDone
+                markdownImageList: markdownImageListUpdatedDone
               },
               statusCode: 200
             });

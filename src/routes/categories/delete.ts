@@ -1,7 +1,7 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Prisma, Category } from '../../database/client';
+import { Post, Prisma } from '../../database/client';
 import { ParamsId } from '../../types/crud/params/params-id';
 import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
 
@@ -35,7 +35,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           type: 'object',
           properties: {
             data: {
-              $ref: 'categorySchema#'
+              type: 'object',
+              properties: {
+                message: {
+                  type: 'string'
+                }
+              }
             },
             statusCode: {
               type: 'number'
@@ -53,15 +58,35 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     handler: async function (request: FastifyRequest<ParamsId & QuerystringSearch>, reply: FastifyReply): Promise<any> {
       const { categoryId }: Record<string, any> = request.query;
 
-      const categoryDeleteArgs: Prisma.CategoryDeleteArgs = {
-        select: request.server.prismaService.getCategorySelect(),
-        where: {
-          userId: Number(request.user.id),
-          id: Number(request.params.id)
-        }
+      /** Delete category */
+
+      const setCategoryDelete = () => {
+        const categoryDeleteArgs: Prisma.CategoryDeleteArgs = {
+          where: {
+            id: Number(request.params.id),
+            userId: Number(request.user.id)
+          }
+        };
+
+        return reply.server.prisma.category.delete(categoryDeleteArgs);
       };
 
-      if (categoryId) {
+      /** Delete category related posts */
+
+      const setCategoryPostListDelete = () => {
+        const postDeleteManyArgs: Prisma.PostDeleteManyArgs = {
+          where: {
+            userId: Number(request.user.id),
+            categoryId: Number(request.params.id)
+          }
+        };
+
+        return reply.server.prisma.post.deleteMany(postDeleteManyArgs);
+      };
+
+      /** Transfer category related posts to another category */
+
+      const setCategoryPostListTransfer = () => {
         const postUpdateManyArgs: Prisma.PostUpdateManyArgs = {
           where: {
             userId: Number(request.user.id),
@@ -72,22 +97,51 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           }
         };
 
-        await reply.server.prisma.post.updateMany(postUpdateManyArgs).catch((error: Error) => {
-          return reply.server.prismaService.setError(reply, error);
-        });
-      }
+        return reply.server.prisma.post.updateMany(postUpdateManyArgs);
+      };
 
-      await reply.server.prisma.category
-        .delete(categoryDeleteArgs)
-        .then((category: Category) => {
-          return reply.status(200).send({
-            data: category,
-            statusCode: 200
-          });
-        })
-        .catch((error: Error) => {
-          return reply.server.prismaService.setError(reply, error);
+      try {
+        if (categoryId) {
+          await reply.server.prisma.$transaction([setCategoryPostListTransfer(), setCategoryDelete()]);
+        } else {
+          const postFindManyArgs: Prisma.PostFindManyArgs = {
+            select: {
+              firebaseUid: true
+            },
+            where: {
+              userId: Number(request.user.id),
+              categoryId: Number(request.params.id)
+            }
+          };
+
+          /** Get all post firebaseUid before delete them */
+
+          const postList: Partial<Post>[] = await reply.server.prisma.post.findMany(postFindManyArgs);
+
+          /** Delete category related posts and category */
+
+          await reply.server.prisma.$transaction([setCategoryPostListDelete(), setCategoryDelete()]);
+
+          /** Delete markdown images */
+
+          // prettier-ignore
+          await Promise.all(postList.map((post: Partial<Post>) => {
+            const postFirebaseUid: string = String(post.firebaseUid);
+            const userFirebaseUid: string = String(request.user.firebaseUid);
+
+            return request.server.storageService.getBucketImageListPostDelete(userFirebaseUid, postFirebaseUid);
+          }));
+        }
+
+        return reply.status(200).send({
+          data: {
+            message: 'Category successfully deleted'
+          },
+          statusCode: 200
         });
+      } catch (error: any) {
+        return reply.server.prismaService.setError(reply, error);
+      }
     }
   });
 }

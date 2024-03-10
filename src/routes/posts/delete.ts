@@ -61,15 +61,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const postFirebaseUid: string = String(post.firebaseUid);
             const userFirebaseUid: string = String(request.user.firebaseUid);
 
-            const markdownImageListDone: string[] = await request.server.storageService.getBucketImageListPostDelete(
-              postFirebaseUid,
-              userFirebaseUid
-            );
+            /** Delete markdown images */
+
+            const markdownImageListDeleted: string[] = await request.server.storageService.getBucketImageListPostDelete(userFirebaseUid, postFirebaseUid);
 
             return reply.status(200).send({
               data: {
                 ...post,
-                markdownImageList: markdownImageListDone
+                markdownImageList: markdownImageListDeleted
               },
               statusCode: 200
             });
