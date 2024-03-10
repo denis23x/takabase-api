@@ -17,8 +17,8 @@ model User {
   name        String     @unique @db.VarChar(255)
   description String?    @db.VarChar(255)
   avatar      String?    @db.VarChar(255)
-  createdAt   DateTime   @default(now()) @db.DateTime(6)
-  updatedAt   DateTime   @default(now()) @db.DateTime(6)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
   deletedAt   DateTime?  @db.DateTime(6)
   terms       Boolean    @default(true) @db.TinyInt
   categories  Category[]
@@ -32,10 +32,10 @@ model Category {
   userId      Int       @db.Int
   name        String    @db.VarChar(255)
   description String?   @db.VarChar(255)
-  createdAt   DateTime  @default(now()) @db.DateTime(6)
-  updatedAt   DateTime  @default(now()) @db.DateTime(6)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
   deletedAt   DateTime? @db.DateTime(6)
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   posts       Post[]
 
   @@unique([name, userId])
@@ -52,11 +52,11 @@ model Post {
   image       String?   @db.VarChar(255)
   userId      Int       @db.Int
   categoryId  Int       @db.Int
-  createdAt   DateTime  @default(now()) @db.DateTime(6)
-  updatedAt   DateTime  @default(now()) @db.DateTime(6)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
   deletedAt   DateTime? @db.DateTime(6)
-  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [userId], references: [id])
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user        User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([name, categoryId])
   @@index([categoryId])

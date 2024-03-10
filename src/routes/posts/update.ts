@@ -66,8 +66,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<PostUpdateDto>, reply: FastifyReply): Promise<any> {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { categoryId, ...requestBody } = request.body;
+
       const postUpdateInput: Prisma.PostUpdateInput = {
-        ...request.body
+        ...requestBody
       };
 
       const postUpdateArgs: Prisma.PostUpdateArgs = {
