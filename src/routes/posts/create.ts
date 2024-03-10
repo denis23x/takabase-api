@@ -1,7 +1,7 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Prisma, Post } from '../../database/client';
+import { Prisma, Post, PrismaClient } from '../../database/client';
 import { PostCreateDto } from '../../types/dto/post/post-create';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
@@ -20,7 +20,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       body: {
         type: 'object',
         properties: {
-          firebaseId: {
+          firebaseUid: {
             type: 'string'
           },
           name: {
@@ -94,38 +94,34 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         data: postCreateInput
       };
 
-      /** Update markdown images */
+      // prettier-ignore
+      await request.server.prisma.$transaction(async (prisma: PrismaClient): Promise<void> => {
+        const postMarkdown: string = String(postCreateArgs.data.markdown);
+        const postFirebaseUid: string = String(postCreateArgs.data.firebaseUid);
 
-      const postMarkdown: string = String(postCreateArgs.data.markdown);
-      const postFirebaseId: string = String(postCreateArgs.data.firebaseId);
+        const markdownImageList: string[] = request.server.storageService.getMarkdownImageList(postMarkdown);
+        const markdownImageListTemp: string[] = request.server.storageService.getMarkdownImageListTemp(markdownImageList);
+        const markdownImageListPost: string[] = await request.server.storageService.getBucketImageListTempTransfer(postFirebaseUid, markdownImageListTemp);
 
-      const markdownImageList: string[] = request.server.storageService.getMarkdownImageList(postMarkdown);
-      const markdownImageListTemp: string[] = request.server.storageService.getMarkdownImageListTemp(markdownImageList);
-      const markdownImageListPost: string[] = await request.server.storageService.getBucketImageListTempTransfer(
-        postFirebaseId,
-        markdownImageListTemp
-      );
+        /** Update markdown images */
 
-      postCreateArgs.data.markdown = request.server.storageService.getMarkdownImageListRewrite(
-        postMarkdown,
-        markdownImageListTemp,
-        markdownImageListPost
-      );
+        postCreateArgs.data.markdown = request.server.storageService.getMarkdownImageListRewrite(postMarkdown, markdownImageListTemp, markdownImageListPost);
 
-      await reply.server.prisma.post
-        .create(postCreateArgs)
-        .then((post: Post) => {
-          return reply.status(201).send({
-            data: {
-              ...post,
-              markdownImageList: markdownImageListPost
-            },
-            statusCode: 201
+        await prisma.post
+          .create(postCreateArgs)
+          .then((post: Post) => {
+            return reply.status(201).send({
+              data: {
+                ...post,
+                markdownImageList: markdownImageListPost
+              },
+              statusCode: 201
+            });
+          })
+          .catch((error: Error) => {
+            return reply.server.prismaService.setError(reply, error);
           });
-        })
-        .catch((error: Error) => {
-          return reply.server.prismaService.setError(reply, error);
-        });
+      });
     }
   });
 }

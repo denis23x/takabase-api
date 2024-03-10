@@ -13,16 +13,13 @@ datasource db {
 
 model User {
   id          Int        @id @default(autoincrement()) @db.Int
-  googleId    String?    @db.VarChar(255)
-  firebaseId  String     @unique @db.VarChar(255)
-  facebookId  String?    @db.VarChar(255)
+  firebaseUid String     @unique @db.VarChar(255)
   name        String     @unique @db.VarChar(255)
   description String?    @db.VarChar(255)
   avatar      String?    @db.VarChar(255)
   createdAt   DateTime   @default(now()) @db.DateTime(6)
   updatedAt   DateTime   @default(now()) @db.DateTime(6)
   deletedAt   DateTime?  @db.DateTime(6)
-  githubId    String?    @db.VarChar(255)
   terms       Boolean    @default(true) @db.TinyInt
   categories  Category[]
   posts       Post[]
@@ -49,7 +46,7 @@ model Category {
 model Post {
   id          Int       @id @default(autoincrement()) @db.Int
   name        String    @db.VarChar(255)
-  firebaseId  String    @unique @db.VarChar(255)
+  firebaseUid String    @unique @db.VarChar(255)
   description String    @db.VarChar(255)
   markdown    String    @db.Text
   image       String?   @db.VarChar(255)

@@ -1,7 +1,7 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Post, Prisma } from '../../database/client';
+import { Post, Prisma, PrismaClient } from '../../database/client';
 import { ParamsId } from '../../types/crud/params/params-id';
 import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
 
@@ -45,7 +45,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const postDeleteArgs: Prisma.PostDeleteArgs = {
         select: {
           ...request.server.prismaService.getPostSelect(),
-          firebaseId: true
+          firebaseUid: true
         },
         where: {
           userId: Number(request.user.id),
@@ -53,28 +53,31 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       };
 
-      await reply.server.prisma.post
-        .delete(postDeleteArgs)
-        .then(async (post: Post) => {
-          const postFirebaseId: string = String(post.firebaseId);
-          const userFirebaseId: string = String(request.user.firebaseId);
+      // prettier-ignore
+      await request.server.prisma.$transaction(async (prisma: PrismaClient): Promise<void> => {
+        await prisma.post
+          .delete(postDeleteArgs)
+          .then(async (post: Post) => {
+            const postFirebaseUid: string = String(post.firebaseUid);
+            const userFirebaseUid: string = String(request.user.firebaseUid);
 
-          const markdownImageListDone: string[] = await request.server.storageService.getBucketImageListPostDelete(
-            userFirebaseId,
-            postFirebaseId
-          );
+            const markdownImageListDone: string[] = await request.server.storageService.getBucketImageListPostDelete(
+              postFirebaseUid,
+              userFirebaseUid
+            );
 
-          return reply.status(200).send({
-            data: {
-              ...post,
-              markdownImageList: markdownImageListDone
-            },
-            statusCode: 200
+            return reply.status(200).send({
+              data: {
+                ...post,
+                markdownImageList: markdownImageListDone
+              },
+              statusCode: 200
+            });
+          })
+          .catch((error: Error) => {
+            return reply.server.prismaService.setError(reply, error);
           });
-        })
-        .catch((error: Error) => {
-          return reply.server.prismaService.setError(reply, error);
-        });
+      });
     }
   });
 }

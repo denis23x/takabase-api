@@ -15,11 +15,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       body: {
         type: 'object',
         properties: {
-          firebaseId: {
+          firebaseUid: {
             type: 'string'
           }
         },
-        required: ['firebaseId'],
+        required: ['firebaseUid'],
         additionalProperties: false
       },
       response: {
@@ -55,15 +55,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<AuthorizationLoginDto>, reply: FastifyReply): Promise<any> {
-      const { firebaseId }: Record<string, string> = request.body;
+      const { firebaseUid }: Record<string, string> = request.body;
 
       const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {
         select: {
           ...request.server.prismaService.getUserSelect(),
-          firebaseId: true
+          firebaseUid: true
         },
         where: {
-          firebaseId
+          firebaseUid
         }
       };
 
@@ -80,11 +80,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         })
         .catch((error: any) => {
           if (error.code === 'P2025' && error.name === 'NotFoundError') {
-            // TODO: add check in firebase database for provided firebaseId
+            // TODO: add check in firebase database for provided firebaseUid
 
             const userCreateInput: Prisma.UserCreateInput = {
               name: randomUUID(),
-              firebaseId: firebaseId
+              firebaseUid: firebaseUid
             };
 
             const userCreateArgs: Prisma.UserCreateArgs = {

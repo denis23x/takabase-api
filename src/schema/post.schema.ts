@@ -7,7 +7,7 @@ export const postSchema: Record<string, any> = {
     id: {
       type: 'number'
     },
-    firebaseId: {
+    firebaseUid: {
       type: 'string'
     },
     name: {

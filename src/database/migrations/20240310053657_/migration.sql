@@ -1,19 +1,16 @@
 -- CreateTable
 CREATE TABLE `User` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `googleId` VARCHAR(255) NULL,
-    `firebaseId` VARCHAR(255) NOT NULL,
-    `facebookId` VARCHAR(255) NULL,
+    `firebaseUid` VARCHAR(255) NOT NULL,
     `name` VARCHAR(255) NOT NULL,
     `description` VARCHAR(255) NULL,
     `avatar` VARCHAR(255) NULL,
     `createdAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `updatedAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `deletedAt` DATETIME(6) NULL,
-    `githubId` VARCHAR(255) NULL,
     `terms` BOOLEAN NOT NULL DEFAULT true,
 
-    UNIQUE INDEX `User_firebaseId_key`(`firebaseId`),
+    UNIQUE INDEX `User_firebaseUid_key`(`firebaseUid`),
     UNIQUE INDEX `User_name_key`(`name`),
     FULLTEXT INDEX `User_name_idx`(`name`),
     PRIMARY KEY (`id`)
@@ -39,7 +36,7 @@ CREATE TABLE `Category` (
 CREATE TABLE `Post` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(255) NOT NULL,
-    `firebaseId` VARCHAR(255) NOT NULL,
+    `firebaseUid` VARCHAR(255) NOT NULL,
     `description` VARCHAR(255) NOT NULL,
     `markdown` TEXT NOT NULL,
     `image` VARCHAR(255) NULL,
@@ -49,7 +46,7 @@ CREATE TABLE `Post` (
     `updatedAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `deletedAt` DATETIME(6) NULL,
 
-    UNIQUE INDEX `Post_firebaseId_key`(`firebaseId`),
+    UNIQUE INDEX `Post_firebaseUid_key`(`firebaseUid`),
     INDEX `Post_categoryId_idx`(`categoryId`),
     INDEX `Post_userId_idx`(`userId`),
     UNIQUE INDEX `Post_name_categoryId_key`(`name`, `categoryId`),

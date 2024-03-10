@@ -28,9 +28,9 @@ export const userRaw = async (): Promise<any> => {
 
   for (let i: number = 0; i < 5; i++) {
     raw.push({
+      firebaseUid: ['seed', i].join('-'),
       name: faker.internet.userName(),
       description: faker.datatype.boolean() ? faker.person.bio() : null,
-      firebaseId: ['seed', i].join('-'),
       avatar: faker.datatype.boolean() ? getAvatarPath() : null,
       terms: true
     });

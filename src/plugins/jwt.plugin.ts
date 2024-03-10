@@ -21,7 +21,7 @@ const jwtPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fastif
     signUser: (user: User): string => {
       return fastifyInstance.jwt.sign({
         id: user.id,
-        firebaseId: user.firebaseId
+        firebaseUid: user.firebaseUid
       });
     }
   });

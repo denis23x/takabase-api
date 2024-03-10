@@ -29,23 +29,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           terms: {
             const: true
           },
-          firebaseId: {
+          firebaseUid: {
             type: 'string'
-          },
-          facebookId: {
-            type: 'string',
-            nullable: true
-          },
-          githubId: {
-            type: 'string',
-            nullable: true
-          },
-          googleId: {
-            type: 'string',
-            nullable: true
           }
         },
-        required: ['name', 'terms', 'firebaseId'],
+        required: ['name', 'terms', 'firebaseUid'],
         additionalProperties: false
       },
       response: {

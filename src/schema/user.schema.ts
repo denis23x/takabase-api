@@ -7,6 +7,9 @@ export const userSchema: Record<string, any> = {
     id: {
       type: 'number'
     },
+    firebaseUid: {
+      type: 'string'
+    },
     name: {
       type: 'string'
     },
@@ -20,21 +23,6 @@ export const userSchema: Record<string, any> = {
     },
     terms: {
       const: true
-    },
-    googleId: {
-      type: 'string',
-      nullable: true
-    },
-    firebaseId: {
-      type: 'string'
-    },
-    facebookId: {
-      type: 'string',
-      nullable: true
-    },
-    githubId: {
-      type: 'string',
-      nullable: true
     },
     categories: {
       type: 'array',

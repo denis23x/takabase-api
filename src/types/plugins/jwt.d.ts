@@ -15,11 +15,11 @@ declare module '@fastify/jwt' {
   interface FastifyJWT {
     payload: {
       id: number;
-      firebaseId: string;
+      firebaseUid: string;
     };
     user: {
       id: number;
-      firebaseId: string;
+      firebaseUid: string;
     };
   }
 }

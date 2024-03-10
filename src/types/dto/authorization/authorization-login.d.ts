@@ -2,6 +2,6 @@
 
 export interface AuthorizationLoginDto {
   Body: {
-    firebaseId: string;
+    firebaseUid: string;
   };
 }
