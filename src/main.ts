@@ -19,6 +19,7 @@ import { swaggerConfig } from './config/swagger.config';
 import { jwtConfig } from './config/jwt.config';
 import { rateLimitConfig } from './config/rate-limit.config';
 
+import firebasePlugin from './plugins/firebase.plugin';
 import jwtPlugin from './plugins/jwt.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
 import storagePlugin from './plugins/storage.plugin';
@@ -61,6 +62,7 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(fastifyJwt, jwtConfig);
   await fastifyInstance.register(fastifyRateLimit, rateLimitConfig);
 
+  await fastifyInstance.register(firebasePlugin);
   await fastifyInstance.register(jwtPlugin);
   await fastifyInstance.register(prismaPlugin);
   await fastifyInstance.register(storagePlugin);
@@ -78,30 +80,26 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(postSchema);
   fastifyInstance.addSchema(userSchema);
 
-  // SWAGGER
+  // LOCALHOST
+  // prettier-ignore
+  if (fastifyInstance.config.NODE_ENV === 'localhost') {
+    fastifyInstance.addHook('onRequest', (request: FastifyRequest, reply: FastifyReply, done: HookHandlerDoneFunction) => {
+      setTimeout(() => {
+        done();
+      }, 1000);
+    });
 
-  if (fastifyInstance.config.ENABLE_SWAGGER) {
+    // SWAGGER
+
     await fastifyInstance.register(fastifySwagger, swaggerConfig);
     await fastifyInstance.register(fastifySwaggerUi, {
       routePrefix: '/docs'
     });
   }
 
-  // FOR SKELETON TESTING SLOW DOWN QUERIES
-
-  if (fastifyInstance.config.NODE_ENV === 'localhost') {
-    // prettier-ignore
-    fastifyInstance.addHook('onRequest', (request: FastifyRequest, reply: FastifyReply, done: HookHandlerDoneFunction) => {
-      setTimeout(() => {
-        done();
-      }, 1000);
-    });
-  }
-
   // GCP ISSUE
-
+  // prettier-ignore
   if (fastifyInstance.config.NODE_ENV !== 'localhost') {
-    // prettier-ignore
     fastifyInstance.addContentTypeParser('application/json', {}, (request: FastifyRequest, body: any, done: ContentTypeParserDoneFunction) => {
       done(null, body.body);
     });

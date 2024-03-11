@@ -30,10 +30,6 @@ export const envConfig: FastifyEnvOptions = {
         type: 'number',
         default: 2678400000
       },
-      ENABLE_SWAGGER: {
-        type: 'boolean',
-        default: false
-      },
       MYSQL_DATABASE: {
         type: 'string',
         default: 'dbname'
