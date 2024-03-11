@@ -20,6 +20,7 @@ import { jwtConfig } from './config/jwt.config';
 import { rateLimitConfig } from './config/rate-limit.config';
 
 import firebasePlugin from './plugins/firebase.plugin';
+import firestorePlugin from './plugins/firestore.plugin';
 import jwtPlugin from './plugins/jwt.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
 import storagePlugin from './plugins/storage.plugin';
@@ -28,6 +29,7 @@ import authorizationRoutes from './routes/authorization';
 import categoriesRoutes from './routes/categories';
 import postsRoutes from './routes/posts';
 import usersRoutes from './routes/users';
+import testsRoutes from './routes/tests';
 
 import { paramsIdSchema } from './schema/crud/params/params-id.schema';
 import { querystringScopeSchema } from './schema/crud/querystring/querystring-scope.schema';
@@ -63,6 +65,7 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(fastifyRateLimit, rateLimitConfig);
 
   await fastifyInstance.register(firebasePlugin);
+  await fastifyInstance.register(firestorePlugin);
   await fastifyInstance.register(jwtPlugin);
   await fastifyInstance.register(prismaPlugin);
   await fastifyInstance.register(storagePlugin);
@@ -120,6 +123,9 @@ export const main = async (): Promise<FastifyInstance> => {
       });
       api.register(usersRoutes, {
         prefix: '/users/'
+      });
+      api.register(testsRoutes, {
+        prefix: '/tests/'
       });
     },
     {
