@@ -1,7 +1,7 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Post, Prisma, PrismaClient } from '../../database/client';
+import { Post, Prisma } from '../../database/client';
 import { ParamsId } from '../../types/crud/params/params-id';
 import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
 
@@ -53,30 +53,28 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       };
 
-      // prettier-ignore
-      await request.server.prisma.$transaction(async (prisma: PrismaClient): Promise<void> => {
-        await prisma.post
-          .delete(postDeleteArgs)
-          .then(async (post: Post) => {
-            const postFirebaseUid: string = String(post.firebaseUid);
-            const userFirebaseUid: string = String(request.user.firebaseUid);
+      await request.server.prisma.post
+        .delete(postDeleteArgs)
+        .then(async (post: Post) => {
+          const postFirebaseUid: string = String(post.firebaseUid);
+          const userFirebaseUid: string = String(request.user.firebaseUid);
 
-            /** Delete markdown images */
+          /** Delete markdown images */
 
-            const markdownImageListDeleted: string[] = await request.server.storageService.getBucketImageListPostDelete(userFirebaseUid, postFirebaseUid);
+          // prettier-ignore
+          const markdownImageListDeleted: string[] = await request.server.storage.getBucketImageListPostDelete(userFirebaseUid, postFirebaseUid);
 
-            return reply.status(200).send({
-              data: {
-                ...post,
-                markdownImageList: markdownImageListDeleted
-              },
-              statusCode: 200
-            });
-          })
-          .catch((error: Error) => {
-            return reply.server.prismaService.setError(reply, error);
+          return reply.status(200).send({
+            data: {
+              ...post,
+              markdownImageList: markdownImageListDeleted
+            },
+            statusCode: 200
           });
-      });
+        })
+        .catch((error: Error) => {
+          return reply.server.prismaService.setError(reply, error);
+        });
     }
   });
 }

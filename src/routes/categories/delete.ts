@@ -129,7 +129,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const postFirebaseUid: string = String(post.firebaseUid);
             const userFirebaseUid: string = String(request.user.firebaseUid);
 
-            return request.server.storageService.getBucketImageListPostDelete(userFirebaseUid, postFirebaseUid);
+            return request.server.storage.getBucketImageListPostDelete(userFirebaseUid, postFirebaseUid);
           }));
         }
 

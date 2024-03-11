@@ -8,11 +8,7 @@ Setup
 
 Processes
 
-> Don't use this use docker instead
-
-- `start:dev` local dev server http://localhost:4400
-- `start:deploy` deploy
-- `start:debug` local dev server with code inspection enabled for debugging
+> Don't use NPM use docker instead
 
 Builds
 
@@ -20,7 +16,7 @@ Builds
 
 Makefile (using Docker)
 
-- `make up` run docker container with local dev server http://localhost:4400
+- `make up` swagger http://localhost:4400/docs
 - `make down` stop docker container
 - `make exec` go into running container
 

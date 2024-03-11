@@ -2,18 +2,14 @@
 
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { Storage, Bucket, MoveResponse, File, GetFilesResponse } from '@google-cloud/storage';
+import { Bucket, MoveResponse, File, GetFilesResponse, GetFilesOptions } from '@google-cloud/storage';
 import { storageConfig } from '../config/storage.config';
-import { GetFilesOptions } from '@google-cloud/storage/build/cjs/src/bucket';
+import { getStorage } from 'firebase-admin/storage';
 
+// prettier-ignore
 const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
-  fastifyInstance.decorate('storage', new Storage({ projectId: storageConfig.projectId }));
-
-  // prettier-ignore
-  fastifyInstance.decorate('storageService', {
-    getBucket: (bucketUrl: string = storageConfig.bucket): Bucket => {
-      return fastifyInstance.storage.bucket(bucketUrl);
-    },
+  fastifyInstance.decorate('storage', {
+    getBucket: (): Bucket => getStorage().bucket(storageConfig.bucket),
     getBucketImageListTempTransfer: (postFirebaseUid: string, imageListUrl: string[]): Promise<string[]> => {
       const postBucketPath: string = ['posts', postFirebaseUid].join('/');
 
@@ -22,7 +18,7 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
           const source: string = decodeURIComponent(imageUrl);
           const destination: string = decodeURIComponent(source.replace('temp', postBucketPath));
 
-          return fastifyInstance.storageService
+          return fastifyInstance.storage
             .getBucket()
             .file(source)
             .move(destination)
@@ -37,7 +33,7 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
         delimiter: '/'
       };
 
-      return fastifyInstance.storageService
+      return fastifyInstance.storage
         .getBucket()
         .getFiles(options)
         .then((getFilesResponse: GetFilesResponse) => {
@@ -47,25 +43,25 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
         });
     },
     getBucketImageListPostDelete: async (userFirebaseUid: string, postFirebaseUid: string): Promise<string[]> => {
-      return fastifyInstance.storageService
+      return fastifyInstance.storage
         .getBucketImageListPost(userFirebaseUid, postFirebaseUid)
         .then(async (imageListPost: string[]) => {
           await Promise.all(imageListPost.map((imageUrl: string) => {
-            return fastifyInstance.storageService.getBucket().file(imageUrl).delete();
+            return fastifyInstance.storage.getBucket().file(imageUrl).delete();
           }));
 
           return imageListPost;
         });
     },
     getBucketImageListPostUpdate: async (userFirebaseUid: string, postFirebaseUid: string, imageListUrl: string[]): Promise<string[]> => {
-      return fastifyInstance.storageService
+      return fastifyInstance.storage
         .getBucketImageListPost(userFirebaseUid, postFirebaseUid)
         .then(async (imageListPost: string[]) => {
           const imageListMarkdown: string[] = imageListUrl.map((imageUrl: string) => decodeURIComponent(imageUrl));
           const imageListDelete: string[] = imageListPost.filter((markdownImage: string) => !imageListMarkdown.includes(markdownImage));
 
           await Promise.all(imageListDelete.map((imageUrl: string) => {
-            return fastifyInstance.storageService.getBucket().file(imageUrl).delete();
+            return fastifyInstance.storage.getBucket().file(imageUrl).delete();
           }));
 
           return imageListDelete;
@@ -107,19 +103,19 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
         .filter((markdownImageUrl: string) => markdownImageUrl.includes(storageConfig.bucket));
     },
     getMarkdownImageListTemp: (markdownImageList: string[]): string[] => {
-      const markdownImageListTemp: string[] = fastifyInstance.storageService
+      const markdownImageListTemp: string[] = fastifyInstance.storage
         .getMarkdownImageListFirebaseBucket(markdownImageList)
         .filter((markdownImageUrl: string) => markdownImageUrl.includes('temp'))
 
-      return fastifyInstance.storageService.getBucketImageListSubstringUrl(markdownImageListTemp);
+      return fastifyInstance.storage.getBucketImageListSubstringUrl(markdownImageListTemp);
     },
     getMarkdownImageListPost: (markdownImageList: string[]): string[] => {
-      const markdownImageListPost: string[] = fastifyInstance.storageService
+      const markdownImageListPost: string[] = fastifyInstance.storage
         .getMarkdownImageListFirebaseBucket(markdownImageList)
         .filter((markdownImageUrl: string) => markdownImageUrl.includes('users'))
         .filter((markdownImageUrl: string) => markdownImageUrl.includes('posts'));
 
-      return fastifyInstance.storageService.getBucketImageListSubstringUrl(markdownImageListPost);
+      return fastifyInstance.storage.getBucketImageListSubstringUrl(markdownImageListPost);
     },
     getMarkdownImageListRewrite: (markdown: string, tempList: string[], postList: string[]): string => {
       let markdownNew: string = markdown;

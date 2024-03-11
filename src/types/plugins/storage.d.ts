@@ -1,12 +1,11 @@
 /** @format */
 
-import { Bucket, Storage } from '@google-cloud/storage';
+import { Bucket } from '@google-cloud/storage';
 
 // prettier-ignore
 declare module 'fastify' {
   interface FastifyInstance {
-    storage: Storage;
-    storageService: {
+    storage: {
       getBucket: (bucketUrl?: string) => Bucket;
       getBucketImageListTempTransfer: (postFirebaseUid: string, imageListUrl: string[]) => Promise<string[]>
       getBucketImageListPost: (userFirebaseUid: string, postFirebaseUid: string) => Promise<string[]>
