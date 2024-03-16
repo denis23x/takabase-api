@@ -8,6 +8,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     prisma: PrismaClient;
     prismaService: {
+      getTransactionOptions: () => any;
       getCategorySelect: () => Prisma.CategorySelect;
       getPostSelect: () => Prisma.PostSelect;
       getUserSelect: () => Prisma.UserSelect;

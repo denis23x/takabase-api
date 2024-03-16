@@ -66,7 +66,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<PostCreateDto>, reply: FastifyReply): Promise<void> {
-      const rollbackBag: any = {};
+      const transactionOptions: any = request.server.prisma.getTransactionOptions();
+      const transactionRollback: any = {};
 
       // prettier-ignore
       await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<Post> => {
@@ -91,8 +92,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
         //? Rollback cooking
 
-        rollbackBag.userFirebaseUid = userFirebaseUid;
-        rollbackBag.postFirebaseUid = postFirebaseUid;
+        transactionRollback.userFirebaseUid = userFirebaseUid;
+        transactionRollback.postFirebaseUid = postFirebaseUid;
 
         /** Move image temp to post */
 
@@ -130,7 +131,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
         //? Rollback cooking
 
-        rollbackBag.markdownImageList = markdownImageList;
+        transactionRollback.markdownImageList = markdownImageList;
 
         /** Create MySQL row */
 
@@ -178,11 +179,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         /** Response to client */
 
         return post;
-      }, {
-        maxWait: 2000,
-        timeout: 5000,
-        isolationLevel: Prisma.TransactionIsolationLevel.Serializable
-      }).then((post: Post) => {
+      }, transactionOptions).then((post: Post) => {
         //* Success
 
         return reply.status(201).send({
@@ -199,10 +196,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
          */
 
         if (error.cause.code !== 'fastify/firestore/failed-add') {
-          const postDocumentPath: string = ['/users', rollbackBag.userFirebaseUid, 'posts', rollbackBag.postFirebaseUid].join('/');
+          const postDocumentPath: string = ['/users', transactionRollback.userFirebaseUid, 'posts', transactionRollback.postFirebaseUid].join('/');
 
           await reply.server.firestoreService.deleteDocument(postDocumentPath);
-          await reply.server.storageService.setImageListMovePostToTemp(rollbackBag.postFirebaseUid, rollbackBag.markdownImageList);
+          await reply.server.storageService.setImageListMovePostToTemp(transactionRollback.postFirebaseUid, transactionRollback.markdownImageList);
         }
 
         /** Send error */
