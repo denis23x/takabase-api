@@ -99,7 +99,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         const markdownImageListBody: string[] = request.server.markdownService.getImageList(postMarkdown);
         const markdownImageListTemp: string[] = request.server.markdownService.getImageListTemp(markdownImageListBody);
         const markdownImageListPost: string[] = await request.server.storageService
-          .setImageListTempMove(postFirebaseUid, markdownImageListTemp)
+          .setImageListMoveTempToPost(postFirebaseUid, markdownImageListTemp)
           .catch(() => {
             throw new Error('fastify/storage/failed-move', {
               cause: {
@@ -112,11 +112,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
         /** Update empty Firestore document */
 
+        const markdownImageList: string[] = markdownImageListPost.map((imageUrl: string) => decodeURIComponent(imageUrl));
+
         // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const postDocumentUpdate: WriteResult = await postDocumentReference
-          .update({
-            markdownImageList: markdownImageListPost.map((imageUrl: string) => decodeURIComponent(imageUrl))
-          })
+          .update({ markdownImageList })
           .catch(() => {
             throw new Error('fastify/firestore/failed-update', {
               cause: {
@@ -127,7 +128,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             });
           });
 
-        /** Add ready MySQL Post row */
+        //? Rollback cooking
+
+        rollbackBag.markdownImageList = markdownImageList;
+
+        /** Create MySQL row */
 
         const postCreateMarkdown: string = request.server.markdownService.getImageListRewrite(postMarkdown, markdownImageListTemp, markdownImageListPost);
         const postCreateArgs: Prisma.PostCreateArgs = {
@@ -189,15 +194,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
         /**
          * If error happens after firestore added document, we have a chance of remaining junk files, so:
-         *  1. Remove document
-         *  2. Remove files associated with this document
+         *  1. Delete document
+         *  2. Move associated files back to temp
          */
 
         if (error.cause.code !== 'fastify/firestore/failed-add') {
           const postDocumentPath: string = ['/users', rollbackBag.userFirebaseUid, 'posts', rollbackBag.postFirebaseUid].join('/');
 
           await reply.server.firestoreService.deleteDocument(postDocumentPath);
-          await reply.server.storageService.setImageListPostDelete(rollbackBag.userFirebaseUid, rollbackBag.postFirebaseUid);
+          await reply.server.storageService.setImageListMovePostToTemp(rollbackBag.postFirebaseUid, rollbackBag.markdownImageList);
         }
 
         /** Send error */

@@ -7,7 +7,9 @@ declare module 'fastify' {
   interface FastifyInstance {
     storage: Bucket,
     storageService: {
-      setImageListTempMove: (postFirebaseUid: string, imageListUrl: string[]) => Promise<string[]>
+      setImageListMove: (source: string, destination: string) => Promise<string>,
+      setImageListMoveTempToPost: (postFirebaseUid: string, imageListUrl: string[]) => Promise<string[]>
+      setImageListMovePostToTemp: (postFirebaseUid: string, imageListUrl: string[]) => Promise<string[]>
       getImageListPost: (userFirebaseUid: string, postFirebaseUid: string) => Promise<string[]>
       setImageListPostDelete: (userFirebaseUid: string, postFirebaseUid: string) => Promise<string[]>
       setImageListPostUpdate: (userFirebaseUid: string, postFirebaseUid: string, imageListUrl: string[]) => Promise<string[]>

@@ -11,7 +11,14 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
   fastifyInstance.decorate('storage', getStorage().bucket(storageConfig.bucket));
 
   fastifyInstance.decorate('storageService', {
-    setImageListTempMove: (postFirebaseUid: string, imageListUrl: string[]): Promise<string[]> => {
+    setImageListMove: async (source: string, destination: string): Promise<string> => {
+      return fastifyInstance.storage
+        .file(source)
+        .move(destination)
+        .then((moveResponse: MoveResponse) => moveResponse.shift() as File)
+        .then((file: File) => String(file.id));
+    },
+    setImageListMoveTempToPost: (postFirebaseUid: string, imageListUrl: string[]): Promise<string[]> => {
       const postBucketPath: string = ['posts', postFirebaseUid].join('/');
 
       return Promise.all(
@@ -19,11 +26,19 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
           const source: string = decodeURIComponent(imageUrl);
           const destination: string = decodeURIComponent(source.replace('temp', postBucketPath));
 
-          return fastifyInstance.storage
-            .file(source)
-            .move(destination)
-            .then((moveResponse: MoveResponse) => moveResponse.shift() as File)
-            .then((file: File) => String(file.id));
+          return fastifyInstance.storageService.setImageListMove(source, destination);
+        })
+      );
+    },
+    setImageListMovePostToTemp: (postFirebaseUid: string, imageListUrl: string[]): Promise<string[]> => {
+      const postBucketPath: string = ['posts', postFirebaseUid].join('/');
+
+      return Promise.all(
+        imageListUrl.map(async (imageUrl: string): Promise<string> => {
+          const source: string = decodeURIComponent(imageUrl);
+          const destination: string = decodeURIComponent(source.replace(postBucketPath, 'temp'));
+
+          return fastifyInstance.storageService.setImageListMove(source, destination);
         })
       );
     },
