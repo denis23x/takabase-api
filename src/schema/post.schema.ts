@@ -19,12 +19,6 @@ export const postSchema: Record<string, any> = {
     markdown: {
       type: 'string'
     },
-    markdownImageList: {
-      type: 'array',
-      items: {
-        type: 'string'
-      }
-    },
     image: {
       type: 'string',
       nullable: true

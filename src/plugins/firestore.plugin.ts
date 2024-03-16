@@ -2,13 +2,23 @@
 
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { getFirestore, Firestore, DocumentReference } from 'firebase-admin/firestore';
+import { getFirestore, DocumentReference, WriteResult } from 'firebase-admin/firestore';
 
 const firestorePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
-  fastifyInstance.decorate('firestore', {
-    getFirestore: (): Firestore => getFirestore(fastifyInstance.firebase.getApp()),
-    getDocReference: (documentPath: string): DocumentReference => {
-      return fastifyInstance.firestore.getFirestore().doc(documentPath);
+  fastifyInstance.decorate('firestore', getFirestore(fastifyInstance.firebase));
+
+  fastifyInstance.decorate('firestoreService', {
+    addDocument: (collectionPath: string, documentData: any): Promise<DocumentReference> => {
+      return fastifyInstance.firestore.collection(collectionPath).add(documentData);
+    },
+    getDocumentReference: (documentPath: string): DocumentReference => {
+      return fastifyInstance.firestore.doc(documentPath);
+    },
+    updateDocument: (documentPath: string, documentData: any): Promise<WriteResult> => {
+      return fastifyInstance.firestore.doc(documentPath).update(documentData);
+    },
+    deleteDocument: (documentPath: string): Promise<WriteResult> => {
+      return fastifyInstance.firestore.doc(documentPath).delete();
     }
   });
 });

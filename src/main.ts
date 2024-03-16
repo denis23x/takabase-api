@@ -22,6 +22,7 @@ import { rateLimitConfig } from './config/rate-limit.config';
 import firebasePlugin from './plugins/firebase.plugin';
 import firestorePlugin from './plugins/firestore.plugin';
 import jwtPlugin from './plugins/jwt.plugin';
+import markdownPlugin from './plugins/markdown.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
 import storagePlugin from './plugins/storage.plugin';
 
@@ -67,6 +68,7 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(firebasePlugin);
   await fastifyInstance.register(firestorePlugin);
   await fastifyInstance.register(jwtPlugin);
+  await fastifyInstance.register(markdownPlugin);
   await fastifyInstance.register(prismaPlugin);
   await fastifyInstance.register(storagePlugin);
 

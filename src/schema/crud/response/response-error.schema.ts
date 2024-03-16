@@ -7,6 +7,9 @@ export const responseErrorSchema: Record<string, any> = {
     error: {
       type: 'string'
     },
+    code: {
+      type: 'string'
+    },
     message: {
       type: 'string'
     },
