@@ -74,9 +74,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         /** Add empty Firestore document */
 
         const userFirebaseUid: string = request.user.firebaseUid;
-        const postCollectionPath: string = ['/users', userFirebaseUid, 'posts'].join('/');
+        const userTemp: string = ['users', userFirebaseUid, 'temp'].join('/');
+        const postPath: string = ['users', userFirebaseUid, 'posts'].join('/');
         const postDocumentReference: DocumentReference = await request.server.firestoreService
-          .addDocument(postCollectionPath, {})
+          .addDocument(postPath, {})
           .catch(() => {
             throw new Error('fastify/firestore/failed-add-post');
           });
@@ -95,20 +96,20 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         const markdownImageListBody: string[] = request.server.markdownService.getImageList(postMarkdown);
         const markdownImageListTemp: string[] = request.server.markdownService.getImageListTemp(markdownImageListBody);
         const markdownImageListPost: string[] = await request.server.storageService
-          .setImageListMoveTempToPost(postFirebaseUid, markdownImageListTemp)
+          .setImageListMoveTo(markdownImageListTemp, postDocumentReference.path)
           .catch(() => {
             throw new Error('fastify/storage/failed-move-temp-image-to-post');
           });
 
-        /** Update empty Firestore document */
-
-        const markdownImageList: string[] = markdownImageListPost.map((imageUrl: string) => decodeURIComponent(imageUrl));
-
         //! Storage files rollback
 
         transaction.rollbackPostStorage = async (): Promise<void> => {
-          await request.server.storageService.setImageListMovePostToTemp(postFirebaseUid, markdownImageList);
+          await request.server.storageService.setImageListMoveTo(markdownImageListPost, userTemp);
         };
+
+        /** Update empty Firestore document */
+
+        const markdownImageList: string[] = markdownImageListPost.map((imageUrl: string) => decodeURIComponent(imageUrl));
 
         // @ts-ignore
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

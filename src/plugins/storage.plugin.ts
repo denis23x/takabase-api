@@ -5,42 +5,35 @@ import { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { MoveResponse, File, GetFilesResponse, GetFilesOptions } from '@google-cloud/storage';
 import { storageConfig } from '../config/storage.config';
 import { getStorage } from 'firebase-admin/storage';
+import { parse, ParsedPath } from 'path';
 
 // prettier-ignore
 const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('storage', getStorage().bucket(storageConfig.bucket));
 
   fastifyInstance.decorate('storageService', {
-    setImageListMove: async (source: string, destination: string): Promise<string> => {
-      return fastifyInstance.storage
-        .file(source)
-        .move(destination)
-        .then((moveResponse: MoveResponse) => moveResponse.shift() as File)
-        .then((file: File) => String(file.id));
-    },
-    setImageListMoveTempToPost: (postFirebaseUid: string, imageListUrl: string[] = []): Promise<string[]> => {
-      const postBucketPath: string = ['posts', postFirebaseUid].join('/');
+    setImageListMoveTo: async (imageList: string[] = [], moveTo: string): Promise<string[]> => {
+      const listMoveTo: Promise<string>[] = imageList.map(async (imageUrl: string) => {
+        const source: string = decodeURIComponent(imageUrl);
+        const parsedPath: ParsedPath = parse(source);
+        const destination: string = decodeURIComponent([moveTo, parsedPath.base].join('/'));
 
-      return Promise.all(
-        imageListUrl.map(async (imageUrl: string): Promise<string> => {
-          const source: string = decodeURIComponent(imageUrl);
-          const destination: string = decodeURIComponent(source.replace('temp', postBucketPath));
+        return fastifyInstance.storage
+          .file(source)
+          .move(destination)
+          .then((moveResponse: MoveResponse) => moveResponse.shift() as File)
+          .then((file: File) => String(file.id));
+      });
 
-          return fastifyInstance.storageService.setImageListMove(source, destination);
-        })
-      );
-    },
-    setImageListMovePostToTemp: (postFirebaseUid: string, imageListUrl: string[] = []): Promise<string[]> => {
-      const postBucketPath: string = ['posts', postFirebaseUid].join('/');
+      return Promise.allSettled(listMoveTo).then((promiseSettledResult: PromiseSettledResult<string>[]) => {
+        // TODO: Handle rejected ..
+        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const rejected: PromiseRejectedResult[] = promiseSettledResult.filter((promise: PromiseSettledResult<string>) => promise.status === 'rejected') as PromiseRejectedResult[];
+        const fulfilled: PromiseFulfilledResult<string>[] = promiseSettledResult.filter((promise: PromiseSettledResult<string>) => promise.status === 'fulfilled') as PromiseFulfilledResult<string>[];
 
-      return Promise.all(
-        imageListUrl.map(async (imageUrl: string): Promise<string> => {
-          const source: string = decodeURIComponent(imageUrl);
-          const destination: string = decodeURIComponent(source.replace(postBucketPath, 'temp'));
-
-          return fastifyInstance.storageService.setImageListMove(source, destination);
-        })
-      );
+        return fulfilled.map((promise: PromiseFulfilledResult<string>) => promise.value);
+      });
     },
     getImageListPost: async (userFirebaseUid: string, postFirebaseUid: string): Promise<string[]> => {
       const options: GetFilesOptions = {
