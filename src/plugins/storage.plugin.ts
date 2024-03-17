@@ -53,15 +53,14 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
         .then((getFilesResponse: GetFilesResponse) => getFilesResponse.flat().map((file: any) => file.name));
     },
     setImageListPostDelete: async (userFirebaseUid: string, postFirebaseUid: string): Promise<string[]> => {
-      return fastifyInstance.storageService
-        .getImageListPost(userFirebaseUid, postFirebaseUid)
-        .then(async (imageListUrl: string[]) => {
-          await Promise.all(imageListUrl.map((imageUrl: string) => {
-            return fastifyInstance.storage.file(imageUrl).delete();
-          }));
+      const imageListUrl: string[] = await fastifyInstance.storageService.getImageListPost(userFirebaseUid, postFirebaseUid);
+      const imageListUrlDelete: Promise<any>[] = imageListUrl.map(async (imageUrl: string) => {
+        return fastifyInstance.storage.file(imageUrl).delete();
+      });
 
-          return imageListUrl;
-        });
+      /** Literally delete all files by given address */
+
+      return Promise.allSettled(imageListUrlDelete).then(() => imageListUrl);
     }
   });
 });
