@@ -1,7 +1,6 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { DocumentReference, DocumentSnapshot } from 'firebase-admin/firestore';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -20,13 +19,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<any>, reply: FastifyReply): Promise<any> {
-      const docPath: string = 'users/1BXmxiwTwWfxHfJq4Cch9eVrBR83';
-      const docReference: DocumentReference = request.server.firestore.getDocReference(docPath);
-
-      await docReference.get().then((documentSnapshot: DocumentSnapshot) => {
-        console.log(documentSnapshot.data());
-      });
-
       return reply.status(200).send({
         data: {
           message: 'Hi'

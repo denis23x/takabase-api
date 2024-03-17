@@ -66,31 +66,6 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
 
           return imageListUrl;
         });
-    },
-    setImageListPostUpdate: async (userFirebaseUid: string, postFirebaseUid: string, markdownImageListUrl: string[]): Promise<string[]> => {
-      return fastifyInstance.storageService
-        .getImageListPost(userFirebaseUid, postFirebaseUid)
-        .then(async (bucketImageListUrl: string[]) => {
-          const imageListMarkdown: string[] = markdownImageListUrl.map((imageUrl: string) => decodeURIComponent(imageUrl));
-          const imageListDelete: string[] = [];
-          const imageListUpdate: string[] = [];
-
-          /** Sort imageList */
-
-          bucketImageListUrl.forEach((imageUrl: string) => {
-            if (imageListMarkdown.includes(imageUrl)) {
-              imageListUpdate.push(imageUrl)
-            } else {
-              imageListDelete.push(imageUrl)
-            }
-          });
-
-          await Promise.all(imageListDelete.map((imageUrl: string) => {
-            return fastifyInstance.storage.file(imageUrl).delete();
-          }));
-
-          return imageListUpdate;
-        });
     }
   });
 });

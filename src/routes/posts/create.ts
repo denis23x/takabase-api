@@ -78,9 +78,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         const postDocumentReference: DocumentReference = await request.server.firestoreService
           .addDocument(postCollectionPath, {})
           .catch(() => {
-            throw new Error('fastify/firestore/failed-add', {
+            throw new Error('fastify/firestore/failed-add-post', {
               cause: {
-                code: 'fastify/firestore/failed-add',
+                code: 'fastify/firestore/failed-add-post',
                 error: 'Internal Server Error',
                 statusCode: 500
               }
@@ -90,10 +90,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         const postMarkdown: string = request.body.markdown;
         const postFirebaseUid: string = postDocumentReference.id;
 
-        //? Rollback cooking
+        //! Rollback cooking
 
         transactionRollback.userFirebaseUid = userFirebaseUid;
         transactionRollback.postFirebaseUid = postFirebaseUid;
+        transactionRollback.postDocumentReference = postDocumentReference;
 
         /** Move image temp to post */
 
@@ -102,9 +103,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         const markdownImageListPost: string[] = await request.server.storageService
           .setImageListMoveTempToPost(postFirebaseUid, markdownImageListTemp)
           .catch(() => {
-            throw new Error('fastify/storage/failed-move', {
+            throw new Error('fastify/storage/failed-move-temp-image-to-post', {
               cause: {
-                code: 'fastify/storage/failed-move',
+                code: 'fastify/storage/failed-move-temp-image-to-post',
                 error: 'Internal Server Error',
                 statusCode: 500
               }
@@ -115,23 +116,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
         const markdownImageList: string[] = markdownImageListPost.map((imageUrl: string) => decodeURIComponent(imageUrl));
 
+        //! Rollback cooking
+
+        transactionRollback.markdownImageList = markdownImageList;
+
         // @ts-ignore
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const postDocumentUpdate: WriteResult = await postDocumentReference
           .update({ markdownImageList })
           .catch(() => {
-            throw new Error('fastify/firestore/failed-update', {
+            throw new Error('fastify/firestore/failed-update-post', {
               cause: {
-                code: 'fastify/firestore/failed-update',
+                code: 'fastify/firestore/failed-update-post',
                 error: 'Internal Server Error',
                 statusCode: 500
               }
             });
           });
-
-        //? Rollback cooking
-
-        transactionRollback.markdownImageList = markdownImageList;
 
         /** Create MySQL row */
 
@@ -167,9 +168,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         const post: Post = await prismaClient.post
           .create(postCreateArgs)
           .catch(() => {
-            throw new Error('fastify/prisma/failed-create', {
+            throw new Error('fastify/prisma/failed-create-post', {
               cause: {
-                code: 'fastify/prisma/failed-create',
+                code: 'fastify/prisma/failed-create-post',
                 error: 'Internal Server Error',
                 statusCode: 500
               }
@@ -187,24 +188,27 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           statusCode: 201
         });
       }).catch(async (error: any) => {
-        //! Rollback
-
-        /**
-         * If error happens after firestore added document, we have a chance of remaining junk files, so:
-         *  1. Delete document
-         *  2. Move associated files back to temp
-         */
-
-        if (error.cause.code !== 'fastify/firestore/failed-add') {
-          const postDocumentPath: string = ['/users', transactionRollback.userFirebaseUid, 'posts', transactionRollback.postFirebaseUid].join('/');
-
-          await reply.server.firestoreService.deleteDocument(postDocumentPath);
-          await reply.server.storageService.setImageListMovePostToTemp(transactionRollback.postFirebaseUid, transactionRollback.markdownImageList);
-        }
+        const setRollback = (): Promise<unknown> => {
+          switch (error.cause.code) {
+            case 'fastify/storage/failed-move-temp-image-to-post':
+            case 'fastify/firestore/failed-update-post':
+            case 'fastify/prisma/failed-create-post': {
+              return Promise.all([
+                transactionRollback.postDocumentReference.delete(),
+                reply.server.storageService.setImageListMovePostToTemp(transactionRollback.postFirebaseUid, transactionRollback.markdownImageList)
+              ]);
+            }
+            default: {
+              return new Promise((resolve) => resolve(undefined));
+            }
+          }
+        };
 
         /** Send error */
 
-        return reply.status(error.cause.statusCode).send(error.cause);
+        await setRollback().then(() => {
+          return reply.status(error.cause.statusCode).send(error.cause);
+        });
       })
     }
   });

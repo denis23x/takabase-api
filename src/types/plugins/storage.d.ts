@@ -12,7 +12,6 @@ declare module 'fastify' {
       setImageListMovePostToTemp: (postFirebaseUid: string, imageListUrl: string[]) => Promise<string[]>
       getImageListPost: (userFirebaseUid: string, postFirebaseUid: string) => Promise<string[]>
       setImageListPostDelete: (userFirebaseUid: string, postFirebaseUid: string) => Promise<string[]>
-      setImageListPostUpdate: (userFirebaseUid: string, postFirebaseUid: string, imageListUrl: string[]) => Promise<string[]>
     };
   }
 }
