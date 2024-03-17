@@ -66,7 +66,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<PostCreateDto>, reply: FastifyReply): Promise<void> {
-      const transactionOptions: any = request.server.prismaService.getTransactionOptions();
       const transaction: any = {};
 
       // prettier-ignore
@@ -160,7 +159,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         /** Response to client */
 
         return post;
-      }, transactionOptions).then((post: Post) => {
+      }).then((post: Post) => {
         //* Success
 
         return reply.status(201).send({

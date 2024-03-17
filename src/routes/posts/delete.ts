@@ -43,7 +43,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<ParamsId & QuerystringSearch>, reply: FastifyReply): Promise<any> {
-      const transactionOptions: any = request.server.prismaService.getTransactionOptions();
       const transaction: any = {};
 
       // prettier-ignore
@@ -117,28 +116,26 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         /** Response to client */
 
         return post;
-      }, transactionOptions)
-        .then((post: Post) => {
-          //* Success
+      }).then((post: Post) => {
+        //* Success
 
-          return reply.status(200).send({
-            data: post,
-            statusCode: 200
+        return reply.status(200).send({
+          data: post,
+          statusCode: 200
+        });
+      }).catch(async (error: any) => {
+        await Promise.allSettled(Object.values(transaction)
+          .map(async (rollback: any) => rollback()))
+          .then(() => {
+            //! Failed
+
+            return reply.status(500).send({
+              code: error.message,
+              error: 'Internal Server Error',
+              statusCode: 500
+            })
           });
-        })
-        .catch(async (error: any) => {
-          await Promise.allSettled(Object.values(transaction)
-            .map(async (rollback: any) => rollback()))
-            .then(() => {
-              //! Failed
-
-              return reply.status(500).send({
-                code: error.message,
-                error: 'Internal Server Error',
-                statusCode: 500
-              })
-            });
-        })
+      })
     }
   });
 }

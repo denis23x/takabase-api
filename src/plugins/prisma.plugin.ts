@@ -9,13 +9,6 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
   fastifyInstance.decorate('prisma', new PrismaClient(prismaConfig));
 
   fastifyInstance.decorate('prismaService', {
-    getTransactionOptions: (): any => {
-      return {
-        maxWait: 2000,
-        timeout: 5000,
-        isolationLevel: Prisma.TransactionIsolationLevel.Serializable
-      };
-    },
     getCategorySelect: (): Prisma.CategorySelect => ({
       id: true,
       name: true,

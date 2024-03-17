@@ -10,14 +10,29 @@ dotenv.config();
 const prismaConfigList: Record<string, Prisma.PrismaClientOptions> = {
   localhost: {
     errorFormat: 'pretty',
-    log: ['warn', 'error']
+    log: ['warn', 'error'],
+    transactionOptions: {
+      maxWait: 2000,
+      timeout: 5000,
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable
+    }
   },
   development: {
     errorFormat: 'pretty',
-    log: ['warn', 'error']
+    log: ['warn', 'error'],
+    transactionOptions: {
+      maxWait: 2000,
+      timeout: 5000,
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable
+    }
   },
   production: {
-    errorFormat: 'minimal'
+    errorFormat: 'minimal',
+    transactionOptions: {
+      maxWait: 2000,
+      timeout: 5000,
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable
+    }
   }
 };
 
