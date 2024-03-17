@@ -66,7 +66,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<PostCreateDto>, reply: FastifyReply): Promise<void> {
-      const transactionOptions: any = request.server.prisma.getTransactionOptions();
+      const transactionOptions: any = request.server.prismaService.getTransactionOptions();
       const transactionRollback: any = {};
 
       // prettier-ignore
@@ -140,7 +140,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         const postCreateArgs: Prisma.PostCreateArgs = {
           select: {
             ...request.server.prismaService.getPostSelect(),
-            markdown: true,
             category: {
               select: request.server.prismaService.getCategorySelect()
             },
@@ -149,7 +148,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
           },
           data: {
-            ...request.body,
+            name: request.body.name,
+            image: request.body.image,
+            description: request.body.description,
             firebaseUid: postFirebaseUid,
             markdown: postCreateMarkdown,
             user: {
@@ -190,6 +191,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }).catch(async (error: any) => {
         const setRollback = (): Promise<unknown> => {
           switch (error.cause.code) {
+            // case 'fastify/firestore/failed-add-post':
             case 'fastify/storage/failed-move-temp-image-to-post':
             case 'fastify/firestore/failed-update-post':
             case 'fastify/prisma/failed-create-post': {

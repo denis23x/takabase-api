@@ -67,7 +67,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<PostUpdateDto>, reply: FastifyReply): Promise<any> {
-      const transactionOptions: any = request.server.prisma.getTransactionOptions();
+      const transactionOptions: any = request.server.prismaService.getTransactionOptions();
       const transactionRollback: any = {};
 
       // prettier-ignore
@@ -106,9 +106,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         const markdownImageListUpdated: string = request.server.markdownService.getImageListRewrite(postMarkdown, markdownImageListTemp, markdownImageListMoveTempToPost);
         const markdownImageListUpdatedBody: string[] = request.server.markdownService.getImageList(markdownImageListUpdated);
         const markdownImageListUpdatedPost: string[] = request.server.markdownService.getImageListPost(markdownImageListUpdatedBody);
-        const markdownImageListUpdatedTempList: string[] = markdownImageListMoveTempToPost.filter((imageUrl: string) => !markdownImageListUpdatedPost.includes(imageUrl));
+        const markdownImageListUpdatedPostStorage: string[] = await request.server.storageService.getImageListPost(userFirebaseUid, postFirebaseUid);
+        const markdownImageListUpdatedTemp: string[] = markdownImageListUpdatedPostStorage.filter((imageStorageUrl: string) => !markdownImageListUpdatedPost.includes(encodeURIComponent(imageStorageUrl)));
         const markdownImageListUpdatedMovePostToTemp: string[] = await request.server.storageService
-          .setImageListMovePostToTemp(postFirebaseUid, markdownImageListUpdatedTempList)
+          .setImageListMovePostToTemp(postFirebaseUid, markdownImageListUpdatedTemp)
           .catch(() => {
             throw new Error('fastify/storage/failed-move-post-image-to-temp', {
               cause: {
@@ -139,7 +140,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         // @ts-ignore
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const postDocumentUpdate: WriteResult = await postDocumentReference
-          .update(postDocumentPath, { markdownImageList })
+          .update({ markdownImageList })
           .catch(() => {
             throw new Error('fastify/firestore/failed-update-post', {
               cause: {
@@ -155,7 +156,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         const postUpdateArgs: Prisma.PostUpdateArgs = {
           select: {
             ...request.server.prismaService.getPostSelect(),
-            markdown: true,
             category: {
               select: request.server.prismaService.getCategorySelect()
             },

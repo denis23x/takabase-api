@@ -18,7 +18,7 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
         .then((moveResponse: MoveResponse) => moveResponse.shift() as File)
         .then((file: File) => String(file.id));
     },
-    setImageListMoveTempToPost: (postFirebaseUid: string, imageListUrl: string[]): Promise<string[]> => {
+    setImageListMoveTempToPost: (postFirebaseUid: string, imageListUrl: string[] = []): Promise<string[]> => {
       const postBucketPath: string = ['posts', postFirebaseUid].join('/');
 
       return Promise.all(
@@ -30,7 +30,7 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
         })
       );
     },
-    setImageListMovePostToTemp: (postFirebaseUid: string, imageListUrl: string[]): Promise<string[]> => {
+    setImageListMovePostToTemp: (postFirebaseUid: string, imageListUrl: string[] = []): Promise<string[]> => {
       const postBucketPath: string = ['posts', postFirebaseUid].join('/');
 
       return Promise.all(
@@ -50,11 +50,7 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
 
       return fastifyInstance.storage
         .getFiles(options)
-        .then((getFilesResponse: GetFilesResponse) => {
-          return getFilesResponse
-            .map((fileList: any) => (fileList.shift() as File)?.name)
-            .filter((fileList: any) => !!fileList)
-        });
+        .then((getFilesResponse: GetFilesResponse) => getFilesResponse.flat().map((file: any) => file.name));
     },
     setImageListPostDelete: async (userFirebaseUid: string, postFirebaseUid: string): Promise<string[]> => {
       return fastifyInstance.storageService
