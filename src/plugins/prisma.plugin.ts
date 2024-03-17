@@ -40,7 +40,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
     }),
     getUserSelect: (): Prisma.UserSelect => ({
       id: true,
-      firebaseUid: false,
+      firebaseUid: true,
       name: true,
       description: true,
       avatar: true,

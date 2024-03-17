@@ -59,8 +59,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {
         select: {
-          ...request.server.prismaService.getUserSelect(),
-          firebaseUid: true
+          ...request.server.prismaService.getUserSelect()
         },
         where: {
           firebaseUid

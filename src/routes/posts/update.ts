@@ -126,7 +126,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
         //! Rollback cooking
 
-        transactionRollback.markdownImageListTempToPost = markdownImageListUpdatedMovePostToTemp.map((imageUrl: string) => decodeURIComponent(imageUrl));;
+        transactionRollback.markdownImageListTempToPost = markdownImageListUpdatedMovePostToTemp.map((imageUrl: string) => decodeURIComponent(imageUrl));
 
         const postDocumentPath: string = '/users/' + userFirebaseUid + '/posts/' + postFirebaseUid;
         const postDocumentReference: DocumentReference = request.server.firestoreService.getDocumentReference(postDocumentPath);
