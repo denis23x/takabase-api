@@ -67,7 +67,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<PostUpdateDto>, reply: FastifyReply): Promise<any> {
-      const transaction: any = {};
+      const rollback: any = {};
 
       // prettier-ignore
       await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<Post> => {
@@ -89,7 +89,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
         //! Storage files rollback
 
-        transaction.rollbackPostStorage = async (): Promise<void> => {
+        rollback.postStorage = async (): Promise<void> => {
           await request.server.storageService.setImageListMoveTo(markdownImageListPost, userTemp);
         };
 
@@ -113,7 +113,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
         //! Storage files rollback
 
-        transaction.rollbackTempStorage = async (): Promise<void> => {
+        rollback.tempStorage = async (): Promise<void> => {
           await request.server.storageService.setImageListMoveTo(markdownImageListUpdatedTemp, postPath);
         };
 
@@ -128,7 +128,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
         //! Firestore document rollback
 
-        transaction.rollbackPostDocument = async (): Promise<void> => {
+        rollback.postDocument = async (): Promise<void> => {
           await postDocumentReference.set(postDocumentSnapshot.data() as DocumentData)
         };
 
@@ -183,8 +183,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           statusCode: 200
         });
       }).catch(async (error: any) => {
-        await Promise.allSettled(Object.values(transaction)
-          .map(async (rollback: any) => rollback()))
+        await Promise.allSettled(Object.values(rollback)
+          .map(async (callback: any) => callback()))
           .then(() => {
             //! Failed
 

@@ -52,18 +52,16 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<CategoryCreateDto>, reply: FastifyReply): Promise<any> {
-      const categoryCreateInput: Prisma.CategoryCreateInput = {
-        ...request.body,
-        user: {
-          connect: {
-            id: Number(request.user.id)
-          }
-        }
-      };
-
       const categoryCreateArgs: Prisma.CategoryCreateArgs = {
         select: request.server.prismaService.getCategorySelect(),
-        data: categoryCreateInput
+        data: {
+          ...request.body,
+          user: {
+            connect: {
+              id: Number(request.user.id)
+            }
+          }
+        }
       };
 
       await reply.server.prisma.category
