@@ -1,9 +1,12 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Post, Prisma } from '../../database/client';
+import { Category, Post, Prisma, PrismaClient, PrismaPromise } from '../../database/client';
 import { ParamsId } from '../../types/crud/params/params-id';
 import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
+import { DocumentReference, DocumentSnapshot } from 'firebase-admin/firestore';
+import { DocumentData, WriteResult } from 'firebase-admin/lib/firestore';
+import { parse } from 'path';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -56,92 +59,153 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<ParamsId & QuerystringSearch>, reply: FastifyReply): Promise<any> {
-      const { categoryId }: Record<string, any> = request.query;
+      const rollback: any = {};
 
-      /** Delete category */
+      // prettier-ignore
+      await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<Category> => {
+        const userId: number = Number(request.user.id);
+        const userFirebaseUid: string = String(request.user.firebaseUid);
+        const userTemp: string = ['users', userFirebaseUid, 'temp'].join('/');
 
-      const setCategoryDelete = () => {
-        const categoryDeleteArgs: Prisma.CategoryDeleteArgs = {
-          where: {
-            id: Number(request.params.id),
-            userId: Number(request.user.id)
+        const categoryId: number = Number(request.params.id);
+        const categoryPostListMoveTo: number = Number(request.query.categoryId);
+        const categoryPostList = async (): Promise<PrismaPromise<any>> => {
+          if (categoryPostListMoveTo) {
+            const postUpdateManyArgs: Prisma.PostUpdateManyArgs = {
+              where: {
+                userId,
+                categoryId
+              },
+              data: {
+                categoryId: categoryPostListMoveTo
+              }
+            };
+
+            return prismaClient.post
+              .updateMany(postUpdateManyArgs)
+              .catch(() => {
+                throw new Error('fastify/prisma/failed-update-post');
+              });
+          } else {
+            /** Get post list (delete preparations) */
+
+            const postFindManyArgs: Prisma.PostFindManyArgs = {
+              select: {
+                firebaseUid: true
+              },
+              where: {
+                userId,
+                categoryId
+              }
+            };
+
+            const postList: Post[] = await prismaClient.post
+              .findMany(postFindManyArgs)
+              .catch(() => {
+                throw new Error('fastify/prisma/failed-find-many-post');
+              });
+
+            /** Delete category related post Firestore documents */
+
+            const postListDocumentReference: DocumentReference[] = postList
+              .map((post: Post) => ['users', userFirebaseUid, 'posts', post.firebaseUid].join('/'))
+              .map((documentPath: string) => request.server.firestoreService.getDocumentReference(documentPath));
+
+            const postListDocumentSnapshot: DocumentSnapshot[] = await Promise
+              .all(postListDocumentReference.map(async (documentReference: DocumentReference): Promise<DocumentSnapshot> => documentReference.get()))
+              .catch(() => {
+                throw new Error('fastify/firestore/failed-get-all-post');
+              });
+
+            //! Firestore post list documents rollback
+
+            rollback.postListDocument = async (): Promise<void> => {
+              await Promise.all(postListDocumentReference.map(async (documentReference: DocumentReference): Promise<WriteResult> => {
+                const documentSnapshot: DocumentSnapshot | undefined = postListDocumentSnapshot.find((snapshot: DocumentSnapshot) => {
+                  return snapshot.id === documentReference.id
+                });
+
+                return documentReference.set(documentSnapshot?.data() as DocumentData);
+              }));
+            };
+
+            // @ts-ignore
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const postListDocumentDelete: WriteResult[] = await Promise
+              .all(postListDocumentReference.map(async (documentReference: DocumentReference): Promise<WriteResult> => documentReference.delete()))
+              .catch(() => {
+                throw new Error('fastify/firestore/failed-delete-post');
+              });
+
+            /** Delete category related post Markdown images */
+
+            const markdownImageListDeletedPostList: string[][] = postListDocumentSnapshot
+              .map((documentSnapshot: DocumentSnapshot) => documentSnapshot.data())
+              .map((documentData: DocumentData | undefined) => documentData?.markdownImageList);
+
+            const markdownImageListDeletedTempList: string[][] = await Promise
+              .all(markdownImageListDeletedPostList.map(async (markdownImageListDeletedPost: string[]): Promise<string[]> => {
+                return request.server.storageService.setImageListMoveTo(markdownImageListDeletedPost, userTemp);
+              }))
+              .catch(() => {
+                throw new Error('fastify/storage/failed-move-post-image-to-temp');
+              });
+
+            //! Storage post list files rollback
+
+            rollback.tempListStorage = async (): Promise<void> => {
+              await Promise.all(markdownImageListDeletedTempList.map(async (markdownImageListDeletedTemp: string[], i: number): Promise<string[]> => {
+                return request.server.storageService.setImageListMoveTo(markdownImageListDeletedTemp, parse(markdownImageListDeletedPostList[i][0]).dir);
+              }));
+            };
+
+            /** Delete category related post list */
+
+            const postDeleteManyArgs: Prisma.PostDeleteManyArgs = {
+              where: {
+                userId,
+                categoryId
+              }
+            };
+
+            return prismaClient.post.deleteMany(postDeleteManyArgs);
           }
-        };
-
-        return reply.server.prisma.category.delete(categoryDeleteArgs);
-      };
-
-      /** Delete category related posts */
-
-      const setCategoryPostListDelete = () => {
-        const postDeleteManyArgs: Prisma.PostDeleteManyArgs = {
-          where: {
-            userId: Number(request.user.id),
-            categoryId: Number(request.params.id)
-          }
-        };
-
-        return reply.server.prisma.post.deleteMany(postDeleteManyArgs);
-      };
-
-      /** Transfer category related posts to another category */
-
-      const setCategoryPostListTransfer = () => {
-        const postUpdateManyArgs: Prisma.PostUpdateManyArgs = {
-          where: {
-            userId: Number(request.user.id),
-            categoryId: Number(request.params.id)
-          },
-          data: {
-            categoryId
-          }
-        };
-
-        return reply.server.prisma.post.updateMany(postUpdateManyArgs);
-      };
-
-      try {
-        if (categoryId) {
-          await reply.server.prisma.$transaction([setCategoryPostListTransfer(), setCategoryDelete()]);
-        } else {
-          const postFindManyArgs: Prisma.PostFindManyArgs = {
-            select: {
-              firebaseUid: true
-            },
-            where: {
-              userId: Number(request.user.id),
-              categoryId: Number(request.params.id)
-            }
-          };
-
-          /** Get all post firebaseUid before delete them */
-
-          const postList: Partial<Post>[] = await reply.server.prisma.post.findMany(postFindManyArgs);
-
-          /** Delete category related posts and category */
-
-          await reply.server.prisma.$transaction([setCategoryPostListDelete(), setCategoryDelete()]);
-
-          /** Delete markdown images */
-
-          // prettier-ignore
-          await Promise.all(postList.map((post: Partial<Post>) => {
-            const postFirebaseUid: string = String(post.firebaseUid);
-            const userFirebaseUid: string = String(request.user.firebaseUid);
-
-            return request.server.storageService.setImageListPostDelete(userFirebaseUid, postFirebaseUid);
-          }));
         }
 
+        /** Post handler (update or delete) */
+
+        await categoryPostList();
+
+        /** Delete category */
+
+        const categoryDeleteArgs: Prisma.CategoryDeleteArgs = {
+          where: {
+            id: categoryId,
+            userId
+          }
+        };
+
+        return prismaClient.category.delete(categoryDeleteArgs);
+      }).then((category: Category) => {
+        //* Success
+
         return reply.status(200).send({
-          data: {
-            message: 'Category successfully deleted'
-          },
+          data: category,
           statusCode: 200
         });
-      } catch (error: any) {
-        return reply.server.prismaService.setError(reply, error);
-      }
+      }).catch(async (error: any) => {
+        await Promise.allSettled(Object.values(rollback)
+          .map(async (callback: any) => callback()))
+          .then(() => {
+            //! Failed
+
+            return reply.status(500).send({
+              code: error.message,
+              error: 'Internal Server Error',
+              statusCode: 500
+            });
+          });
+      })
     }
   });
 }
