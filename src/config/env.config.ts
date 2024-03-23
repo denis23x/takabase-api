@@ -22,6 +22,10 @@ export const envConfig: FastifyEnvOptions = {
         type: 'string',
         default: 'localhost'
       },
+      APP_SEED: {
+        type: 'string',
+        default: 'https://firebasestorage.googleapis.com/v0/b/.../o/seed'
+      },
       JWT_SECRET: {
         type: 'string',
         default: 'secret'

@@ -6,6 +6,7 @@ declare module 'fastify' {
       NODE_ENV: string;
       APP_PORT: number;
       APP_HOST: string;
+      APP_SEED: string;
       JWT_SECRET: string;
       JWT_TTL: number;
       MYSQL_ROOT_PASSWORD: string;

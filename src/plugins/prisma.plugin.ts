@@ -4,6 +4,7 @@ import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyPluginAsync, FastifyReply } from 'fastify';
 import { Prisma, PrismaClient } from '../database/client';
 import { prismaConfig } from '../config/prisma.config';
+import { ResponseError } from '../types/crud/response/response-error.schema';
 
 const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('prisma', new PrismaClient(prismaConfig));
@@ -122,6 +123,44 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
       }));
 
       return anyManyArgsOrderBy;
+    },
+    getError: (error: Prisma.PrismaClientKnownRequestError): ResponseError | null => {
+      const prismaErrorReference: string = 'https://prisma.io/docs/reference/api-reference/error-reference';
+      const prismaErrorMessage: string = [prismaErrorReference, error.code?.toLowerCase()].join('#');
+
+      switch (error.code) {
+        case 'P2034': {
+          //! Transaction write conflict or deadlock (no reply, should retry)
+
+          return null;
+        }
+        case 'P2028': {
+          //! Transaction timeout (no reply, should retry)
+
+          return null;
+        }
+        case 'P2025': {
+          return {
+            error: 'Not found',
+            message: prismaErrorMessage,
+            statusCode: 404
+          };
+        }
+        case 'P2002': {
+          return {
+            error: 'Bad Request',
+            message: prismaErrorMessage,
+            statusCode: 400
+          };
+        }
+        default: {
+          return {
+            error: 'Internal Server Error',
+            message: prismaErrorMessage,
+            statusCode: 500
+          };
+        }
+      }
     },
     setError: (reply: FastifyReply, error: Prisma.PrismaClientKnownRequestError): FastifyReply => {
       const prismaErrorReference: string = 'https://prisma.io/docs/reference/api-reference/error-reference';
