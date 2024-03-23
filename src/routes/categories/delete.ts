@@ -119,6 +119,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       let requestRetries: number = 0;
       let requestRollback: any = undefined;
 
+      //? Transaction
+
       while (requestRetries < MAX_RETRIES) {
         try {
           // prettier-ignore
