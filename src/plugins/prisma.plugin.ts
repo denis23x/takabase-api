@@ -162,6 +162,26 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
         }
       }
     },
+    getErrorTransaction: (error: any, retriesLimitReached: boolean): ResponseError | null => {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (retriesLimitReached) {
+          return {
+            message: 'Something unexpected occurred. Please try again later',
+            error: 'Internal Server Error',
+            statusCode: 500
+          };
+        }
+
+        return fastifyInstance.prismaService.getError(error);
+      } else {
+        return {
+          code: error.message,
+          message: 'Fastify application error',
+          error: 'Internal Server Error',
+          statusCode: 500
+        };
+      }
+    },
     setError: (reply: FastifyReply, error: Prisma.PrismaClientKnownRequestError): FastifyReply => {
       const prismaErrorReference: string = 'https://prisma.io/docs/reference/api-reference/error-reference';
       const prismaErrorMessage: string = [prismaErrorReference, error.code?.toLowerCase()].join('#');

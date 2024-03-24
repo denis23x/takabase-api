@@ -56,9 +56,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       let requestRetries: number = 0;
       let requestRollback: any = undefined;
 
+      // prettier-ignore
       while (requestRetries < MAX_RETRIES) {
         try {
-          // prettier-ignore
           await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<Post> => {
             requestRollback = {};
 
@@ -133,39 +133,21 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
           break;
         } catch (error: any) {
+          requestRetries++;
+
           //! Rollback
 
-          // prettier-ignore
-          await Promise.allSettled(Object.values(requestRollback).map(async (callback: any): Promise<any> => callback()));
+          await Promise.allSettled(Object.values(requestRollback).map(async (rollback: any): Promise<any> => rollback()));
 
           //! Send error or retry
 
-          if (error instanceof Prisma.PrismaClientKnownRequestError) {
-            const responseError: ResponseError | null = reply.server.prismaService.getError(error);
+          const responseError: ResponseError | null = reply.server.prismaService.getErrorTransaction(error, requestRetries >= MAX_RETRIES);
 
-            if (responseError) {
-              return reply.status(responseError.statusCode).send(responseError);
-            }
-
-            requestRetries++;
-          } else {
-            return reply.status(500).send({
-              code: error.message,
-              message: 'Fastify application error',
-              error: 'Internal Server Error',
-              statusCode: 500
-            });
+          if (responseError) {
+            return reply.status(responseError.statusCode).send(responseError);
           }
         }
       }
-
-      //! Tragedy
-
-      return reply.status(500).send({
-        message: 'Something unexpected occurred. Please try again later',
-        error: 'Internal Server Error',
-        statusCode: 500
-      });
     }
   });
 }

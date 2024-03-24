@@ -15,6 +15,7 @@ declare module 'fastify' {
       setScope: (anyManyArgs: any, scope: string[]) => any;
       setOrderBy: (anyManyArgs: any, orderBy: string) => any;
       getError: (error: Prisma.PrismaClientKnownRequestError) => ResponseError | null;
+      getErrorTransaction: (error: any, retriesLimitReached: boolean) => ResponseError | null;
       setError: (reply: FastifyReply, error: Prisma.PrismaClientKnownRequestError) => FastifyReply | null;
     };
   }
