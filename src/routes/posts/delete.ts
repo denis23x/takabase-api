@@ -51,10 +51,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const userFirebaseUid: string = request.user.firebaseUid;
       const userTemp: string = ['users', userFirebaseUid, 'temp'].join('/');
 
+      //? Transaction
+
       let requestRetries: number = 0;
       let requestRollback: any = undefined;
-
-      //? Transaction
 
       while (requestRetries < MAX_RETRIES) {
         try {
@@ -74,12 +74,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               }
             };
 
-            const post: Post = await prismaClient.post
-              .delete(postDeleteArgs)
-              .catch(() => {
-                throw new Error('fastify/prisma/failed-delete-post');
-              });
-
+            const post: Post = await prismaClient.post.delete(postDeleteArgs);
             const postFirebaseUid: string = post.firebaseUid;
             const postPath: string = ['users', userFirebaseUid, 'posts', postFirebaseUid].join('/');
 
@@ -108,14 +103,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             /** Delete not used images */
 
-            const markdownImageListUpdatedPost: string[] = await request.server.storageService
+            const postMarkdownImageList: string[] = await request.server.storageService
               .getImageListPost(userFirebaseUid, postFirebaseUid)
               .catch(() => {
                 throw new Error('fastify/storage/failed-read-file-list');
               });
 
-            const markdownImageListUpdatedTemp: string[] = await request.server.storageService
-              .setImageListMoveTo(markdownImageListUpdatedPost, userTemp)
+            const tempMarkdownImageList: string[] = await request.server.storageService
+              .setImageListMoveTo(postMarkdownImageList, userTemp)
               .catch(() => {
                 throw new Error('fastify/storage/failed-move-post-image-to-temp');
               });
@@ -123,7 +118,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             //! Storage files rollback
 
             requestRollback.tempStorage = async (): Promise<void> => {
-              await request.server.storageService.setImageListMoveTo(markdownImageListUpdatedTemp, postPath);
+              await request.server.storageService.setImageListMoveTo(tempMarkdownImageList, postPath);
             };
 
             /** Response to client */

@@ -90,9 +90,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           }
         };
 
-        const postList: Post[] = await request.server.prisma.post.findMany(postFindManyArgs).catch(() => {
-          throw new Error('fastify/prisma/failed-find-many-post');
-        });
+        const postList: Post[] = await request.server.prisma.post.findMany(postFindManyArgs);
 
         categoryPostList.push(...postList);
 
@@ -116,10 +114,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         categoryPostListDocumentSnapshot.push(...postListDocumentSnapshot);
       }
 
+      //? Transaction
+
       let requestRetries: number = 0;
       let requestRollback: any = undefined;
-
-      //? Transaction
 
       while (requestRetries < MAX_RETRIES) {
         try {
@@ -195,11 +193,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
               // @ts-ignore
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const postList: Prisma.BatchPayload = await prismaClient.post
-                .updateMany(postUpdateManyArgs)
-                .catch(() => {
-                  throw new Error('fastify/prisma/failed-update-post');
-                });
+              const postList: Prisma.BatchPayload = await prismaClient.post.updateMany(postUpdateManyArgs);
             }
 
             /** Delete category */
