@@ -74,6 +74,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       const userFirebaseUid: string = request.user.firebaseUid;
       const userTemp: string = ['users', userFirebaseUid, 'temp'].join('/');
+
       const postMarkdown: string = String(request.body.markdown || '');
       const postFirebaseUid: string = String(request.body.firebaseUid || '');
       const postPath: string = ['users', userFirebaseUid, 'posts', postFirebaseUid].join('/');
@@ -99,7 +100,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 throw new Error('fastify/storage/failed-move-temp-image-to-post');
               });
 
-            //! Storage files rollback
+            //! Storage Markdown files rollback
 
             requestRollback.postStorage = async (): Promise<void> => {
               await request.server.storageService.setImageListMoveTo(postMarkdownImageList, userTemp);
@@ -123,7 +124,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 throw new Error('fastify/storage/failed-move-post-image-to-temp');
               });
 
-            //! Storage files rollback
+            //! Storage Markdown files rollback
 
             requestRollback.tempStorage = async (): Promise<void> => {
               await request.server.storageService.setImageListMoveTo(updatedTempMarkdownImageList, postPath);

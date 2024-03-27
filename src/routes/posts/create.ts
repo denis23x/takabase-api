@@ -71,9 +71,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       //* Common info
 
+      const userId: number = request.user.id;
       const userFirebaseUid: string = request.user.firebaseUid;
       const userTemp: string = ['users', userFirebaseUid, 'temp'].join('/');
+
       const postPath: string = ['users', userFirebaseUid, 'posts'].join('/');
+      const postImage: string | null | undefined = request.body.image;
+      const postCategoryId: number = request.body.categoryId;
+      const postMarkdown: string = request.body.markdown;
+
+      // Delete for more adjustable Prisma Data
+
+      delete request.body.categoryId;
 
       //? Transaction
 
@@ -94,48 +103,72 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 throw new Error('fastify/firestore/failed-add-post');
               });
 
-            const postMarkdown: string = request.body.markdown;
-            const postFirebaseUid: string = postDocumentReference.id;
-
             //! Firestore document rollback
 
             requestRollback.postDocument = async (): Promise<void> => {
               await postDocumentReference.delete();
             };
 
-            /** Move image temp to post */
+            /** Move Post Image from temp to post */
+
+            if (postImage) {
+              const tempImageList: string[] = request.server.markdownService.getImageListSubstringUrl([postImage]);
+              const postImageList: string[] = await request.server.storageService
+                .setImageListMoveTo(tempImageList, postDocumentReference.path)
+                .catch(() => {
+                  throw new Error('fastify/storage/failed-move-temp-image-to-post');
+                });
+
+              //! Storage Post image rollback
+
+              requestRollback.postImageList = async (): Promise<void> => {
+                await request.server.storageService.setImageListMoveTo(postImageList, userTemp);
+              };
+
+              //* Set
+
+              request.body.image = request.server.markdownService.getImageListRewrite(postImage, tempImageList, postImageList);
+            }
+
+            /** Move Markdown image temp to post */
 
             const bodyMarkdownImageList: string[] = request.server.markdownService.getImageList(postMarkdown);
             const tempMarkdownImageList: string[] = request.server.markdownService.getImageListTemp(bodyMarkdownImageList);
-            const postMarkdownImageList: string[] = await request.server.storageService
-              .setImageListMoveTo(tempMarkdownImageList, postDocumentReference.path)
-              .catch(() => {
-                throw new Error('fastify/storage/failed-move-temp-image-to-post');
-              });
 
-            //! Storage files rollback
+            if (tempMarkdownImageList.length) {
+              const postMarkdownImageList: string[] = await request.server.storageService
+                .setImageListMoveTo(tempMarkdownImageList, postDocumentReference.path)
+                .catch(() => {
+                  throw new Error('fastify/storage/failed-move-temp-image-to-post');
+                });
 
-            requestRollback.postStorage = async (): Promise<void> => {
-              await request.server.storageService.setImageListMoveTo(postMarkdownImageList, userTemp);
-            };
+              //! Storage Markdown images rollback
 
-            /** Update empty Firestore document */
+              requestRollback.postMarkdownImageList = async (): Promise<void> => {
+                await request.server.storageService.setImageListMoveTo(postMarkdownImageList, userTemp);
+              };
 
-            const postDocumentUpdateDto: any = {
-              markdownImageList: postMarkdownImageList.map((imageUrl: string) => decodeURIComponent(imageUrl))
-            };
+              //* Set
 
-            // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const postDocumentUpdate: WriteResult = await postDocumentReference
-              .update(postDocumentUpdateDto)
-              .catch(() => {
-                throw new Error('fastify/firestore/failed-update-post');
-              });
+              request.body.markdown = request.server.markdownService.getImageListRewrite(postMarkdown, tempMarkdownImageList, postMarkdownImageList);
+
+              /** Update empty Firestore document */
+
+              const postDocumentUpdateDto: any = {
+                markdownImageList: postMarkdownImageList.map((imageUrl: string) => decodeURIComponent(imageUrl))
+              };
+
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const postDocumentUpdate: WriteResult = await postDocumentReference
+                .update(postDocumentUpdateDto)
+                .catch(() => {
+                  throw new Error('fastify/firestore/failed-update-post');
+                });
+            }
 
             /** Create MySQL row */
 
-            const postCreateMarkdown: string = request.server.markdownService.getImageListRewrite(postMarkdown, tempMarkdownImageList, postMarkdownImageList);
             const postCreateArgs: Prisma.PostCreateArgs = {
               select: {
                 ...request.server.prismaService.getPostSelect(),
@@ -147,19 +180,16 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 }
               },
               data: {
-                name: request.body.name,
-                image: request.body.image,
-                description: request.body.description,
-                firebaseUid: postFirebaseUid,
-                markdown: postCreateMarkdown,
+                ...request.body,
+                firebaseUid: postDocumentReference.id,
                 user: {
                   connect: {
-                    id: Number(request.user.id)
+                    id: userId
                   }
                 },
                 category: {
                   connect: {
-                    id: Number(request.body.categoryId)
+                    id: postCategoryId
                   }
                 }
               }
