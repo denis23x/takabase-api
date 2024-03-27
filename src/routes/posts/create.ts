@@ -109,7 +109,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               await postDocumentReference.delete();
             };
 
-            /** Move Post Image from temp to post */
+            /** Move Post image to post (save) */
 
             if (postImage) {
               const tempImageList: string[] = request.server.markdownService.getImageListSubstringUrl([postImage]);
@@ -131,7 +131,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               request.body.image = request.server.markdownService.getImageListRewrite(postImage, tempImageList, postImageList);
             }
 
-            /** Move Markdown image temp to post */
+            /** Move Markdown image to post (save) */
 
             const bodyMarkdownList: string[] = request.server.markdownService.getImageList(postMarkdown);
             const tempMarkdownList: string[] = request.server.markdownService.getImageListTemp(bodyMarkdownList);

@@ -66,7 +66,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             const postDeleteArgs: Prisma.PostDeleteArgs = {
               select: {
-                ...request.server.prismaService.getPostSelect(),
+                firebaseUid: true,
+                image: true
               },
               where: {
                 userId: Number(request.user.id),
@@ -101,27 +102,45 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 throw new Error('fastify/firestore/failed-delete-post');
               });
 
-            /** Delete not used images */
+            /** Move Post image to temp (delete) */
 
-            const postMarkdownImageList: string[] = await request.server.storageService
-              .getImageListPost(userFirebaseUid, postFirebaseUid)
+            if (post.image) {
+              const postImageListDestination: string[] = request.server.markdownService.getImageListSubstringUrl([post.image]);
+              const tempImageList: string[] = await request.server.storageService
+                .setImageListMoveTo(postImageListDestination, userTemp)
+                .catch(() => {
+                  throw new Error('fastify/storage/failed-move-post-image-to-temp');
+                });
+
+              //! Storage Post image rollback
+
+              requestRollback.tempImageList = async (): Promise<void> => {
+                await request.server.storageService.setImageListMoveTo(tempImageList, postPath);
+              };
+            }
+
+            /** Move Markdown image to temp (delete) */
+
+            const postMarkdownListDestination: string = [postPath, 'markdown'].join('/');
+            const postMarkdownList: string[] = await request.server.storageService
+              .getImageList(postMarkdownListDestination)
               .catch(() => {
                 throw new Error('fastify/storage/failed-read-file-list');
               });
 
-            const tempMarkdownImageList: string[] = await request.server.storageService
-              .setImageListMoveTo(postMarkdownImageList, userTemp)
-              .catch(() => {
-                throw new Error('fastify/storage/failed-move-post-image-to-temp');
-              });
+            if (postMarkdownList.length) {
+              const tempMarkdownList: string[] = await request.server.storageService
+                .setImageListMoveTo(postMarkdownList, userTemp)
+                .catch(() => {
+                  throw new Error('fastify/storage/failed-move-post-image-to-temp');
+                });
 
-            //! Storage Markdown files rollback
+              //! Storage Markdown images rollback
 
-            requestRollback.tempStorage = async (): Promise<void> => {
-              await request.server.storageService.setImageListMoveTo(tempMarkdownImageList, postPath);
-            };
-
-            /** Response to client */
+              requestRollback.tempMarkdownList = async (): Promise<void> => {
+                await request.server.storageService.setImageListMoveTo(tempMarkdownList, postPath);
+              };
+            }
 
             return post;
           }).then((post: Post) => {
