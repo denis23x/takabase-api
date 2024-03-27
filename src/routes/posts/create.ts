@@ -113,8 +113,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             if (postImage) {
               const tempImageList: string[] = request.server.markdownService.getImageListSubstringUrl([postImage]);
+              const postImageListDestination: string = postDocumentReference.path;
               const postImageList: string[] = await request.server.storageService
-                .setImageListMoveTo(tempImageList, postDocumentReference.path)
+                .setImageListMoveTo(tempImageList, postImageListDestination)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-temp-image-to-post');
                 });
@@ -132,30 +133,31 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             /** Move Markdown image temp to post */
 
-            const bodyMarkdownImageList: string[] = request.server.markdownService.getImageList(postMarkdown);
-            const tempMarkdownImageList: string[] = request.server.markdownService.getImageListTemp(bodyMarkdownImageList);
+            const bodyMarkdownList: string[] = request.server.markdownService.getImageList(postMarkdown);
+            const tempMarkdownList: string[] = request.server.markdownService.getImageListTemp(bodyMarkdownList);
 
-            if (tempMarkdownImageList.length) {
-              const postMarkdownImageList: string[] = await request.server.storageService
-                .setImageListMoveTo(tempMarkdownImageList, postDocumentReference.path)
+            if (tempMarkdownList.length) {
+              const postMarkdownListDestination: string = [postDocumentReference.path, 'markdown'].join('/');
+              const postMarkdownList: string[] = await request.server.storageService
+                .setImageListMoveTo(tempMarkdownList, postMarkdownListDestination)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-temp-image-to-post');
                 });
 
               //! Storage Markdown images rollback
 
-              requestRollback.postMarkdownImageList = async (): Promise<void> => {
-                await request.server.storageService.setImageListMoveTo(postMarkdownImageList, userTemp);
+              requestRollback.postMarkdownList = async (): Promise<void> => {
+                await request.server.storageService.setImageListMoveTo(postMarkdownList, userTemp);
               };
 
               //* Set
 
-              request.body.markdown = request.server.markdownService.getImageListRewrite(postMarkdown, tempMarkdownImageList, postMarkdownImageList);
+              request.body.markdown = request.server.markdownService.getImageListRewrite(postMarkdown, tempMarkdownList, postMarkdownList);
 
               /** Update empty Firestore document */
 
               const postDocumentUpdateDto: any = {
-                markdownImageList: postMarkdownImageList.map((imageUrl: string) => decodeURIComponent(imageUrl))
+                markdown: postMarkdownList.map((imageUrl: string) => decodeURIComponent(imageUrl))
               };
 
               // @ts-ignore
