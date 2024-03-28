@@ -72,12 +72,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       //* Common info
 
+      const userId: number = request.user.id;
       const userFirebaseUid: string = request.user.firebaseUid;
       const userTemp: string = ['users', userFirebaseUid, 'temp'].join('/');
 
-      const postMarkdown: string = String(request.body.markdown || '');
+      const postId: number = request.params.id;
       const postFirebaseUid: string = String(request.body.firebaseUid || '');
       const postPath: string = ['users', userFirebaseUid, 'posts', postFirebaseUid].join('/');
+      const postImage: string | null | undefined = request.body.image as any;
+      const postMarkdown: string = String(request.body.markdown || '');
 
       //? Transaction
 
@@ -90,45 +93,63 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<Post> => {
             requestRollback = {};
 
-            /** Move image temp to post */
+            /** Move Post image to post (save) */
 
-            const bodyMarkdownImageList: string[] = request.server.markdownService.getImageList(postMarkdown);
-            const tempMarkdownImageList: string[] = request.server.markdownService.getImageListTemp(bodyMarkdownImageList);
-            const postMarkdownImageList: string[] = await request.server.storageService
-              .setImageListMoveTo(tempMarkdownImageList, postPath)
-              .catch(() => {
-                throw new Error('fastify/storage/failed-move-temp-image-to-post');
-              });
+            if (postImage) {
+              // TODO: Save
+            } else {
+              // TODO: Delete
+            }
 
-            //! Storage Markdown files rollback
+            /** Move Markdown image to post (save) */
 
-            requestRollback.postStorage = async (): Promise<void> => {
-              await request.server.storageService.setImageListMoveTo(postMarkdownImageList, userTemp);
-            };
+            const bodyMarkdownList: string[] = request.server.markdownService.getImageList(postMarkdown);
+            const tempMarkdownList: string[] = request.server.markdownService.getImageListTemp(bodyMarkdownList);
 
-            /** Delete not used images */
+            if (tempMarkdownList.length) {
+              const postMarkdownListDestination: string = [postPath, 'markdown'].join('/');
+              const postMarkdownList: string[] = await request.server.storageService
+                .setImageListMoveTo(tempMarkdownList, postMarkdownListDestination)
+                .catch(() => {
+                  throw new Error('fastify/storage/failed-move-temp-image-to-post');
+                });
 
-            const updatedPostMarkdown: string = request.server.markdownService.getImageListRewrite(postMarkdown, tempMarkdownImageList, postMarkdownImageList);
-            const updatedBodyMarkdownImageList: string[] = request.server.markdownService.getImageList(updatedPostMarkdown);
-            const updatedPostMarkdownImageList: string[] = request.server.markdownService.getImageListPost(updatedBodyMarkdownImageList);
-            const updatedPostMarkdownImageListUnused: string[] = await request.server.storageService
-              .getImageListPost(userFirebaseUid, postFirebaseUid)
-              .then((imageList: string[]) => imageList.filter((imageUrl: string) => !updatedPostMarkdownImageList.includes(encodeURIComponent(imageUrl))))
+              //! Storage Markdown images rollback
+
+              requestRollback.postMarkdownList = async (): Promise<void> => {
+                await request.server.storageService.setImageListMoveTo(postMarkdownList, userTemp);
+              };
+
+              //* Set
+
+              request.body.markdown = request.server.markdownService.getImageListRewrite(postMarkdown, tempMarkdownList, postMarkdownList);
+            }
+
+            /** Move Markdown image to temp (delete) */
+
+            const updatedPostMarkdown: string[] = request.server.markdownService.getImageList(String(request.body.markdown || ''));
+            const updatedPostMarkdownList: string[] = request.server.markdownService.getImageListPost(updatedPostMarkdown);
+            const updatedPostMarkdownListDestination: string = [postPath, 'markdown'].join('/');
+            const updatedPostMarkdownListUnused: string[] = await request.server.storageService
+              .getImageList(updatedPostMarkdownListDestination)
+              .then((imageList: string[]) => imageList.filter((imageUrl: string) => !updatedPostMarkdownList.includes(encodeURIComponent(imageUrl))))
               .catch(() => {
                 throw new Error('fastify/storage/failed-read-file-list');
               });
 
-            const updatedTempMarkdownImageList: string[] = await request.server.storageService
-              .setImageListMoveTo(updatedPostMarkdownImageListUnused, userTemp)
-              .catch(() => {
-                throw new Error('fastify/storage/failed-move-post-image-to-temp');
-              });
+            if (updatedPostMarkdownListUnused.length) {
+              const updatedTempMarkdownList: string[] = await request.server.storageService
+                .setImageListMoveTo(updatedPostMarkdownListUnused, userTemp)
+                .catch(() => {
+                  throw new Error('fastify/storage/failed-move-post-image-to-temp');
+                });
 
-            //! Storage Markdown files rollback
+              //! Storage Markdown files rollback
 
-            requestRollback.tempStorage = async (): Promise<void> => {
-              await request.server.storageService.setImageListMoveTo(updatedTempMarkdownImageList, postPath);
-            };
+              requestRollback.updatedTempMarkdownList = async (): Promise<void> => {
+                await request.server.storageService.setImageListMoveTo(updatedTempMarkdownList, postPath);
+              };
+            }
 
             /** Get related Firestore document */
 
@@ -148,7 +169,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             /** Update related Firestore document */
 
             const postDocumentUpdateDto: any = {
-              markdownImageList: updatedPostMarkdownImageList.map((imageUrl: string) => decodeURIComponent(imageUrl))
+              markdown: updatedPostMarkdownList.map((imageUrl: string) => decodeURIComponent(imageUrl))
             };
 
             // @ts-ignore
@@ -172,12 +193,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 }
               },
               where: {
-                userId: Number(request.user.id),
-                id: Number(request.params.id)
+                userId,
+                id: postId
               },
               data: {
-                ...request.body,
-                markdown: updatedPostMarkdown,
+                ...request.body
               }
             };
 
