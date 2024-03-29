@@ -48,6 +48,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       //* Common info
 
+      const userId: number = request.user.id;
       const userFirebaseUid: string = request.user.firebaseUid;
       const userTemp: string = ['users', userFirebaseUid, 'temp'].join('/');
 
@@ -70,8 +71,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 image: true
               },
               where: {
-                userId: Number(request.user.id),
-                id: Number(request.params.id)
+                userId,
+                id: request.params.id
               }
             };
 

@@ -5,6 +5,7 @@ import { Prisma, Post, PrismaClient } from '../../database/client';
 import { PostUpdateDto } from '../../types/dto/post/post-update';
 import { DocumentReference, DocumentSnapshot, DocumentData, WriteResult } from 'firebase-admin/firestore';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
+import { parse } from 'path';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -82,6 +83,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const postImage: string | null | undefined = request.body.image as any;
       const postMarkdown: string = String(request.body.markdown || '');
 
+      //* Make post updating preparations before start transaction
+
+      const postDocumentReference: DocumentReference = request.server.firestoreService.getDocumentReference(postPath);
+      const postDocumentSnapshot: DocumentSnapshot = await postDocumentReference.get().catch(() => {
+        throw new Error('fastify/firestore/failed-get-post');
+      });
+
       //? Transaction
 
       let requestRetries: number = 0;
@@ -96,9 +104,43 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             /** Move Post image to post (save) */
 
             if (postImage) {
-              // TODO: Save
+              const tempImageList: string[] = request.server.markdownService.getImageListSubstringUrl([postImage]);
+              const postImageListDestination: string = postDocumentReference.path;
+              const postImageList: string[] = await request.server.storageService
+                .setImageListMoveTo(tempImageList, postImageListDestination)
+                .catch(() => {
+                  throw new Error('fastify/storage/failed-move-temp-image-to-post');
+                });
+
+              //! Storage Post image rollback
+
+              requestRollback.postImageList = async (): Promise<void> => {
+                await request.server.storageService.setImageListMoveTo(postImageList, userTemp);
+              };
+
+              //* Set
+
+              request.body.image = request.server.markdownService.getImageListRewrite(postImage, tempImageList, postImageList);
             } else {
-              // TODO: Delete
+              const postImageListDestination: string = [postPath].join('/');
+              const postImageList: string[] = await request.server.storageService
+                .getImageList(postImageListDestination)
+                .catch(() => {
+                  throw new Error('fastify/storage/failed-read-file-list');
+                });
+
+              const tempImageListUnusedDestination: string[] = postImageList.filter((postImageList: string) => !parse(postImageList).dir.endsWith('markdown'));
+              const tempImageList: string[] = await request.server.storageService
+                .setImageListMoveTo(tempImageListUnusedDestination, userTemp)
+                .catch(() => {
+                  throw new Error('fastify/storage/failed-move-post-image-to-temp');
+                });
+
+              //! Storage Post image rollback
+
+              requestRollback.tempImageList = async (): Promise<void> => {
+                await request.server.storageService.setImageListMoveTo(tempImageList, postPath);
+              };
             }
 
             /** Move Markdown image to post (save) */
@@ -151,22 +193,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
             }
 
-            /** Get related Firestore document */
-
-            const postDocumentReference: DocumentReference = request.server.firestoreService.getDocumentReference(postPath);
-            const postDocumentSnapshot: DocumentSnapshot = await postDocumentReference
-              .get()
-              .catch(() => {
-                throw new Error('fastify/firestore/failed-get-post');
-              });
+            /** Update related Firestore document */
 
             //! Firestore document rollback
 
             requestRollback.postDocument = async (): Promise<void> => {
               await postDocumentReference.set(postDocumentSnapshot.data() as DocumentData)
             };
-
-            /** Update related Firestore document */
 
             const postDocumentUpdateDto: any = {
               markdown: updatedPostMarkdownList.map((imageUrl: string) => decodeURIComponent(imageUrl))
