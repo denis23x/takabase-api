@@ -56,7 +56,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     },
     handler: async function (request: FastifyRequest<CategoryUpdateDto>, reply: FastifyReply): Promise<any> {
       const categoryUpdateArgs: Prisma.CategoryUpdateArgs = {
-        select: request.server.prismaPlugin.getCategorySelect(),
+        select: {
+          ...request.server.prismaPlugin.getCategorySelect()
+        },
         where: {
           userId: Number(request.user.id),
           id: Number(request.params.id)

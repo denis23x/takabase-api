@@ -46,7 +46,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const { scope }: Record<string, any> = request.query;
 
       const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {
-        select: request.server.prismaPlugin.getUserSelect(),
+        select: {
+          ...request.server.prismaPlugin.getUserSelect()
+        },
         where: {
           id: Number(request.user.id)
         }

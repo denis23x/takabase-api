@@ -2,7 +2,7 @@
 
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { getFirestore, DocumentReference, WriteResult } from 'firebase-admin/firestore';
+import { getFirestore, DocumentReference } from 'firebase-admin/firestore';
 
 const firestorePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('firestore', getFirestore(fastifyInstance.firebase));
@@ -13,12 +13,6 @@ const firestorePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: 
     },
     getDocumentReference: (documentPath: string): DocumentReference => {
       return fastifyInstance.firestore.doc(documentPath);
-    },
-    updateDocument: (documentPath: string, documentData: any): Promise<WriteResult> => {
-      return fastifyInstance.firestore.doc(documentPath).update(documentData);
-    },
-    deleteDocument: (documentPath: string): Promise<WriteResult> => {
-      return fastifyInstance.firestore.doc(documentPath).delete();
     }
   });
 });

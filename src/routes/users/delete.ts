@@ -44,7 +44,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     },
     handler: async function (request: FastifyRequest<ParamsId & QuerystringSearch>, reply: FastifyReply): Promise<any> {
       const userDeleteArgs: Prisma.UserDeleteArgs = {
-        select: request.server.prismaPlugin.getUserSelect(),
+        select: {
+          ...request.server.prismaPlugin.getUserSelect()
+        },
         where: {
           id: Number(request.user.id)
         }

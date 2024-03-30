@@ -58,13 +58,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<UserCreateDto>, reply: FastifyReply): Promise<any> {
-      const userCreateInput: Prisma.UserCreateInput = {
-        ...request.body
-      };
-
       const userCreateArgs: Prisma.UserCreateArgs = {
-        select: request.server.prismaPlugin.getUserSelect(),
-        data: userCreateInput
+        select: {
+          ...request.server.prismaPlugin.getUserSelect()
+        },
+        data: {
+          ...request.body
+        }
       };
 
       await reply.server.prisma.user

@@ -82,14 +82,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           if (error.code === 'P2025' && error.name === 'NotFoundError') {
             // TODO: add check in firebase database for provided firebaseUid
 
-            const userCreateInput: Prisma.UserCreateInput = {
-              name: randomUUID(),
-              firebaseUid: firebaseUid
-            };
-
             const userCreateArgs: Prisma.UserCreateArgs = {
-              select: request.server.prismaPlugin.getUserSelect(),
-              data: userCreateInput
+              select: {
+                ...request.server.prismaPlugin.getUserSelect()
+              },
+              data: {
+                name: randomUUID(),
+                firebaseUid: firebaseUid
+              }
             };
 
             return reply.server.prisma.user
