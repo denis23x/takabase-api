@@ -77,7 +77,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
         const postFindManyArgs: Prisma.PostFindManyArgs = {
           select: {
-            firebaseUid: true
+            firebaseUid: true,
+            image: true
           },
           where: {
             userId,
@@ -121,7 +122,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             requestRollback = {};
 
             if (!categoryPostListMoveTo) {
-              /** Delete category related post Firestore documents */
+              /** Delete category related Post Firestore documents */
+
+              //! Firestore category related Post documents rollback
 
               requestRollback.postListDocument = async (): Promise<void> => {
                 await Promise.all(categoryPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<WriteResult> => {
@@ -141,27 +144,55 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                   throw new Error('fastify/firestore/failed-delete-post');
                 });
 
-              /** Delete category related post Markdown images */
+              /** Move category related Post image to temp (delete) */
 
-              const postListMarkdownImageList: string[][] = categoryPostListDocumentSnapshot
+              const postListImageList: string[] = categoryPostList
+                .filter((post: Post) => post.image)
+                .map((post: Post) => post.image);
+
+              if (postListImageList.length) {
+                const postListImageListDestination: string[] = request.server.markdownPlugin.getImageListSubstringUrl(postListImageList);
+                const tempListImageList: string[] = await request.server.storagePlugin
+                  .setImageListMoveTo(postListImageListDestination, userTemp)
+                  .catch(() => {
+                    throw new Error('fastify/storage/failed-move-post-image-to-temp');
+                  });
+
+                //! Storage category related Post image rollback
+
+                requestRollback.tempListImageList = async (): Promise<void> => {
+                  await Promise.all(tempListImageList.map(async (tempImageList: string, i: number): Promise<string[]> => {
+                    return request.server.storagePlugin.setImageListMoveTo([tempImageList], parse(decodeURIComponent(postListImageListDestination[i])).dir);
+                  }));
+                };
+              }
+
+              /** Move category related Post Markdown image to temp (delete) */
+
+              const postListMarkdownList: string[][] = categoryPostListDocumentSnapshot
                 .map((documentSnapshot: DocumentSnapshot) => documentSnapshot.data())
-                .map((documentData: DocumentData | undefined) => documentData?.markdownImageList);
+                .filter((documentData: DocumentData | undefined) => documentData?.markdown)
+                .map((documentData: DocumentData | undefined) => documentData?.markdown);
 
-              const tempListMarkdownImageList: string[][] = await Promise
-                .all(postListMarkdownImageList.map(async (postMarkdownImageList: string[]): Promise<string[]> => {
-                  return request.server.storagePlugin.setImageListMoveTo(postMarkdownImageList, userTemp);
-                }))
-                .catch(() => {
-                  throw new Error('fastify/storage/failed-move-post-image-to-temp');
-                });
+              if (postListMarkdownList.some((postMarkdownList: string[]) => postMarkdownList.length)) {
+                const tempListMarkdownList: string[][] = await Promise
+                  .all(postListMarkdownList.map(async (postMarkdownList: string[]): Promise<string[]> => {
+                    return request.server.storagePlugin.setImageListMoveTo(postMarkdownList, userTemp);
+                  }))
+                  .catch(() => {
+                    throw new Error('fastify/storage/failed-move-post-image-to-temp');
+                  });
 
-              requestRollback.tempListStorage = async (): Promise<void> => {
-                await Promise.all(tempListMarkdownImageList.map(async (tempMarkdownImageList: string[], i: number): Promise<string[]> => {
-                  return request.server.storagePlugin.setImageListMoveTo(tempMarkdownImageList, parse(postListMarkdownImageList[i][0]).dir);
-                }));
-              };
+                //! Storage category related Post Markdown images rollback
 
-              /** Delete category related post list */
+                requestRollback.tempListMarkdownList = async (): Promise<void> => {
+                  await Promise.all(tempListMarkdownList.map(async (tempMarkdownList: string[], i: number): Promise<string[]> => {
+                    return request.server.storagePlugin.setImageListMoveTo(tempMarkdownList, parse(postListMarkdownList[i][0]).dir);
+                  }));
+                };
+              }
+
+              /** Delete category related Post list */
 
               const postDeleteManyArgs: Prisma.PostDeleteManyArgs = {
                 where: {

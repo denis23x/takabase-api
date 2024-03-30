@@ -186,7 +186,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                   throw new Error('fastify/storage/failed-move-post-image-to-temp');
                 });
 
-              //! Storage Markdown files rollback
+              //! Storage Markdown images rollback
 
               requestRollback.updatedTempMarkdownList = async (): Promise<void> => {
                 await request.server.storagePlugin.setImageListMoveTo(updatedTempMarkdownList, updatedPostMarkdownListDestination);
