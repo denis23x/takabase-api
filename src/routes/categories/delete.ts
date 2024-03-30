@@ -215,13 +215,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         } catch (error: any) {
           requestRetries++;
 
-          //! Rollback
+          //! Rollback && Send error or pass further for retry
 
-          await Promise.allSettled(Object.values(requestRollback).map(async (rollback: any): Promise<any> => rollback()));
-
-          //! Send error or retry
-
-          const responseError: ResponseError | null = reply.server.prismaService.getErrorTransaction(error, requestRetries >= MAX_RETRIES);
+          const responseError: ResponseError | null = await reply.server.prismaService.setErrorTransaction(error, requestRetries >= MAX_RETRIES, requestRollback);
 
           if (responseError) {
             return reply.status(responseError.statusCode).send(responseError);

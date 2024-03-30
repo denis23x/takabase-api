@@ -9,6 +9,7 @@ import { ResponseError } from '../types/crud/response/response-error.schema';
 const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('prisma', new PrismaClient(prismaConfig));
 
+  // prettier-ignore
   fastifyInstance.decorate('prismaService', {
     getCategorySelect: (): Prisma.CategorySelect => ({
       id: true,
@@ -181,6 +182,16 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
           statusCode: 500
         };
       }
+    },
+    setErrorTransaction: async (error: any, retriesLimitReached: boolean, requestRollback: any): Promise<ResponseError | null> => {
+      const rollbackList: Promise<any>[] = Object.values(requestRollback).map(async (rollback: any): Promise<any> => rollback());
+
+      // TODO: Handle rejected ..
+      // @ts-ignore
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const rollback: PromiseSettledResult<any>[] = await Promise.allSettled(rollbackList);
+
+      return fastifyInstance.prismaService.getErrorTransaction(error, retriesLimitReached);
     },
     setError: (reply: FastifyReply, error: Prisma.PrismaClientKnownRequestError): FastifyReply => {
       const prismaErrorReference: string = 'https://prisma.io/docs/reference/api-reference/error-reference';
