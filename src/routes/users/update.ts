@@ -3,6 +3,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, User } from '../../database/client';
 import { UserUpdateDto } from '../../types/dto/user/user-update';
+import { ResponseError } from '../../types/crud/response/response-error.schema';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -64,7 +65,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       };
 
       const userUpdateArgs: Prisma.UserUpdateArgs = {
-        select: request.server.prismaService.getUserSelect(),
+        select: request.server.prismaPlugin.getUserSelect(),
         where: {
           id: Number(request.user.id)
         },
@@ -80,7 +81,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           });
         })
         .catch((error: Error) => {
-          return reply.server.prismaService.setError(reply, error);
+          const responseError: ResponseError = reply.server.prismaPlugin.getError(error) as ResponseError;
+
+          return reply.status(responseError.statusCode).send(responseError);
         });
     }
   });

@@ -2,7 +2,7 @@
 
 declare module 'fastify' {
   interface FastifyInstance {
-    markdownService: {
+    markdownPlugin: {
       getImageList: (markdown: string) => string[];
       getImageListFirebaseBucket: (markdownImageList: string[]) => string[];
       getImageListTemp: (markdownImageList: string[]) => string[];

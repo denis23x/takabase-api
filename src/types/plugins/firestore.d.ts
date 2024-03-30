@@ -6,7 +6,7 @@ import { DocumentReference, WriteResult } from 'firebase-admin/lib/firestore';
 declare module 'fastify' {
   interface FastifyInstance {
     firestore: Firestore;
-    firestoreService: {
+    firestorePlugin: {
       addDocument: (collectionPath: string, documentData: any) => Promise<DocumentReference>;
       getDocumentReference: (documentPath: string) => DocumentReference;
       updateDocument: (documentPath: string, documentData: any) => Promise<WriteResult>;

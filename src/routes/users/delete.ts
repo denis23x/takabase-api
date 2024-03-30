@@ -4,6 +4,7 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, User } from '../../database/client';
 import { ParamsId } from '../../types/crud/params/params-id';
 import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
+import { ResponseError } from '../../types/crud/response/response-error.schema';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -43,7 +44,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     },
     handler: async function (request: FastifyRequest<ParamsId & QuerystringSearch>, reply: FastifyReply): Promise<any> {
       const userDeleteArgs: Prisma.UserDeleteArgs = {
-        select: request.server.prismaService.getUserSelect(),
+        select: request.server.prismaPlugin.getUserSelect(),
         where: {
           id: Number(request.user.id)
         }
@@ -58,7 +59,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           });
         })
         .catch((error: Error) => {
-          return reply.server.prismaService.setError(reply, error);
+          const responseError: ResponseError = reply.server.prismaPlugin.getError(error) as ResponseError;
+
+          return reply.status(responseError.statusCode).send(responseError);
         });
     }
   });

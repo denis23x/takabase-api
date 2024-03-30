@@ -1,7 +1,7 @@
 /** @format */
 
 import fp from 'fastify-plugin';
-import { FastifyInstance, FastifyPluginAsync, FastifyReply } from 'fastify';
+import { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { Prisma, PrismaClient } from '../database/client';
 import { prismaConfig } from '../config/prisma.config';
 import { ResponseError } from '../types/crud/response/response-error.schema';
@@ -10,7 +10,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
   fastifyInstance.decorate('prisma', new PrismaClient(prismaConfig));
 
   // prettier-ignore
-  fastifyInstance.decorate('prismaService', {
+  fastifyInstance.decorate('prismaPlugin', {
     getCategorySelect: (): Prisma.CategorySelect => ({
       id: true,
       name: true,
@@ -49,14 +49,14 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
           case 'category': {
             return {
               category: {
-                select: fastifyInstance.prismaService.getCategorySelect()
+                select: fastifyInstance.prismaPlugin.getCategorySelect()
               }
             };
           }
           case 'categories': {
             return {
               categories: {
-                select: fastifyInstance.prismaService.getCategorySelect(),
+                select: fastifyInstance.prismaPlugin.getCategorySelect(),
                 orderBy: {
                   id: 'desc'
                 }
@@ -66,7 +66,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
           case 'posts': {
             return {
               posts: {
-                select: fastifyInstance.prismaService.getPostSelect(),
+                select: fastifyInstance.prismaPlugin.getPostSelect(),
                 orderBy: {
                   id: 'desc'
                 }
@@ -76,7 +76,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
           case 'user': {
             return {
               user: {
-                select: fastifyInstance.prismaService.getUserSelect()
+                select: fastifyInstance.prismaPlugin.getUserSelect()
               }
             };
           }
@@ -173,7 +173,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
           };
         }
 
-        return fastifyInstance.prismaService.getError(error);
+        return fastifyInstance.prismaPlugin.getError(error);
       } else {
         return {
           code: error.message,
@@ -191,35 +191,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const rollback: PromiseSettledResult<any>[] = await Promise.allSettled(rollbackList);
 
-      return fastifyInstance.prismaService.getErrorTransaction(error, retriesLimitReached);
-    },
-    setError: (reply: FastifyReply, error: Prisma.PrismaClientKnownRequestError): FastifyReply => {
-      const prismaErrorReference: string = 'https://prisma.io/docs/reference/api-reference/error-reference';
-      const prismaErrorMessage: string = [prismaErrorReference, error.code?.toLowerCase()].join('#');
-
-      switch (error.code) {
-        case 'P2025': {
-          return reply.status(404).send({
-            error: 'Not found',
-            message: prismaErrorMessage,
-            statusCode: 404
-          });
-        }
-        case 'P2002': {
-          return reply.status(400).send({
-            error: 'Bad Request',
-            message: prismaErrorMessage,
-            statusCode: 400
-          });
-        }
-        default: {
-          return reply.status(500).send({
-            error: 'Internal Server Error',
-            message: prismaErrorMessage,
-            statusCode: 500
-          });
-        }
-      }
+      return fastifyInstance.prismaPlugin.getErrorTransaction(error, retriesLimitReached);
     }
   });
 

@@ -3,6 +3,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Category } from '../../database/client';
 import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
+import { ResponseError } from '../../types/crud/response/response-error.schema';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -57,7 +58,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const { userId, userName, query, orderBy, scope, size, page }: Record<string, any> = request.query;
 
       const categoryFindManyArgs: Prisma.CategoryFindManyArgs = {
-        select: request.server.prismaService.getCategorySelect(),
+        select: request.server.prismaPlugin.getCategorySelect(),
         orderBy: {
           id: 'desc'
         },
@@ -111,13 +112,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       /** Order */
 
       if (orderBy) {
-        categoryFindManyArgs.orderBy = request.server.prismaService.setOrderBy(categoryFindManyArgs, orderBy);
+        categoryFindManyArgs.orderBy = request.server.prismaPlugin.setOrderBy(categoryFindManyArgs, orderBy);
       }
 
       /** Scope */
 
       if (scope) {
-        categoryFindManyArgs.select = request.server.prismaService.setScope(categoryFindManyArgs, scope);
+        categoryFindManyArgs.select = request.server.prismaPlugin.setScope(categoryFindManyArgs, scope);
       }
 
       await reply.server.prisma.category
@@ -129,7 +130,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           });
         })
         .catch((error: Error) => {
-          return reply.server.prismaService.setError(reply, error);
+          const responseError: ResponseError = reply.server.prismaPlugin.getError(error) as ResponseError;
+
+          return reply.status(responseError.statusCode).send(responseError);
         });
     }
   });

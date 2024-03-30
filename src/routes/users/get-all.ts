@@ -3,6 +3,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, User } from '../../database/client';
 import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
+import { ResponseError } from '../../types/crud/response/response-error.schema';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -45,7 +46,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const { name, query, orderBy, scope, size, page }: Record<string, any> = request.query;
 
       const userFindManyArgs: Prisma.UserFindManyArgs = {
-        select: request.server.prismaService.getUserSelect(),
+        select: request.server.prismaPlugin.getUserSelect(),
         orderBy: {
           id: 'desc'
         },
@@ -87,13 +88,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       /** Order */
 
       if (orderBy) {
-        userFindManyArgs.orderBy = request.server.prismaService.setOrderBy(userFindManyArgs, orderBy);
+        userFindManyArgs.orderBy = request.server.prismaPlugin.setOrderBy(userFindManyArgs, orderBy);
       }
 
       /** Scope */
 
       if (scope) {
-        userFindManyArgs.select = request.server.prismaService.setScope(userFindManyArgs, scope);
+        userFindManyArgs.select = request.server.prismaPlugin.setScope(userFindManyArgs, scope);
       }
 
       await reply.server.prisma.user
@@ -105,7 +106,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           });
         })
         .catch((error: Error) => {
-          return reply.server.prismaService.setError(reply, error);
+          const responseError: ResponseError = reply.server.prismaPlugin.getError(error) as ResponseError;
+
+          return reply.status(responseError.statusCode).send(responseError);
         });
     }
   });

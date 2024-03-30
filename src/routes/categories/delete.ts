@@ -93,7 +93,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
         const postListDocumentReference: DocumentReference[] = categoryPostList
           .map((post: Post) => ['users', userFirebaseUid, 'posts', post.firebaseUid].join('/'))
-          .map((documentPath: string) => request.server.firestoreService.getDocumentReference(documentPath));
+          .map((documentPath: string) => request.server.firestorePlugin.getDocumentReference(documentPath));
 
         categoryPostListDocumentReference.push(...postListDocumentReference);
 
@@ -149,7 +149,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
               const tempListMarkdownImageList: string[][] = await Promise
                 .all(postListMarkdownImageList.map(async (postMarkdownImageList: string[]): Promise<string[]> => {
-                  return request.server.storageService.setImageListMoveTo(postMarkdownImageList, userTemp);
+                  return request.server.storagePlugin.setImageListMoveTo(postMarkdownImageList, userTemp);
                 }))
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-post-image-to-temp');
@@ -157,7 +157,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
               requestRollback.tempListStorage = async (): Promise<void> => {
                 await Promise.all(tempListMarkdownImageList.map(async (tempMarkdownImageList: string[], i: number): Promise<string[]> => {
-                  return request.server.storageService.setImageListMoveTo(tempMarkdownImageList, parse(postListMarkdownImageList[i][0]).dir);
+                  return request.server.storagePlugin.setImageListMoveTo(tempMarkdownImageList, parse(postListMarkdownImageList[i][0]).dir);
                 }));
               };
 
@@ -195,7 +195,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             const categoryDeleteArgs: Prisma.CategoryDeleteArgs = {
               select: {
-                ...request.server.prismaService.getCategorySelect(),
+                ...request.server.prismaPlugin.getCategorySelect(),
               },
               where: {
                 id: categoryId,
@@ -217,7 +217,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
           //! Rollback && Send error or pass further for retry
 
-          const responseError: ResponseError | null = await reply.server.prismaService.setErrorTransaction(error, requestRetries >= MAX_RETRIES, requestRollback);
+          const responseError: ResponseError | null = await reply.server.prismaPlugin.setErrorTransaction(error, requestRetries >= MAX_RETRIES, requestRollback);
 
           if (responseError) {
             return reply.status(responseError.statusCode).send(responseError);

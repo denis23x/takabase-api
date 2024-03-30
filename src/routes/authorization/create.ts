@@ -4,6 +4,7 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, User } from '../../database/client';
 import { randomUUID } from 'crypto';
 import { AuthorizationLoginDto } from '../../types/dto/authorization/authorization-login';
+import { ResponseError } from '../../types/crud/response/response-error.schema';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -59,7 +60,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {
         select: {
-          ...request.server.prismaService.getUserSelect()
+          ...request.server.prismaPlugin.getUserSelect()
         },
         where: {
           firebaseUid
@@ -87,7 +88,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             };
 
             const userCreateArgs: Prisma.UserCreateArgs = {
-              select: request.server.prismaService.getUserSelect(),
+              select: request.server.prismaPlugin.getUserSelect(),
               data: userCreateInput
             };
 
@@ -102,8 +103,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                   statusCode: 200
                 });
               })
-              .catch((error: Error) => {
-                return reply.server.prismaService.setError(reply, error);
+              .catch((error: any) => {
+                const responseError: ResponseError = reply.server.prismaPlugin.getError(error) as ResponseError;
+
+                return reply.status(responseError.statusCode).send(responseError);
               });
           }
         });

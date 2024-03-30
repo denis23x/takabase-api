@@ -5,7 +5,7 @@ import { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { storageConfig } from '../config/storage.config';
 
 const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
-  fastifyInstance.decorate('markdownService', {
+  fastifyInstance.decorate('markdownPlugin', {
     getImageList: (markdown: string): string[] => {
       const markdownImageRegExp: RegExp = /!\[(.*?)]\((.*?)\)/g;
       const markdownImageList: RegExpMatchArray | null = markdown.match(markdownImageRegExp);
@@ -33,19 +33,19 @@ const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: F
         .filter((imageUrl: string) => imageUrl.includes(storageConfig.bucket));
     },
     getImageListTemp: (imageListUrl: string[]): string[] => {
-      const imageListTemp: string[] = fastifyInstance.markdownService
+      const imageListTemp: string[] = fastifyInstance.markdownPlugin
         .getImageListFirebaseBucket(imageListUrl)
         .filter((imageUrl: string) => imageUrl.includes('temp'));
 
-      return fastifyInstance.markdownService.getImageListSubstringUrl(imageListTemp);
+      return fastifyInstance.markdownPlugin.getImageListSubstringUrl(imageListTemp);
     },
     getImageListPost: (imageListUrl: string[]): string[] => {
-      const imageListPost: string[] = fastifyInstance.markdownService
+      const imageListPost: string[] = fastifyInstance.markdownPlugin
         .getImageListFirebaseBucket(imageListUrl)
         .filter((imageUrl: string) => imageUrl.includes('users'))
         .filter((imageUrl: string) => imageUrl.includes('posts'));
 
-      return fastifyInstance.markdownService.getImageListSubstringUrl(imageListPost);
+      return fastifyInstance.markdownPlugin.getImageListSubstringUrl(imageListPost);
     },
     getImageListRewrite: (markdown: string, tempList: string[], postList: string[]): string => {
       let markdownNew: string = markdown;

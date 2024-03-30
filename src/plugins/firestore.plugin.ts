@@ -7,7 +7,7 @@ import { getFirestore, DocumentReference, WriteResult } from 'firebase-admin/fir
 const firestorePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('firestore', getFirestore(fastifyInstance.firebase));
 
-  fastifyInstance.decorate('firestoreService', {
+  fastifyInstance.decorate('firestorePlugin', {
     addDocument: (collectionPath: string, documentData: any): Promise<DocumentReference> => {
       return fastifyInstance.firestore.collection(collectionPath).add(documentData);
     },

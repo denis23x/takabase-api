@@ -3,6 +3,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Category } from '../../database/client';
 import { QuerystringScope } from '../../types/crud/querystring/querystring-scope';
+import { ResponseError } from '../../types/crud/response/response-error.schema';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -57,7 +58,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const { userId, userName, scope }: Record<string, any> = request.query;
 
       const categoryFindUniqueOrThrowArgs: Prisma.CategoryFindUniqueOrThrowArgs = {
-        select: request.server.prismaService.getCategorySelect(),
+        select: request.server.prismaPlugin.getCategorySelect(),
         where: {
           id: Number(request.params.id)
         }
@@ -85,7 +86,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       if (scope) {
         // prettier-ignore
-        categoryFindUniqueOrThrowArgs.select = request.server.prismaService.setScope(categoryFindUniqueOrThrowArgs, scope);
+        categoryFindUniqueOrThrowArgs.select = request.server.prismaPlugin.setScope(categoryFindUniqueOrThrowArgs, scope);
       }
 
       await reply.server.prisma.category
@@ -97,7 +98,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           });
         })
         .catch((error: Error) => {
-          return reply.server.prismaService.setError(reply, error);
+          const responseError: ResponseError = reply.server.prismaPlugin.getError(error) as ResponseError;
+
+          return reply.status(responseError.statusCode).send(responseError);
         });
     }
   });

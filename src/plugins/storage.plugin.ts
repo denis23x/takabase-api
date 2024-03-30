@@ -11,7 +11,7 @@ import { parse, ParsedPath } from 'path';
 const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('storage', getStorage().bucket(storageConfig.bucket));
 
-  fastifyInstance.decorate('storageService', {
+  fastifyInstance.decorate('storagePlugin', {
     setImageListMoveTo: async (imageList: string[] = [], moveTo: string): Promise<string[]> => {
       const listMoveTo: Promise<string>[] = imageList.map(async (imageUrl: string) => {
         const source: string = decodeURIComponent(imageUrl);

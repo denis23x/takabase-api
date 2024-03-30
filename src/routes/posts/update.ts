@@ -85,7 +85,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       //* Make post updating preparations before start transaction
 
-      const postDocumentReference: DocumentReference = request.server.firestoreService.getDocumentReference(postPath);
+      const postDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(postPath);
       const postDocumentSnapshot: DocumentSnapshot = await postDocumentReference.get().catch(() => {
         throw new Error('fastify/firestore/failed-get-post');
       });
@@ -104,9 +104,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             /** Move Post image to post (save) */
 
             if (postImage) {
-              const tempImageList: string[] = request.server.markdownService.getImageListSubstringUrl([postImage]);
+              const tempImageList: string[] = request.server.markdownPlugin.getImageListSubstringUrl([postImage]);
               const postImageListDestination: string = postDocumentReference.path;
-              const postImageList: string[] = await request.server.storageService
+              const postImageList: string[] = await request.server.storagePlugin
                 .setImageListMoveTo(tempImageList, postImageListDestination)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-temp-image-to-post');
@@ -115,22 +115,22 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               //! Storage Post image rollback
 
               requestRollback.postImageList = async (): Promise<void> => {
-                await request.server.storageService.setImageListMoveTo(postImageList, userTemp);
+                await request.server.storagePlugin.setImageListMoveTo(postImageList, userTemp);
               };
 
               //* Set
 
-              request.body.image = request.server.markdownService.getImageListRewrite(postImage, tempImageList, postImageList);
+              request.body.image = request.server.markdownPlugin.getImageListRewrite(postImage, tempImageList, postImageList);
             } else {
               const postImageListDestination: string = [postPath].join('/');
-              const postImageList: string[] = await request.server.storageService
+              const postImageList: string[] = await request.server.storagePlugin
                 .getImageList(postImageListDestination)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-read-file-list');
                 });
 
               const tempImageListUnusedDestination: string[] = postImageList.filter((postImageList: string) => !parse(postImageList).dir.endsWith('markdown'));
-              const tempImageList: string[] = await request.server.storageService
+              const tempImageList: string[] = await request.server.storagePlugin
                 .setImageListMoveTo(tempImageListUnusedDestination, userTemp)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-post-image-to-temp');
@@ -139,18 +139,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               //! Storage Post image rollback
 
               requestRollback.tempImageList = async (): Promise<void> => {
-                await request.server.storageService.setImageListMoveTo(tempImageList, postPath);
+                await request.server.storagePlugin.setImageListMoveTo(tempImageList, postPath);
               };
             }
 
             /** Move Markdown image to post (save) */
 
-            const bodyMarkdownList: string[] = request.server.markdownService.getImageList(postMarkdown);
-            const tempMarkdownList: string[] = request.server.markdownService.getImageListTemp(bodyMarkdownList);
+            const bodyMarkdownList: string[] = request.server.markdownPlugin.getImageList(postMarkdown);
+            const tempMarkdownList: string[] = request.server.markdownPlugin.getImageListTemp(bodyMarkdownList);
 
             if (tempMarkdownList.length) {
               const postMarkdownListDestination: string = [postPath, 'markdown'].join('/');
-              const postMarkdownList: string[] = await request.server.storageService
+              const postMarkdownList: string[] = await request.server.storagePlugin
                 .setImageListMoveTo(tempMarkdownList, postMarkdownListDestination)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-temp-image-to-post');
@@ -159,20 +159,20 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               //! Storage Markdown images rollback
 
               requestRollback.postMarkdownList = async (): Promise<void> => {
-                await request.server.storageService.setImageListMoveTo(postMarkdownList, userTemp);
+                await request.server.storagePlugin.setImageListMoveTo(postMarkdownList, userTemp);
               };
 
               //* Set
 
-              request.body.markdown = request.server.markdownService.getImageListRewrite(postMarkdown, tempMarkdownList, postMarkdownList);
+              request.body.markdown = request.server.markdownPlugin.getImageListRewrite(postMarkdown, tempMarkdownList, postMarkdownList);
             }
 
             /** Move Markdown image to temp (delete) */
 
-            const updatedPostMarkdown: string[] = request.server.markdownService.getImageList(String(request.body.markdown || ''));
-            const updatedPostMarkdownList: string[] = request.server.markdownService.getImageListPost(updatedPostMarkdown);
+            const updatedPostMarkdown: string[] = request.server.markdownPlugin.getImageList(String(request.body.markdown || ''));
+            const updatedPostMarkdownList: string[] = request.server.markdownPlugin.getImageListPost(updatedPostMarkdown);
             const updatedPostMarkdownListDestination: string = [postPath, 'markdown'].join('/');
-            const updatedPostMarkdownListUnused: string[] = await request.server.storageService
+            const updatedPostMarkdownListUnused: string[] = await request.server.storagePlugin
               .getImageList(updatedPostMarkdownListDestination)
               .then((imageList: string[]) => imageList.filter((imageUrl: string) => !updatedPostMarkdownList.includes(encodeURIComponent(imageUrl))))
               .catch(() => {
@@ -180,7 +180,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               });
 
             if (updatedPostMarkdownListUnused.length) {
-              const updatedTempMarkdownList: string[] = await request.server.storageService
+              const updatedTempMarkdownList: string[] = await request.server.storagePlugin
                 .setImageListMoveTo(updatedPostMarkdownListUnused, userTemp)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-post-image-to-temp');
@@ -189,7 +189,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               //! Storage Markdown files rollback
 
               requestRollback.updatedTempMarkdownList = async (): Promise<void> => {
-                await request.server.storageService.setImageListMoveTo(updatedTempMarkdownList, updatedPostMarkdownListDestination);
+                await request.server.storagePlugin.setImageListMoveTo(updatedTempMarkdownList, updatedPostMarkdownListDestination);
               };
             }
 
@@ -217,12 +217,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             const postUpdateArgs: Prisma.PostUpdateArgs = {
               select: {
-                ...request.server.prismaService.getPostSelect(),
+                ...request.server.prismaPlugin.getPostSelect(),
                 category: {
-                  select: request.server.prismaService.getCategorySelect()
+                  select: request.server.prismaPlugin.getCategorySelect()
                 },
                 user: {
-                  select: request.server.prismaService.getUserSelect()
+                  select: request.server.prismaPlugin.getUserSelect()
                 }
               },
               where: {
@@ -248,7 +248,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
           //! Rollback && Send error or pass further for retry
 
-          const responseError: ResponseError | null = await reply.server.prismaService.setErrorTransaction(error, requestRetries >= MAX_RETRIES, requestRollback);
+          const responseError: ResponseError | null = await reply.server.prismaPlugin.setErrorTransaction(error, requestRetries >= MAX_RETRIES, requestRollback);
 
           if (responseError) {
             return reply.status(responseError.statusCode).send(responseError);
