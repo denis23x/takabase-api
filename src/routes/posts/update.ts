@@ -90,6 +90,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         throw new Error('fastify/firestore/failed-get-post');
       });
 
+      const postImageListDestination: string = postDocumentReference.path;
+      const postImageList: string[] = await request.server.storagePlugin
+        .getImageList(postImageListDestination)
+        .catch(() => {
+          throw new Error('fastify/storage/failed-read-file-list');
+        });
+
       //? Transaction
 
       let requestRetries: number = 0;
@@ -101,37 +108,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<Post> => {
             requestRollback = {};
 
-            /** Move Post image to post (save) */
+            /** Move Post previous image to temp (delete) */
 
-            if (postImage) {
-              const tempImageList: string[] = request.server.markdownPlugin.getImageListSubstringUrl([postImage]);
-              const postImageListDestination: string = postDocumentReference.path;
-              const postImageList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(tempImageList, postImageListDestination)
-                .catch(() => {
-                  throw new Error('fastify/storage/failed-move-temp-image-to-post');
-                });
+            const setPostImage = async (postImageNext: string | null): Promise<string | null> => {
+              const postImageListUnused: string[] = postImageList.filter((postImage: string) => {
+                return !parse(postImage).dir.endsWith('markdown') && postImage !== postImageNext;
+              });
 
-              //! Storage Post image rollback
-
-              requestRollback.postImageList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(postImageList, userTemp);
-              };
-
-              //* Set
-
-              request.body.image = request.server.markdownPlugin.getImageListRewrite(postImage, tempImageList, postImageList);
-            } else {
-              const postImageListDestination: string = [postPath].join('/');
-              const postImageList: string[] = await request.server.storagePlugin
-                .getImageList(postImageListDestination)
-                .catch(() => {
-                  throw new Error('fastify/storage/failed-read-file-list');
-                });
-
-              const tempImageListUnusedDestination: string[] = postImageList.filter((postImageList: string) => !parse(postImageList).dir.endsWith('markdown'));
               const tempImageList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(tempImageListUnusedDestination, userTemp)
+                .setImageListMoveTo(postImageListUnused, userTemp)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-post-image-to-temp');
                 });
@@ -141,6 +126,39 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               requestRollback.tempImageList = async (): Promise<void> => {
                 await request.server.storagePlugin.setImageListMoveTo(tempImageList, postPath);
               };
+
+              return postImageNext;
+            };
+
+            /** Move Post image to post (save) */
+
+            if (postImage) {
+              const updatedTempImageList: string[] = request.server.markdownPlugin.getImageListSubstringUrl([postImage]);
+              const updatedPostImageList: string[] = await request.server.storagePlugin
+                .setImageListMoveTo(updatedTempImageList, postImageListDestination)
+                .catch(() => {
+                  throw new Error('fastify/storage/failed-move-temp-image-to-post');
+                });
+
+              //! Storage Post image rollback
+
+              requestRollback.updatedPostImageList = async (): Promise<void> => {
+                await request.server.storagePlugin.setImageListMoveTo(updatedPostImageList, userTemp);
+              };
+
+              //* Set
+
+              request.body.image = request.server.markdownPlugin.getImageListRewrite(postImage, updatedTempImageList, updatedPostImageList);
+
+              /** Move Post previous image to temp (delete) */
+
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const updatedPostImage: string = await setPostImage(decodeURIComponent([...updatedPostImageList].shift()));
+            } else {
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const updatedPostImage: null = await setPostImage(null);
             }
 
             /** Move Markdown image to post (save) */
