@@ -189,7 +189,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               //! Storage Markdown files rollback
 
               requestRollback.updatedTempMarkdownList = async (): Promise<void> => {
-                await request.server.storageService.setImageListMoveTo(updatedTempMarkdownList, postPath);
+                await request.server.storageService.setImageListMoveTo(updatedTempMarkdownList, updatedPostMarkdownListDestination);
               };
             }
 
