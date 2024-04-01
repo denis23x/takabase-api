@@ -113,7 +113,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             if (postImage) {
               const tempImageList: string[] = request.server.markdownPlugin.getImageListSubstringUrl([postImage]);
-              const postImageListDestination: string = postDocumentReference.path;
+              const postImageListDestination: string = [postDocumentReference.path, 'image'].join('/');
               const postImageList: string[] = await request.server.storagePlugin
                 .setImageListMoveTo(tempImageList, postImageListDestination)
                 .catch(() => {

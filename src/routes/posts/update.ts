@@ -5,7 +5,6 @@ import { Prisma, Post, PrismaClient } from '../../database/client';
 import { PostUpdateDto } from '../../types/dto/post/post-update';
 import { DocumentReference, DocumentSnapshot, DocumentData, WriteResult } from 'firebase-admin/firestore';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
-import { parse } from 'path';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -90,7 +89,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         throw new Error('fastify/firestore/failed-get-post');
       });
 
-      const postImageListDestination: string = postDocumentReference.path;
+      const postImageListDestination: string = [postDocumentReference.path, 'image'].join('/');
       const postImageList: string[] = await request.server.storagePlugin
         .getImageList(postImageListDestination)
         .catch(() => {
@@ -111,10 +110,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             /** Move Post previous image to temp (delete) */
 
             const setPostImage = async (postImageNext: string | null): Promise<string | null> => {
-              const postImageListUnused: string[] = postImageList.filter((postImage: string) => {
-                return !parse(postImage).dir.endsWith('markdown') && postImage !== postImageNext;
-              });
-
+              const postImageListUnused: string[] = postImageList.filter((postImage: string) => postImage !== postImageNext);
               const tempImageList: string[] = await request.server.storagePlugin
                 .setImageListMoveTo(postImageListUnused, userTemp)
                 .catch(() => {
