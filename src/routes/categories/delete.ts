@@ -70,7 +70,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const categoryPostListDocumentReference: DocumentReference[] = [];
       const categoryPostListDocumentSnapshot: DocumentSnapshot[] = [];
 
-      //* Make post deleting preparations before start transaction (if not move them to another category)
+      //* Make post deleting preparations before start transaction (if not move them to another Category)
 
       if (!categoryPostListMoveTo) {
         //* Get postList[]
@@ -122,9 +122,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             requestRollback = {};
 
             if (!categoryPostListMoveTo) {
-              /** Delete category related Post Firestore documents */
+              /** Delete Category related Post Firestore documents */
 
-              //! Firestore category related Post documents rollback
+              //! Firestore Category related Post documents rollback
 
               requestRollback.postListDocument = async (): Promise<void> => {
                 await Promise.all(categoryPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<WriteResult> => {
@@ -144,7 +144,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                   throw new Error('fastify/firestore/failed-delete-post');
                 });
 
-              /** Move category related Post image to temp (delete) */
+              /** Move Category related Post image to temp (delete) */
 
               const postListImageList: string[] = categoryPostList
                 .filter((post: Post) => post.image)
@@ -158,7 +158,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                     throw new Error('fastify/storage/failed-move-post-image-to-temp');
                   });
 
-                //! Storage category related Post image rollback
+                //! Storage Category related Post image rollback
 
                 requestRollback.tempListImageList = async (): Promise<void> => {
                   await Promise.all(tempListImageList.map(async (tempImageList: string, i: number): Promise<string[]> => {
@@ -167,7 +167,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 };
               }
 
-              /** Move category related Post Markdown image to temp (delete) */
+              /** Move Category related Post Markdown image to temp (delete) */
 
               const postListMarkdownList: string[][] = categoryPostListDocumentSnapshot
                 .map((documentSnapshot: DocumentSnapshot) => documentSnapshot.data())
@@ -183,7 +183,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                     throw new Error('fastify/storage/failed-move-post-image-to-temp');
                   });
 
-                //! Storage category related Post Markdown images rollback
+                //! Storage Category related Post Markdown images rollback
 
                 requestRollback.tempListMarkdownList = async (): Promise<void> => {
                   await Promise.all(tempListMarkdownList.map(async (tempMarkdownList: string[], i: number): Promise<string[]> => {
@@ -192,7 +192,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 };
               }
 
-              /** Delete category related Post list */
+              /** Delete Category related Post list */
 
               const postDeleteManyArgs: Prisma.PostDeleteManyArgs = {
                 where: {
@@ -205,7 +205,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const postList: Prisma.BatchPayload = await prismaClient.post.deleteMany(postDeleteManyArgs);
             } else {
-              /** Update category related post list */
+              /** Update Category related post list */
 
               const postUpdateManyArgs: Prisma.PostUpdateManyArgs = {
                 where: {
@@ -222,7 +222,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               const postList: Prisma.BatchPayload = await prismaClient.post.updateMany(postUpdateManyArgs);
             }
 
-            /** Delete category */
+            /** Delete Category */
 
             const categoryDeleteArgs: Prisma.CategoryDeleteArgs = {
               select: {
