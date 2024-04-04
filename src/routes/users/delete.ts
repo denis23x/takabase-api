@@ -45,23 +45,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<ParamsId & QuerystringSearch>, reply: FastifyReply): Promise<any> {
+      // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
-      //* Common info
-
+      // Extract common information from request object
       const userId: number = Number(request.user.id);
       const userFirebaseUid: string = String(request.user.firebaseUid);
-      const userTemp: string = ['users', userFirebaseUid, 'temp'].join('/');
 
-      const userPostList: Post[] = [];
-      const userPostListDocumentReference: DocumentReference[] = [];
-      const userPostListDocumentSnapshot: DocumentSnapshot[] = [];
+      // Construct Firestore document references for user
+      // prettier-ignore
+      const userDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(['users', userFirebaseUid].join('/'));
 
-      //* Make post deleting preparations before start transaction
+      // Fetch document snapshots for user from Firestore
+      // prettier-ignore
+      const userDocumentSnapshot: DocumentSnapshot = await userDocumentReference.get();
 
-      //* Get postList[]
-
-      const postFindManyArgs: Prisma.PostFindManyArgs = {
+      // Define arguments to fetch user's posts from Prisma
+      const userPostFindManyArgs: Prisma.PostFindManyArgs = {
         select: {
           firebaseUid: true,
           image: true
@@ -71,44 +71,36 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       };
 
-      const postList: Post[] = await request.server.prisma.post.findMany(postFindManyArgs);
+      // Fetch user's posts from the database
+      const userPostList: Post[] = await request.server.prisma.post.findMany(userPostFindManyArgs);
 
-      userPostList.push(...postList);
-
-      //* Get postListDocumentReference[]
-
-      const postListDocumentReference: DocumentReference[] = userPostList
+      // Construct Firestore document references for user's posts
+      const userPostListDocumentReference: DocumentReference[] = userPostList
         .map((post: Post) => ['users', userFirebaseUid, 'posts', post.firebaseUid].join('/'))
         .map((documentPath: string) => request.server.firestorePlugin.getDocumentReference(documentPath));
 
-      userPostListDocumentReference.push(...postListDocumentReference);
-
-      //* Get postListDocumentSnapshot[]
-
+      // Fetch document snapshots for user's posts from Firestore
       // prettier-ignore
-      const postListDocumentSnapshot: DocumentSnapshot[] = await Promise
-        .all(postListDocumentReference.map(async (documentReference: DocumentReference): Promise<DocumentSnapshot> => documentReference.get()))
-        .catch(() => {
-          throw new Error('fastify/firestore/failed-get-all-post');
-        });
+      const userPostListDocumentSnapshot: DocumentSnapshot[] = await Promise
+        .all(userPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<DocumentSnapshot> => {
+          return documentReference.get();
+        }));
 
-      userPostListDocumentSnapshot.push(...postListDocumentSnapshot);
-
-      //? Transaction
-
+      // Counter for transaction retries
       let requestRetries: number = 0;
+
+      // Object to store rollback actions in case of transaction failure
       let requestRollback: any = undefined;
 
       // prettier-ignore
       while (requestRetries < MAX_RETRIES) {
         try {
+          // Start transaction using Prisma's $transaction method https://www.prisma.io/docs/orm/prisma-client/queries/transactions
           await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<User> => {
+            // Re-initialize requestRollback object
             requestRollback = {};
 
-            /** Delete User related Post Firestore documents */
-
-            //! Firestore User related Post documents rollback
-
+            //! Define rollback action for user's Firestore post documents
             requestRollback.postListDocument = async (): Promise<void> => {
               await Promise.all(userPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<WriteResult> => {
                 const documentSnapshot: DocumentSnapshot | undefined = userPostListDocumentSnapshot.find((snapshot: DocumentSnapshot) => {
@@ -119,6 +111,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               }));
             };
 
+            // Delete user's Firestore post documents
             // @ts-ignore
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const postListDocumentDelete: WriteResult[] = await Promise
@@ -127,22 +120,21 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 throw new Error('fastify/firestore/failed-delete-post');
               });
 
-            /** Move User related Post image to temp (delete) */
-
+            // Extract URLs of images associated with user's posts
             const postListImageList: string[] = userPostList
               .filter((post: Post) => post.image)
               .map((post: Post) => post.image);
 
+            // Move images associated with user's posts to temporary storage
             if (postListImageList.length) {
               const postListImageListDestination: string[] = request.server.markdownPlugin.getImageListSubstringUrl(postListImageList);
               const tempListImageList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(postListImageListDestination, userTemp)
+                .setImageListMoveTo(postListImageListDestination, 'temp')
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-post-image-to-temp');
                 });
 
-              //! Storage User related Post image rollback
-
+              //! Define rollback action for images moved to temporary storage
               requestRollback.tempListImageList = async (): Promise<void> => {
                 await Promise.all(tempListImageList.map(async (tempImageList: string, i: number): Promise<string[]> => {
                   return request.server.storagePlugin.setImageListMoveTo([tempImageList], parse(decodeURIComponent(postListImageListDestination[i])).dir);
@@ -150,24 +142,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
             }
 
-            /** Move User related Post Markdown image to temp (delete) */
-
+            // Extract URLs of markdown images associated with user's posts
             const postListMarkdownList: string[][] = userPostListDocumentSnapshot
               .map((documentSnapshot: DocumentSnapshot) => documentSnapshot.data())
               .filter((documentData: DocumentData | undefined) => documentData?.markdown)
               .map((documentData: DocumentData | undefined) => documentData?.markdown);
 
+            // Move markdown images associated with user's posts to temporary storage
             if (postListMarkdownList.some((postMarkdownList: string[]) => postMarkdownList.length)) {
               const tempListMarkdownList: string[][] = await Promise
                 .all(postListMarkdownList.map(async (postMarkdownList: string[]): Promise<string[]> => {
-                  return request.server.storagePlugin.setImageListMoveTo(postMarkdownList, userTemp);
+                  return request.server.storagePlugin.setImageListMoveTo(postMarkdownList, 'temp');
                 }))
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-post-image-to-temp');
                 });
 
-              //! Storage User related Post Markdown images rollback
-
+              //! Define rollback action for markdown images moved to temporary storage
               requestRollback.tempListMarkdownList = async (): Promise<void> => {
                 await Promise.all(tempListMarkdownList.map(async (tempMarkdownList: string[], i: number): Promise<string[]> => {
                   return request.server.storagePlugin.setImageListMoveTo(tempMarkdownList, parse(postListMarkdownList[i][0]).dir);
@@ -175,35 +166,63 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
             }
 
-            /** Delete User related Post list */
-
+            // Define arguments to delete user's posts
             const postDeleteManyArgs: Prisma.PostDeleteManyArgs = {
               where: {
                 userId
               }
             };
 
+            // Delete user's posts
             // @ts-ignore
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const postList: Prisma.BatchPayload = await prismaClient.post.deleteMany(postDeleteManyArgs);
 
-            /** Delete User related Category list */
-
+            // Define arguments to delete user's categories
             const categoryDeleteManyArgs: Prisma.CategoryDeleteManyArgs = {
               where: {
                 userId
               }
             };
 
+            // Delete user's categories
             // @ts-ignore
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const categoryList: Prisma.BatchPayload = await prismaClient.category.deleteMany(categoryDeleteManyArgs);
 
-            // TODO: delete user avatar
-            // TODO: delete user document
+            //! Define rollback action for user Firestore document
+            requestRollback.userDocument = async (): Promise<void> => {
+              await userDocumentReference.set(userDocumentSnapshot?.data() as DocumentData);
+            };
 
-            /** Delete User */
+            // Delete user Firestore document
+            // @ts-ignore
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const userDocumentDelete: WriteResult = await userDocumentReference.delete();
 
+            // Fetch the list of user avatars
+            const userAvatarListDestination: string = ['users', userFirebaseUid, 'avatar'].join('/');
+            const userAvatarList: string[] = await request.server.storagePlugin
+              .getImageList(userAvatarListDestination)
+              .catch(() => {
+                throw new Error('fastify/storage/failed-read-file-list');
+              });
+
+            // Move images associated with user avatar to temporary storage
+            if (userAvatarList.length) {
+              const tempAvatarList: string[] = await request.server.storagePlugin
+                .setImageListMoveTo(userAvatarList, 'temp')
+                .catch(() => {
+                  throw new Error('fastify/storage/failed-move-user-avatar-to-temp');
+                });
+
+              //! Define rollback action for user avatars moved to temporary storage
+              requestRollback.tempAvatarList = async (): Promise<void> => {
+                await request.server.storagePlugin.setImageListMoveTo(tempAvatarList, userAvatarListDestination);
+              };
+            }
+
+            // Define arguments to delete user
             const userDeleteArgs: Prisma.UserDeleteArgs = {
               select: {
                 ...request.server.prismaPlugin.getUserSelect()
@@ -213,20 +232,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               }
             };
 
+            // Delete user
             return prismaClient.user.delete(userDeleteArgs);
           }).then((user: User) => {
+            // Send success response with deleted user data
             return reply.status(200).send({
               data: user,
               statusCode: 200
             });
           });
 
+          // Exit retry loop if transaction is successful
           break;
         } catch (error: any) {
+          // Increment retry counter
           requestRetries++;
 
-          //! Rollback && Send error or pass further for retry
-
+          //! Rollback actions and handle errors
           const responseError: ResponseError | null = await reply.server.prismaPlugin.setErrorTransaction(error, requestRetries >= MAX_RETRIES, requestRollback);
 
           if (responseError) {
