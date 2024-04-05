@@ -56,25 +56,24 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<ParamsId & QuerystringSearch>, reply: FastifyReply): Promise<any> {
+      // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
-      //* Common info
-
+      // Extract common information from request object
       const userId: number = Number(request.user.id);
       const userFirebaseUid: string = String(request.user.firebaseUid);
       const userTemp: string = ['users', userFirebaseUid, 'temp'].join('/');
 
+      // Extract category and post related information from the request object
       const categoryId: number = Number(request.params.id);
       const categoryPostListMoveTo: number = Number(request.query.categoryId);
       const categoryPostList: Post[] = [];
       const categoryPostListDocumentReference: DocumentReference[] = [];
       const categoryPostListDocumentSnapshot: DocumentSnapshot[] = [];
 
-      //* Make post deleting preparations before start transaction (if not move them to another Category)
-
+      // Make post deleting preparations before start transaction (if not move them to another category)
       if (!categoryPostListMoveTo) {
-        //* Get postList[]
-
+        // Define arguments to find posts associated with the category
         const postFindManyArgs: Prisma.PostFindManyArgs = {
           select: {
             firebaseUid: true,
@@ -86,20 +85,21 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           }
         };
 
+        // Retrieve the list of posts associated with the category
         const postList: Post[] = await request.server.prisma.post.findMany(postFindManyArgs);
 
+        // Push the retrieved posts to the categoryPostList array
         categoryPostList.push(...postList);
 
-        //* Get postListDocumentReference[]
-
+        // Define an array of DocumentReference objects for the post documents in Firestore
         const postListDocumentReference: DocumentReference[] = categoryPostList
           .map((post: Post) => ['users', userFirebaseUid, 'posts', post.firebaseUid].join('/'))
           .map((documentPath: string) => request.server.firestorePlugin.getDocumentReference(documentPath));
 
+        // Push the DocumentReference objects to the categoryPostListDocumentReference array
         categoryPostListDocumentReference.push(...postListDocumentReference);
 
-        //* Get postListDocumentSnapshot[]
-
+        // Retrieve the DocumentSnapshot objects for the post documents in Firestore
         // prettier-ignore
         const postListDocumentSnapshot: DocumentSnapshot[] = await Promise
           .all(postListDocumentReference.map(async (documentReference: DocumentReference): Promise<DocumentSnapshot> => documentReference.get()))
@@ -107,25 +107,26 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             throw new Error('fastify/firestore/failed-get-all-post');
           });
 
+        // Push the retrieved DocumentSnapshot objects to the categoryPostListDocumentSnapshot array
         categoryPostListDocumentSnapshot.push(...postListDocumentSnapshot);
       }
 
-      //? Transaction
-
+      // Counter for transaction retries
       let requestRetries: number = 0;
+
+      // Object to store rollback actions in case of transaction failure
       let requestRollback: any = undefined;
 
       // prettier-ignore
       while (requestRetries < MAX_RETRIES) {
         try {
+          // Start transaction using Prisma's $transaction method https://www.prisma.io/docs/orm/prisma-client/queries/transactions
           await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<Category> => {
+            // Re-initialize requestRollback object
             requestRollback = {};
 
             if (!categoryPostListMoveTo) {
-              /** Delete Category related Post Firestore documents */
-
-              //! Firestore Category related Post documents rollback
-
+              //! Define rollback action for Firestore category related post documents
               requestRollback.postListDocument = async (): Promise<void> => {
                 await Promise.all(categoryPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<WriteResult> => {
                   const documentSnapshot: DocumentSnapshot | undefined = categoryPostListDocumentSnapshot.find((snapshot: DocumentSnapshot) => {
@@ -136,6 +137,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 }));
               };
 
+              // Delete category related Firestore post documents
               // @ts-ignore
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const postListDocumentDelete: WriteResult[] = await Promise
@@ -144,12 +146,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                   throw new Error('fastify/firestore/failed-delete-post');
                 });
 
-              /** Move Category related Post image to temp (delete) */
-
+              // Extract URLs of images associated with category posts
               const postListImageList: string[] = categoryPostList
                 .filter((post: Post) => post.image)
                 .map((post: Post) => post.image);
 
+              // Move images associated with category related posts to temporary storage
               if (postListImageList.length) {
                 const postListImageListDestination: string[] = request.server.markdownPlugin.getImageListSubstringUrl(postListImageList);
                 const tempListImageList: string[] = await request.server.storagePlugin
@@ -158,8 +160,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                     throw new Error('fastify/storage/failed-move-post-image-to-temp');
                   });
 
-                //! Storage Category related Post image rollback
-
+                //! Define rollback action for images moved to temporary storage
                 requestRollback.tempListImageList = async (): Promise<void> => {
                   await Promise.all(tempListImageList.map(async (tempImageList: string, i: number): Promise<string[]> => {
                     return request.server.storagePlugin.setImageListMoveTo([tempImageList], parse(decodeURIComponent(postListImageListDestination[i])).dir);
@@ -167,13 +168,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 };
               }
 
-              /** Move Category related Post Markdown image to temp (delete) */
-
+              // Extract URLs of markdown images associated with category related posts
               const postListMarkdownList: string[][] = categoryPostListDocumentSnapshot
                 .map((documentSnapshot: DocumentSnapshot) => documentSnapshot.data())
                 .filter((documentData: DocumentData | undefined) => documentData?.markdown)
                 .map((documentData: DocumentData | undefined) => documentData?.markdown);
 
+              // Move markdown images associated with category related posts to temporary storage
               if (postListMarkdownList.some((postMarkdownList: string[]) => postMarkdownList.length)) {
                 const tempListMarkdownList: string[][] = await Promise
                   .all(postListMarkdownList.map(async (postMarkdownList: string[]): Promise<string[]> => {
@@ -183,8 +184,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                     throw new Error('fastify/storage/failed-move-post-image-to-temp');
                   });
 
-                //! Storage Category related Post Markdown images rollback
-
+                //! Define rollback action for markdown images moved to temporary storage
                 requestRollback.tempListMarkdownList = async (): Promise<void> => {
                   await Promise.all(tempListMarkdownList.map(async (tempMarkdownList: string[], i: number): Promise<string[]> => {
                     return request.server.storagePlugin.setImageListMoveTo(tempMarkdownList, parse(postListMarkdownList[i][0]).dir);
@@ -192,8 +192,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 };
               }
 
-              /** Delete Category related Post list */
-
+              // Define arguments to delete category related posts
               const postDeleteManyArgs: Prisma.PostDeleteManyArgs = {
                 where: {
                   userId,
@@ -201,12 +200,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 }
               };
 
+              // Delete category related posts
               // @ts-ignore
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const postList: Prisma.BatchPayload = await prismaClient.post.deleteMany(postDeleteManyArgs);
             } else {
-              /** Update Category related post list */
-
+              // Define arguments to update category related posts
               const postUpdateManyArgs: Prisma.PostUpdateManyArgs = {
                 where: {
                   userId,
@@ -217,13 +216,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 }
               };
 
+              // Update category related posts
               // @ts-ignore
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const postList: Prisma.BatchPayload = await prismaClient.post.updateMany(postUpdateManyArgs);
             }
 
-            /** Delete Category */
-
+            // Define arguments to delete category
             const categoryDeleteArgs: Prisma.CategoryDeleteArgs = {
               select: {
                 ...request.server.prismaPlugin.getCategorySelect(),
@@ -234,20 +233,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               }
             };
 
+            // Delete category
             return prismaClient.category.delete(categoryDeleteArgs);
           }).then((category: Category) => {
+            // Send success response with deleted category
             return reply.status(200).send({
               data: category,
               statusCode: 200
             });
           });
 
+          // Exit retry loop if transaction is successful
           break;
         } catch (error: any) {
+          // Increment retry counter
           requestRetries++;
 
-          //! Rollback && Send error or pass further for retry
-
+          //! Rollback actions and handle errors
           const responseError: ResponseError | null = await reply.server.prismaPlugin.setErrorTransaction(error, requestRetries >= MAX_RETRIES, requestRollback);
 
           if (responseError) {
