@@ -67,99 +67,104 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<PostCreateDto>, reply: FastifyReply): Promise<void> {
+      // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
-      //* Common info
+      // Extract common information from request object
+      const userId: number = Number(request.user.id);
+      const userFirebaseUid: string = String(request.user.firebaseUid);
 
-      const userId: number = request.user.id;
-      const userFirebaseUid: string = request.user.firebaseUid;
-      const userTemp: string = ['users', userFirebaseUid, 'temp'].join('/');
-
+      // Extract post information from the request object
       const postPath: string = ['users', userFirebaseUid, 'posts'].join('/');
       const postImage: string | null | undefined = request.body.image;
-      const postCategoryId: number = request.body.categoryId;
-      const postMarkdown: string = request.body.markdown;
+      const postCategoryId: number = Number(request.body.categoryId);
+      const postMarkdown: string = String(request.body.markdown);
 
-      // Delete for more adjustable Prisma Data
-
+      // Delete for more adjustable Prisma input
       delete request.body.categoryId;
 
-      //? Transaction
-
+      // Counter for transaction retries
       let requestRetries: number = 0;
+
+      // Object to store rollback actions in case of transaction failure
       let requestRollback: any = undefined;
 
       // prettier-ignore
       while (requestRetries < MAX_RETRIES) {
         try {
+          // Start transaction using Prisma's $transaction method https://www.prisma.io/docs/orm/prisma-client/queries/transactions
           await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<Post> => {
+            // Re-initialize requestRollback object
             requestRollback = {};
 
-            /** Add empty Firestore document */
-
+            // Create a reference for the new post document in Firestore
             const postDocumentReference: DocumentReference = await request.server.firestorePlugin
               .addDocument(postPath, {})
               .catch(() => {
                 throw new Error('fastify/firestore/failed-add-post');
               });
 
-            //! Firestore document rollback
-
+            //! Define the rollback action for deleting the newly created post document in Firestore
             requestRollback.postDocument = async (): Promise<void> => {
               await postDocumentReference.delete();
             };
 
-            /** Move Post image to post (save) */
-
+            // If there is an image associated with the post
             if (postImage) {
+              // Prepare the post image temporary URL
               const tempImageList: string[] = request.server.markdownPlugin.getImageListSubstringUrl([postImage]);
+
+              // Define the destination path for the post image in storage
               const postImageListDestination: string = [postDocumentReference.path, 'image'].join('/');
+
+              // Move the temporary post image to the post image destination
               const postImageList: string[] = await request.server.storagePlugin
                 .setImageListMoveTo(tempImageList, postImageListDestination)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-temp-image-to-post');
                 });
 
-              //! Storage Post image rollback
-
+              //! Define rollback action for post image moved to the post image destination
               requestRollback.postImageList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(postImageList, userTemp);
+                await request.server.storagePlugin.setImageListMoveTo(postImageList, 'temp');
               };
 
-              //* Set
-
+              // Rewrite the image URL in the request body with the new post image URL
               request.body.image = request.server.markdownPlugin.getImageListRewrite(postImage, tempImageList, postImageList);
             }
 
-            /** Move Markdown image to post (save) */
-
+            // Get the list of images in the post markdown body
             const bodyMarkdownList: string[] = request.server.markdownPlugin.getImageList(postMarkdown);
+
+            // Get the list of temporary images from the post markdown body
             const tempMarkdownList: string[] = request.server.markdownPlugin.getImageListTemp(bodyMarkdownList);
 
+            // If there are temporary markdown images
             if (tempMarkdownList.length) {
+              // Define the destination path for the post markdown images in storage
               const postMarkdownListDestination: string = [postDocumentReference.path, 'markdown'].join('/');
+
+              // Move the temporary markdown images to the post markdown destination
               const postMarkdownList: string[] = await request.server.storagePlugin
                 .setImageListMoveTo(tempMarkdownList, postMarkdownListDestination)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-temp-image-to-post');
                 });
 
-              //! Storage Markdown images rollback
-
+              //! Define rollback action for moving markdown images to post markdown destination
               requestRollback.postMarkdownList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(postMarkdownList, userTemp);
+                await request.server.storagePlugin.setImageListMoveTo(postMarkdownList, 'temp');
               };
 
-              //* Set
-
+              // Rewrite the markdown body with the updated markdown image list
               request.body.markdown = request.server.markdownPlugin.getImageListRewrite(postMarkdown, tempMarkdownList, postMarkdownList);
 
-              /** Update empty Firestore document */
-
+              // Prepare the DTO for updating the Firestore document
               const postDocumentUpdateDto: any = {
                 markdown: postMarkdownList.map((imageUrl: string) => decodeURIComponent(imageUrl))
               };
 
+              // Perform the update operation on the Firestore document
               // @ts-ignore
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const postDocumentUpdate: WriteResult = await postDocumentReference
@@ -169,8 +174,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 });
             }
 
-            /** Create MySQL row */
-
+            // Define the arguments for create post
             const postCreateArgs: Prisma.PostCreateArgs = {
               select: {
                 ...request.server.prismaPlugin.getPostSelect(),
@@ -201,20 +205,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               }
             };
 
+            // Create the post
             return prismaClient.post.create(postCreateArgs);
           }).then((post: Post) => {
+            // Send success response with created post
             return reply.status(201).send({
               data: post,
               statusCode: 201
             });
           });
 
+          // Exit retry loop if transaction is successful
           break;
         } catch (error: any) {
+          // Increment retry counter
           requestRetries++;
 
-          //! Rollback && Send error or pass further for retry
-
+          //! Define rollback actions and handle errors
           const responseError: ResponseError | null = await reply.server.prismaPlugin.setErrorTransaction(error, requestRetries >= MAX_RETRIES, requestRollback);
 
           if (responseError) {

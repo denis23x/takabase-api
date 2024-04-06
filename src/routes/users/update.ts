@@ -60,17 +60,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<UserUpdateDto>, reply: FastifyReply): Promise<any> {
+      // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
-      //* Common info
-
-      const userId: number = request.user.id;
-      const userFirebaseUid: string = request.user.firebaseUid;
-      const userTemp: string = ['users', userFirebaseUid, 'temp'].join('/');
+      // Extract common information from request object
+      const userId: number = Number(request.user.id);
+      const userFirebaseUid: string = String(request.user.firebaseUid);
       const userAvatar: string | null | undefined = request.body.avatar as any;
 
-      //* Make post updating preparations before start transaction
-
+      // Create the destination path for the user avatar
       const userAvatarListDestination: string = ['users', userFirebaseUid, 'avatar'].join('/');
       const userAvatarList: string[] = await request.server.storagePlugin
         .getImageList(userAvatarListDestination)
@@ -78,29 +76,33 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           throw new Error('fastify/storage/failed-read-file-list');
         });
 
-      //? Transaction
-
+      // Counter for transaction retries
       let requestRetries: number = 0;
+
+      // Object to store rollback actions in case of transaction failure
       let requestRollback: any = undefined;
 
       // prettier-ignore
       while (requestRetries < MAX_RETRIES) {
         try {
+          // Start transaction using Prisma's $transaction method https://www.prisma.io/docs/orm/prisma-client/queries/transactions
           await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<User> => {
+            // Re-initialize requestRollback object
             requestRollback = {};
 
-            /** Move User previous avatar to temp (delete) */
-
+            // Define a function to set the user avatar and move unused avatar to temporary storage
             const setUserAvatar = async (userAvatarNext: string | null): Promise<string | null> => {
+              // Filter out the unused user avatar URL
               const userAvatarListUnused: string[] = userAvatarList.filter((userAvatar: string) => userAvatar !== userAvatarNext);
+
+              // Move the unused avatar to temporary storage
               const tempAvatarList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(userAvatarListUnused, userTemp)
+                .setImageListMoveTo(userAvatarListUnused, 'temp')
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-user-avatar-to-temp');
                 });
 
-              //! Storage User avatar rollback
-
+              //! Define rollback action for user avatar moved to temporary storage
               requestRollback.tempAvatarList = async (): Promise<void> => {
                 await request.server.storagePlugin.setImageListMoveTo(tempAvatarList, userAvatarListDestination);
               };
@@ -108,27 +110,25 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               return userAvatarNext;
             };
 
-            /** Move User avatar to post (save) */
-
+            // If there is a post image
             if (userAvatar) {
+              // Extract the new avatar URL with the appropriate destination
               const updatedTempAvatarList: string[] = request.server.markdownPlugin.getImageListSubstringUrl([userAvatar]);
+
+              // Move the updated avatar to the user avatar destination
               const updatedUserAvatarList: string[] = await request.server.storagePlugin
                 .setImageListMoveTo(updatedTempAvatarList, userAvatarListDestination)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-temp-avatar-to-user');
                 });
 
-              //! Storage User avatar rollback
-
+              //! Define rollback action for moving user avatar to destination
               requestRollback.updatedUserAvatarList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(updatedUserAvatarList, userTemp);
+                await request.server.storagePlugin.setImageListMoveTo(updatedUserAvatarList, 'temp');
               };
 
-              //* Set
-
+              // Set the request body avatar with the updated user avatar
               request.body.avatar = request.server.markdownPlugin.getImageListRewrite(userAvatar, updatedTempAvatarList, updatedUserAvatarList);
-
-              /** Move User previous avatar to temp (delete) */
 
               // @ts-ignore
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -139,6 +139,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               const updatedUserAvatar: null = await setUserAvatar(null);
             }
 
+            // Define the arguments for updating user
             const userUpdateArgs: Prisma.UserUpdateArgs = {
               select: {
                 ...request.server.prismaPlugin.getUserSelect()
@@ -151,20 +152,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               }
             };
 
+            // Update the user
             return prismaClient.user.update(userUpdateArgs);
           }).then((user: User) => {
+            // Send success response with updated user
             return reply.status(200).send({
               data: user,
               statusCode: 200
             });
           });
 
+          // Exit retry loop if transaction is successful
           break;
         } catch (error: any) {
+          // Increment retry counter
           requestRetries++;
 
-          //! Rollback && Send error or pass further for retry
-
+          //! Define rollback actions and handle errors
           const responseError: ResponseError | null = await reply.server.prismaPlugin.setErrorTransaction(error, requestRetries >= MAX_RETRIES, requestRollback);
 
           if (responseError) {

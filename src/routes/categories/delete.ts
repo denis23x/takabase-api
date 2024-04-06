@@ -62,7 +62,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Extract common information from request object
       const userId: number = Number(request.user.id);
       const userFirebaseUid: string = String(request.user.firebaseUid);
-      const userTemp: string = ['users', userFirebaseUid, 'temp'].join('/');
 
       // Extract category and post related information from the request object
       const categoryId: number = Number(request.params.id);
@@ -125,8 +124,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Re-initialize requestRollback object
             requestRollback = {};
 
+            // If there is no move operation
             if (!categoryPostListMoveTo) {
-              //! Define rollback action for Firestore category related post documents
+              //! Define rollback action for Firestore delete category related post documents
               requestRollback.postListDocument = async (): Promise<void> => {
                 await Promise.all(categoryPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<WriteResult> => {
                   const documentSnapshot: DocumentSnapshot | undefined = categoryPostListDocumentSnapshot.find((snapshot: DocumentSnapshot) => {
@@ -146,21 +146,24 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                   throw new Error('fastify/firestore/failed-delete-post');
                 });
 
-              // Extract URLs of images associated with category posts
+              // Extract URLs of post images associated with category
               const postListImageList: string[] = categoryPostList
                 .filter((post: Post) => post.image)
                 .map((post: Post) => post.image);
 
-              // Move images associated with category related posts to temporary storage
+              // Move post images associated with category to temporary storage
               if (postListImageList.length) {
+                // Define the destination path of the post image
                 const postListImageListDestination: string[] = request.server.markdownPlugin.getImageListSubstringUrl(postListImageList);
+
+                // Move the post image to temporary storage
                 const tempListImageList: string[] = await request.server.storagePlugin
-                  .setImageListMoveTo(postListImageListDestination, userTemp)
+                  .setImageListMoveTo(postListImageListDestination, 'temp')
                   .catch(() => {
                     throw new Error('fastify/storage/failed-move-post-image-to-temp');
                   });
 
-                //! Define rollback action for images moved to temporary storage
+                //! Define rollback action for post images moved to temporary storage
                 requestRollback.tempListImageList = async (): Promise<void> => {
                   await Promise.all(tempListImageList.map(async (tempImageList: string, i: number): Promise<string[]> => {
                     return request.server.storagePlugin.setImageListMoveTo([tempImageList], parse(decodeURIComponent(postListImageListDestination[i])).dir);
@@ -168,23 +171,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 };
               }
 
-              // Extract URLs of markdown images associated with category related posts
+              // Extract URLs of post markdown images associated with category
               const postListMarkdownList: string[][] = categoryPostListDocumentSnapshot
                 .map((documentSnapshot: DocumentSnapshot) => documentSnapshot.data())
                 .filter((documentData: DocumentData | undefined) => documentData?.markdown)
                 .map((documentData: DocumentData | undefined) => documentData?.markdown);
 
-              // Move markdown images associated with category related posts to temporary storage
+              // Move post markdown images associated with category to temporary storage
               if (postListMarkdownList.some((postMarkdownList: string[]) => postMarkdownList.length)) {
                 const tempListMarkdownList: string[][] = await Promise
                   .all(postListMarkdownList.map(async (postMarkdownList: string[]): Promise<string[]> => {
-                    return request.server.storagePlugin.setImageListMoveTo(postMarkdownList, userTemp);
+                    return request.server.storagePlugin.setImageListMoveTo(postMarkdownList, 'temp');
                   }))
                   .catch(() => {
                     throw new Error('fastify/storage/failed-move-post-image-to-temp');
                   });
 
-                //! Define rollback action for markdown images moved to temporary storage
+                //! Define rollback action for post markdown images moved to temporary storage
                 requestRollback.tempListMarkdownList = async (): Promise<void> => {
                   await Promise.all(tempListMarkdownList.map(async (tempMarkdownList: string[], i: number): Promise<string[]> => {
                     return request.server.storagePlugin.setImageListMoveTo(tempMarkdownList, parse(postListMarkdownList[i][0]).dir);
@@ -249,7 +252,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           // Increment retry counter
           requestRetries++;
 
-          //! Rollback actions and handle errors
+          //! Define rollback actions and handle errors
           const responseError: ResponseError | null = await reply.server.prismaPlugin.setErrorTransaction(error, requestRetries >= MAX_RETRIES, requestRollback);
 
           if (responseError) {

@@ -248,7 +248,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           // Increment retry counter
           requestRetries++;
 
-          //! Rollback actions and handle errors
+          //! Define rollback actions and handle errors
           const responseError: ResponseError | null = await reply.server.prismaPlugin.setErrorTransaction(error, requestRetries >= MAX_RETRIES, requestRollback);
 
           if (responseError) {

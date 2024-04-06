@@ -68,27 +68,33 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<PostUpdateDto>, reply: FastifyReply): Promise<any> {
+      // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
-      //* Common info
+      // Extract common information from request object
+      const userId: number = Number(request.user.id);
+      const userFirebaseUid: string = String(request.user.firebaseUid);
 
-      const userId: number = request.user.id;
-      const userFirebaseUid: string = request.user.firebaseUid;
-      const userTemp: string = ['users', userFirebaseUid, 'temp'].join('/');
-
-      const postId: number = request.params.id;
+      // Extract post information from the request object
+      const postId: number = Number(request.params.id);
       const postFirebaseUid: string = String(request.body.firebaseUid || '');
       const postPath: string = ['users', userFirebaseUid, 'posts', postFirebaseUid].join('/');
       const postImage: string | null | undefined = request.body.image as any;
       const postMarkdown: string = String(request.body.markdown || '');
+      const postMarkdownListDestination: string = [postPath, 'markdown'].join('/');
 
-      //* Make post updating preparations before start transaction
-
+      // Define an array of DocumentReference objects for the post documents in Firestore
       const postDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(postPath);
-      const postDocumentSnapshot: DocumentSnapshot = await postDocumentReference.get().catch(() => {
-        throw new Error('fastify/firestore/failed-get-post');
-      });
 
+      // Retrieve the DocumentSnapshot objects for the post documents in Firestore
+      // prettier-ignore
+      const postDocumentSnapshot: DocumentSnapshot = await postDocumentReference
+        .get()
+        .catch(() => {
+          throw new Error('fastify/firestore/failed-get-post');
+        });
+
+      // Create the destination path for the post image
       const postImageListDestination: string = [postDocumentReference.path, 'image'].join('/');
       const postImageList: string[] = await request.server.storagePlugin
         .getImageList(postImageListDestination)
@@ -96,29 +102,33 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           throw new Error('fastify/storage/failed-read-file-list');
         });
 
-      //? Transaction
-
+      // Counter for transaction retries
       let requestRetries: number = 0;
+
+      // Object to store rollback actions in case of transaction failure
       let requestRollback: any = undefined;
 
       // prettier-ignore
       while (requestRetries < MAX_RETRIES) {
         try {
+          // Start transaction using Prisma's $transaction method https://www.prisma.io/docs/orm/prisma-client/queries/transactions
           await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<Post> => {
+            // Re-initialize requestRollback object
             requestRollback = {};
 
-            /** Move Post previous image to temp (delete) */
-
+            // Define a function to set the post image and move unused image to temporary storage
             const setPostImage = async (postImageNext: string | null): Promise<string | null> => {
+              // Filter out the unused post image URL
               const postImageListUnused: string[] = postImageList.filter((postImage: string) => postImage !== postImageNext);
+
+              // Move the unused image to temporary storage
               const tempImageList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(postImageListUnused, userTemp)
+                .setImageListMoveTo(postImageListUnused, 'temp')
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-post-image-to-temp');
                 });
 
-              //! Storage Post image rollback
-
+              //! Define rollback action for post image moved to temporary storage
               requestRollback.tempImageList = async (): Promise<void> => {
                 await request.server.storagePlugin.setImageListMoveTo(tempImageList, postPath);
               };
@@ -126,27 +136,25 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               return postImageNext;
             };
 
-            /** Move Post image to post (save) */
-
+            // If there is a post image
             if (postImage) {
+              // Extract the new image URL with the appropriate destination
               const updatedTempImageList: string[] = request.server.markdownPlugin.getImageListSubstringUrl([postImage]);
+
+              // Move the updated image to the post image destination
               const updatedPostImageList: string[] = await request.server.storagePlugin
                 .setImageListMoveTo(updatedTempImageList, postImageListDestination)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-temp-image-to-post');
                 });
 
-              //! Storage Post image rollback
-
+              //! Define rollback action for moving post image to destination
               requestRollback.updatedPostImageList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(updatedPostImageList, userTemp);
+                await request.server.storagePlugin.setImageListMoveTo(updatedPostImageList, 'temp');
               };
 
-              //* Set
-
+              // Set the request body image with the updated post image
               request.body.image = request.server.markdownPlugin.getImageListRewrite(postImage, updatedTempImageList, updatedPostImageList);
-
-              /** Move Post previous image to temp (delete) */
 
               // @ts-ignore
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -157,68 +165,70 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               const updatedPostImage: null = await setPostImage(null);
             }
 
-            /** Move Markdown image to post (save) */
-
+            // Get the list of images in the post markdown body
             const bodyMarkdownList: string[] = request.server.markdownPlugin.getImageList(postMarkdown);
+
+            // Get the list of temporary images from the post markdown body
             const tempMarkdownList: string[] = request.server.markdownPlugin.getImageListTemp(bodyMarkdownList);
 
+            // If there are temporary markdown images
             if (tempMarkdownList.length) {
-              const postMarkdownListDestination: string = [postPath, 'markdown'].join('/');
+              // Move the temporary markdown images to the post markdown destination
               const postMarkdownList: string[] = await request.server.storagePlugin
                 .setImageListMoveTo(tempMarkdownList, postMarkdownListDestination)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-temp-image-to-post');
                 });
 
-              //! Storage Markdown images rollback
-
+              //! Define rollback action for moving markdown images to post markdown destination
               requestRollback.postMarkdownList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(postMarkdownList, userTemp);
+                await request.server.storagePlugin.setImageListMoveTo(postMarkdownList, 'temp');
               };
 
-              //* Set
-
+              // Rewrite the markdown body with the updated markdown image list
               request.body.markdown = request.server.markdownPlugin.getImageListRewrite(postMarkdown, tempMarkdownList, postMarkdownList);
             }
 
-            /** Move Markdown image to temp (delete) */
-
+            // Get the updated list of markdown images from the request body
             const updatedPostMarkdown: string[] = request.server.markdownPlugin.getImageList(String(request.body.markdown || ''));
+
+            // Extract the list of post markdown images
             const updatedPostMarkdownList: string[] = request.server.markdownPlugin.getImageListPost(updatedPostMarkdown);
-            const updatedPostMarkdownListDestination: string = [postPath, 'markdown'].join('/');
+
+            // Filter out the post markdown images that are no longer used
             const updatedPostMarkdownListUnused: string[] = await request.server.storagePlugin
-              .getImageList(updatedPostMarkdownListDestination)
+              .getImageList(postMarkdownListDestination)
               .then((imageList: string[]) => imageList.filter((imageUrl: string) => !updatedPostMarkdownList.includes(encodeURIComponent(imageUrl))))
               .catch(() => {
                 throw new Error('fastify/storage/failed-read-file-list');
               });
 
+            // If there are unused post markdown images
             if (updatedPostMarkdownListUnused.length) {
+              // Move the unused post markdown images to temporary storage
               const updatedTempMarkdownList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(updatedPostMarkdownListUnused, userTemp)
+                .setImageListMoveTo(updatedPostMarkdownListUnused, 'temp')
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-post-image-to-temp');
                 });
 
-              //! Storage Markdown images rollback
-
+              //! Define rollback action for moving unused markdown images to temporary storage
               requestRollback.updatedTempMarkdownList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(updatedTempMarkdownList, updatedPostMarkdownListDestination);
+                await request.server.storagePlugin.setImageListMoveTo(updatedTempMarkdownList, postMarkdownListDestination);
               };
             }
 
-            /** Update related Firestore document */
-
-            //! Firestore document rollback
-
+            //! Define rollback action for Firestore document update
             requestRollback.postDocument = async (): Promise<void> => {
               await postDocumentReference.set(postDocumentSnapshot.data() as DocumentData)
             };
 
+            // Prepare the DTO for updating the Firestore document
             const postDocumentUpdateDto: any = {
               markdown: updatedPostMarkdownList.map((imageUrl: string) => decodeURIComponent(imageUrl))
             };
 
+            // Perform the update operation on the Firestore document
             // @ts-ignore
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const postDocumentUpdate: WriteResult = await postDocumentReference
@@ -227,8 +237,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 throw new Error('fastify/firestore/failed-update-post');
               });
 
-            /** Update MySQL row */
-
+            // Define the arguments for updating post
             const postUpdateArgs: Prisma.PostUpdateArgs = {
               select: {
                 ...request.server.prismaPlugin.getPostSelect(),
@@ -252,20 +261,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               }
             };
 
+            // Update the post
             return prismaClient.post.update(postUpdateArgs)
           }).then((post: Post) => {
+            // Send success response with updated post
             return reply.status(200).send({
               data: post,
               statusCode: 200
             });
           });
 
+          // Exit retry loop if transaction is successful
           break;
         } catch (error: any) {
+          // Increment retry counter
           requestRetries++;
 
-          //! Rollback && Send error or pass further for retry
-
+          //! Define rollback actions and handle errors
           const responseError: ResponseError | null = await reply.server.prismaPlugin.setErrorTransaction(error, requestRetries >= MAX_RETRIES, requestRollback);
 
           if (responseError) {
