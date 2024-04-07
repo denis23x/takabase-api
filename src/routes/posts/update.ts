@@ -123,14 +123,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
               // Move the unused image to temporary storage
               const tempImageList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(postImageListUnused, 'temp')
+                .setImageListMove(postImageListUnused, 'temp')
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-post-image-to-temp');
                 });
 
               //! Define rollback action for post image moved to temporary storage
               requestRollback.tempImageList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(tempImageList, postPath);
+                await request.server.storagePlugin.setImageListMove(tempImageList, postPath);
               };
 
               return postImageNext;
@@ -139,18 +139,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // If there is a post image
             if (postImage) {
               // Extract the new image URL with the appropriate destination
-              const updatedTempImageList: string[] = request.server.markdownPlugin.getImageListSubstringUrl([postImage]);
+              const updatedTempImageList: string[] = request.server.markdownPlugin.getImageListRelativeUrl([postImage]);
 
               // Move the updated image to the post image destination
               const updatedPostImageList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(updatedTempImageList, postImageListDestination)
+                .setImageListMove(updatedTempImageList, postImageListDestination)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-temp-image-to-post');
                 });
 
               //! Define rollback action for moving post image to destination
               requestRollback.updatedPostImageList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(updatedPostImageList, 'temp');
+                await request.server.storagePlugin.setImageListMove(updatedPostImageList, 'temp');
               };
 
               // Set the request body image with the updated post image
@@ -175,14 +175,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             if (tempMarkdownList.length) {
               // Move the temporary markdown images to the post markdown destination
               const postMarkdownList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(tempMarkdownList, postMarkdownListDestination)
+                .setImageListMove(tempMarkdownList, postMarkdownListDestination)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-temp-image-to-post');
                 });
 
               //! Define rollback action for moving markdown images to post markdown destination
               requestRollback.postMarkdownList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(postMarkdownList, 'temp');
+                await request.server.storagePlugin.setImageListMove(postMarkdownList, 'temp');
               };
 
               // Rewrite the markdown body with the updated markdown image list
@@ -207,14 +207,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             if (updatedPostMarkdownListUnused.length) {
               // Move the unused post markdown images to temporary storage
               const updatedTempMarkdownList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(updatedPostMarkdownListUnused, 'temp')
+                .setImageListMove(updatedPostMarkdownListUnused, 'temp')
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-post-image-to-temp');
                 });
 
               //! Define rollback action for moving unused markdown images to temporary storage
               requestRollback.updatedTempMarkdownList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(updatedTempMarkdownList, postMarkdownListDestination);
+                await request.server.storagePlugin.setImageListMove(updatedTempMarkdownList, postMarkdownListDestination);
               };
             }
 

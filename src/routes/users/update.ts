@@ -97,14 +97,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
               // Move the unused avatar to temporary storage
               const tempAvatarList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(userAvatarListUnused, 'temp')
+                .setImageListMove(userAvatarListUnused, 'temp')
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-user-avatar-to-temp');
                 });
 
               //! Define rollback action for user avatar moved to temporary storage
               requestRollback.tempAvatarList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(tempAvatarList, userAvatarListDestination);
+                await request.server.storagePlugin.setImageListMove(tempAvatarList, userAvatarListDestination);
               };
 
               return userAvatarNext;
@@ -113,18 +113,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // If there is a post image
             if (userAvatar) {
               // Extract the new avatar URL with the appropriate destination
-              const updatedTempAvatarList: string[] = request.server.markdownPlugin.getImageListSubstringUrl([userAvatar]);
+              const updatedTempAvatarList: string[] = request.server.markdownPlugin.getImageListRelativeUrl([userAvatar]);
 
               // Move the updated avatar to the user avatar destination
               const updatedUserAvatarList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(updatedTempAvatarList, userAvatarListDestination)
+                .setImageListMove(updatedTempAvatarList, userAvatarListDestination)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-temp-avatar-to-user');
                 });
 
               //! Define rollback action for moving user avatar to destination
               requestRollback.updatedUserAvatarList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(updatedUserAvatarList, 'temp');
+                await request.server.storagePlugin.setImageListMove(updatedUserAvatarList, 'temp');
               };
 
               // Set the request body avatar with the updated user avatar

@@ -37,7 +37,7 @@ const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: F
         .getImageListFirebaseBucket(imageListUrl)
         .filter((imageUrl: string) => imageUrl.includes('temp'));
 
-      return fastifyInstance.markdownPlugin.getImageListSubstringUrl(imageListTemp);
+      return fastifyInstance.markdownPlugin.getImageListRelativeUrl(imageListTemp);
     },
     getImageListPost: (imageListUrl: string[]): string[] => {
       const imageListPost: string[] = fastifyInstance.markdownPlugin
@@ -45,7 +45,7 @@ const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: F
         .filter((imageUrl: string) => imageUrl.includes('users'))
         .filter((imageUrl: string) => imageUrl.includes('posts'));
 
-      return fastifyInstance.markdownPlugin.getImageListSubstringUrl(imageListPost);
+      return fastifyInstance.markdownPlugin.getImageListRelativeUrl(imageListPost);
     },
     getImageListRewrite: (markdown: string, tempList: string[], postList: string[]): string => {
       let markdownNew: string = markdown;
@@ -59,13 +59,35 @@ const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: F
 
       return markdownNew;
     },
-    getImageListSubstringUrl: (imageListUrl: string[]): string[] => {
+    getImageListRelativeUrl: (imageListUrl: string[]): string[] => {
       return imageListUrl.map((imageUrl: string) => {
         const url: URL = new URL(imageUrl);
         const pathname: string = url.pathname;
-        const index: number = pathname.indexOf('users');
 
-        return pathname.substring(index);
+        // Function to determine the index for substring extraction (root storage relative)
+        const getIndex = (): number => {
+          // Find the index of 'users' in the pathname
+          const users: number = pathname.indexOf('users');
+
+          // Find the index of 'temp' in the pathname
+          const temp: number = pathname.indexOf('temp');
+
+          // Return the appropriate index based on the presence of 'users' or 'temp'
+          switch (true) {
+            case users !== -1: {
+              return users;
+            }
+            case temp !== -1: {
+              return temp;
+            }
+            default: {
+              return 0;
+            }
+          }
+        };
+
+        // Extract the substring URL based on the determined index
+        return pathname.substring(getIndex());
       });
     }
   });

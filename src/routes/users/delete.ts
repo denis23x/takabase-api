@@ -127,9 +127,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Move images associated with user's posts to temporary storage
             if (postListImageList.length) {
-              const postListImageListDestination: string[] = request.server.markdownPlugin.getImageListSubstringUrl(postListImageList);
+              const postListImageListDestination: string[] = request.server.markdownPlugin.getImageListRelativeUrl(postListImageList);
               const tempListImageList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(postListImageListDestination, 'temp')
+                .setImageListMove(postListImageListDestination, 'temp')
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-post-image-to-temp');
                 });
@@ -137,7 +137,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               //! Define rollback action for images moved to temporary storage
               requestRollback.tempListImageList = async (): Promise<void> => {
                 await Promise.all(tempListImageList.map(async (tempImageList: string, i: number): Promise<string[]> => {
-                  return request.server.storagePlugin.setImageListMoveTo([tempImageList], parse(decodeURIComponent(postListImageListDestination[i])).dir);
+                  return request.server.storagePlugin.setImageListMove([tempImageList], parse(decodeURIComponent(postListImageListDestination[i])).dir);
                 }));
               };
             }
@@ -152,7 +152,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             if (postListMarkdownList.some((postMarkdownList: string[]) => postMarkdownList.length)) {
               const tempListMarkdownList: string[][] = await Promise
                 .all(postListMarkdownList.map(async (postMarkdownList: string[]): Promise<string[]> => {
-                  return request.server.storagePlugin.setImageListMoveTo(postMarkdownList, 'temp');
+                  return request.server.storagePlugin.setImageListMove(postMarkdownList, 'temp');
                 }))
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-post-image-to-temp');
@@ -161,7 +161,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               //! Define rollback action for markdown images moved to temporary storage
               requestRollback.tempListMarkdownList = async (): Promise<void> => {
                 await Promise.all(tempListMarkdownList.map(async (tempMarkdownList: string[], i: number): Promise<string[]> => {
-                  return request.server.storagePlugin.setImageListMoveTo(tempMarkdownList, parse(postListMarkdownList[i][0]).dir);
+                  return request.server.storagePlugin.setImageListMove(tempMarkdownList, parse(postListMarkdownList[i][0]).dir);
                 }));
               };
             }
@@ -211,14 +211,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Move images associated with user avatar to temporary storage
             if (userAvatarList.length) {
               const tempAvatarList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(userAvatarList, 'temp')
+                .setImageListMove(userAvatarList, 'temp')
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-user-avatar-to-temp');
                 });
 
               //! Define rollback action for user avatars moved to temporary storage
               requestRollback.tempAvatarList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(tempAvatarList, userAvatarListDestination);
+                await request.server.storagePlugin.setImageListMove(tempAvatarList, userAvatarListDestination);
               };
             }
 

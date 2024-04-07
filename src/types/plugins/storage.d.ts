@@ -6,7 +6,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     storage: Bucket;
     storagePlugin: {
-      setImageListMoveTo: (imageList: string[] = [], moveTo: string) => Promise<string[]>;
+      setImageListMove: (imageList: string[] = [], destination: string) => Promise<string[]>;
       getImageList: (imageListDestination: string) => Promise<string[]>;
     };
   }

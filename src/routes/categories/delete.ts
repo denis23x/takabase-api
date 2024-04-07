@@ -154,11 +154,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Move post images associated with category to temporary storage
               if (postListImageList.length) {
                 // Define the destination path of the post image
-                const postListImageListDestination: string[] = request.server.markdownPlugin.getImageListSubstringUrl(postListImageList);
+                const postListImageListDestination: string[] = request.server.markdownPlugin.getImageListRelativeUrl(postListImageList);
 
                 // Move the post image to temporary storage
                 const tempListImageList: string[] = await request.server.storagePlugin
-                  .setImageListMoveTo(postListImageListDestination, 'temp')
+                  .setImageListMove(postListImageListDestination, 'temp')
                   .catch(() => {
                     throw new Error('fastify/storage/failed-move-post-image-to-temp');
                   });
@@ -166,7 +166,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 //! Define rollback action for post images moved to temporary storage
                 requestRollback.tempListImageList = async (): Promise<void> => {
                   await Promise.all(tempListImageList.map(async (tempImageList: string, i: number): Promise<string[]> => {
-                    return request.server.storagePlugin.setImageListMoveTo([tempImageList], parse(decodeURIComponent(postListImageListDestination[i])).dir);
+                    return request.server.storagePlugin.setImageListMove([tempImageList], parse(decodeURIComponent(postListImageListDestination[i])).dir);
                   }));
                 };
               }
@@ -181,7 +181,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               if (postListMarkdownList.some((postMarkdownList: string[]) => postMarkdownList.length)) {
                 const tempListMarkdownList: string[][] = await Promise
                   .all(postListMarkdownList.map(async (postMarkdownList: string[]): Promise<string[]> => {
-                    return request.server.storagePlugin.setImageListMoveTo(postMarkdownList, 'temp');
+                    return request.server.storagePlugin.setImageListMove(postMarkdownList, 'temp');
                   }))
                   .catch(() => {
                     throw new Error('fastify/storage/failed-move-post-image-to-temp');
@@ -190,7 +190,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 //! Define rollback action for post markdown images moved to temporary storage
                 requestRollback.tempListMarkdownList = async (): Promise<void> => {
                   await Promise.all(tempListMarkdownList.map(async (tempMarkdownList: string[], i: number): Promise<string[]> => {
-                    return request.server.storagePlugin.setImageListMoveTo(tempMarkdownList, parse(postListMarkdownList[i][0]).dir);
+                    return request.server.storagePlugin.setImageListMove(tempMarkdownList, parse(postListMarkdownList[i][0]).dir);
                   }));
                 };
               }

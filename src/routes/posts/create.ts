@@ -112,21 +112,21 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // If there is an image associated with the post
             if (postImage) {
               // Prepare the post image temporary URL
-              const tempImageList: string[] = request.server.markdownPlugin.getImageListSubstringUrl([postImage]);
+              const tempImageList: string[] = request.server.markdownPlugin.getImageListRelativeUrl([postImage]);
 
               // Define the destination path for the post image in storage
               const postImageListDestination: string = [postDocumentReference.path, 'image'].join('/');
 
               // Move the temporary post image to the post image destination
               const postImageList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(tempImageList, postImageListDestination)
+                .setImageListMove(tempImageList, postImageListDestination)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-temp-image-to-post');
                 });
 
               //! Define rollback action for post image moved to the post image destination
               requestRollback.postImageList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(postImageList, 'temp');
+                await request.server.storagePlugin.setImageListMove(postImageList, 'temp');
               };
 
               // Rewrite the image URL in the request body with the new post image URL
@@ -146,14 +146,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
               // Move the temporary markdown images to the post markdown destination
               const postMarkdownList: string[] = await request.server.storagePlugin
-                .setImageListMoveTo(tempMarkdownList, postMarkdownListDestination)
+                .setImageListMove(tempMarkdownList, postMarkdownListDestination)
                 .catch(() => {
                   throw new Error('fastify/storage/failed-move-temp-image-to-post');
                 });
 
               //! Define rollback action for moving markdown images to post markdown destination
               requestRollback.postMarkdownList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMoveTo(postMarkdownList, 'temp');
+                await request.server.storagePlugin.setImageListMove(postMarkdownList, 'temp');
               };
 
               // Rewrite the markdown body with the updated markdown image list
