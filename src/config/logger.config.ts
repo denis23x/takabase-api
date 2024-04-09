@@ -2,26 +2,66 @@
 
 import { PinoLoggerOptions } from 'fastify/types/logger';
 import * as dotenv from 'dotenv';
+import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 
 dotenv.config();
+
+const loggerConfigBase: PinoLoggerOptions = {
+  base: null,
+  timestamp: (): string => {
+    const date: string = new Date().toISOString();
+
+    return `,"time":"${date}"`;
+  },
+  redact: [
+    'request.headers.authorization',
+    'request.headers.cookie',
+    'request.body.email',
+    'request.body.password',
+    'request.body.newPassword',
+    'request.body.newEmail',
+    'response.headers',
+    'response.cookie'
+  ],
+  serializers: {
+    err(error: FastifyError): any {
+      return {
+        message: error.message
+      };
+    },
+    res(reply: FastifyReply): any {
+      return {
+        statusCode: reply.statusCode
+      };
+    },
+    req: (request: FastifyRequest): any => {
+      return {
+        method: request.method,
+        url: request.url
+      };
+    }
+  }
+};
 
 const loggerConfigList: Record<string, PinoLoggerOptions | boolean> = {
   localhost: {
     level: 'debug',
+    ...loggerConfigBase,
     transport: {
       target: 'pino-pretty',
       options: {
-        ignore: 'pid,hostname',
         colorize: true,
         colorizeObjects: true
       }
     }
   },
   development: {
-    level: 'error'
+    level: 'info',
+    ...loggerConfigBase
   },
   production: {
-    level: 'error'
+    level: 'warn',
+    ...loggerConfigBase
   }
 };
 

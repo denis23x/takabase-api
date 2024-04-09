@@ -12,11 +12,11 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
   fastifyInstance.decorate('storage', getStorage().bucket(storageConfig.bucket));
 
   fastifyInstance.decorate('storagePlugin', {
-    setImageListMove: async (imageList: string[] = [], moveTo: string): Promise<string[]> => {
+    setImageListMove: async (imageList: string[] = [], moveDestination: string): Promise<string[]> => {
       const listMoveTo: Promise<string>[] = imageList.map(async (imageUrl: string) => {
         const source: string = decodeURIComponent(imageUrl);
         const parsedPath: ParsedPath = parse(source);
-        const destination: string = decodeURIComponent([moveTo, parsedPath.base].join('/'));
+        const destination: string = decodeURIComponent([moveDestination, parsedPath.base].join('/'));
 
         return fastifyInstance.storage
           .file(source)
