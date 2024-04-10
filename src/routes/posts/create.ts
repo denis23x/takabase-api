@@ -100,9 +100,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Create a reference for the new post document in Firestore
             const postDocumentReference: DocumentReference = await request.server.firestorePlugin
               .addDocument(postPath, {})
-              .catch(() => {
-                throw new Error('fastify/firestore/failed-add-post');
-              });
+              .catch((error: any) => request.server.helperPlugin.throwError('firestore/add-document-failed', error, request));
 
             //! Define the rollback action for deleting the newly created post document in Firestore
             requestRollback.postDocument = async (): Promise<void> => {
@@ -120,9 +118,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Move the temporary post image to the post image destination
               const postImageList: string[] = await request.server.storagePlugin
                 .setImageListMove(tempImageList, postImageListDestination)
-                .catch(() => {
-                  throw new Error('fastify/storage/failed-move-temp-image-to-post');
-                });
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               //! Define rollback action for post image moved to the post image destination
               requestRollback.postImageList = async (): Promise<void> => {
@@ -147,9 +143,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Move the temporary markdown images to the post markdown destination
               const postMarkdownList: string[] = await request.server.storagePlugin
                 .setImageListMove(tempMarkdownList, postMarkdownListDestination)
-                .catch(() => {
-                  throw new Error('fastify/storage/failed-move-temp-image-to-post');
-                });
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               //! Define rollback action for moving markdown images to post markdown destination
               requestRollback.postMarkdownList = async (): Promise<void> => {
@@ -169,9 +163,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const postDocumentUpdate: WriteResult = await postDocumentReference
                 .update(postDocumentUpdateDto)
-                .catch(() => {
-                  throw new Error('fastify/firestore/failed-update-post');
-                });
+                .catch((error: any) => request.server.helperPlugin.throwError('firestore/update-document-failed', error, request));
             }
 
             // Define the arguments for create post

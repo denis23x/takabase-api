@@ -116,9 +116,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const postListDocumentDelete: WriteResult[] = await Promise
               .all(userPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<WriteResult> => documentReference.delete()))
-              .catch(() => {
-                throw new Error('fastify/firestore/failed-delete-post');
-              });
+              .catch((error: any) => request.server.helperPlugin.throwError('firestore/delete-document-failed', error, request));
 
             // Extract URLs of images associated with user's posts
             const postListImageList: string[] = userPostList
@@ -130,9 +128,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               const postListImageListDestination: string[] = request.server.markdownPlugin.getImageListRelativeUrl(postListImageList);
               const tempListImageList: string[] = await request.server.storagePlugin
                 .setImageListMove(postListImageListDestination, 'temp')
-                .catch(() => {
-                  throw new Error('fastify/storage/failed-move-post-image-to-temp');
-                });
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               //! Define rollback action for images moved to temporary storage
               requestRollback.tempListImageList = async (): Promise<void> => {
@@ -154,9 +150,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 .all(postListMarkdownList.map(async (postMarkdownList: string[]): Promise<string[]> => {
                   return request.server.storagePlugin.setImageListMove(postMarkdownList, 'temp');
                 }))
-                .catch(() => {
-                  throw new Error('fastify/storage/failed-move-post-image-to-temp');
-                });
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               //! Define rollback action for markdown images moved to temporary storage
               requestRollback.tempListMarkdownList = async (): Promise<void> => {
@@ -204,17 +198,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const userAvatarListDestination: string = ['users', userFirebaseUid, 'avatar'].join('/');
             const userAvatarList: string[] = await request.server.storagePlugin
               .getImageList(userAvatarListDestination)
-              .catch(() => {
-                throw new Error('fastify/storage/failed-read-file-list');
-              });
+              .catch((error: any) => request.server.helperPlugin.throwError('storage/get-filelist-failed', error, request));
 
             // Move images associated with user avatar to temporary storage
             if (userAvatarList.length) {
               const tempAvatarList: string[] = await request.server.storagePlugin
                 .setImageListMove(userAvatarList, 'temp')
-                .catch(() => {
-                  throw new Error('fastify/storage/failed-move-user-avatar-to-temp');
-                });
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               //! Define rollback action for user avatars moved to temporary storage
               requestRollback.tempAvatarList = async (): Promise<void> => {

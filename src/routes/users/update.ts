@@ -72,9 +72,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const userAvatarListDestination: string = ['users', userFirebaseUid, 'avatar'].join('/');
       const userAvatarList: string[] = await request.server.storagePlugin
         .getImageList(userAvatarListDestination)
-        .catch(() => {
-          throw new Error('fastify/storage/failed-read-file-list');
-        });
+        .catch((error: any) => request.server.helperPlugin.throwError('storage/get-filelist-failed', error, request));
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -98,9 +96,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Move the unused avatar to temporary storage
               const tempAvatarList: string[] = await request.server.storagePlugin
                 .setImageListMove(userAvatarListUnused, 'temp')
-                .catch(() => {
-                  throw new Error('fastify/storage/failed-move-user-avatar-to-temp');
-                });
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               //! Define rollback action for user avatar moved to temporary storage
               requestRollback.tempAvatarList = async (): Promise<void> => {
@@ -118,9 +114,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Move the updated avatar to the user avatar destination
               const updatedUserAvatarList: string[] = await request.server.storagePlugin
                 .setImageListMove(updatedTempAvatarList, userAvatarListDestination)
-                .catch(() => {
-                  throw new Error('fastify/storage/failed-move-temp-avatar-to-user');
-                });
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               //! Define rollback action for moving user avatar to destination
               requestRollback.updatedUserAvatarList = async (): Promise<void> => {

@@ -102,9 +102,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         // prettier-ignore
         const postListDocumentSnapshot: DocumentSnapshot[] = await Promise
           .all(postListDocumentReference.map(async (documentReference: DocumentReference): Promise<DocumentSnapshot> => documentReference.get()))
-          .catch(() => {
-            throw new Error('fastify/firestore/failed-get-all-post');
-          });
+          .catch((error: any) => request.server.helperPlugin.throwError('firestore/get-list-failed', error, request));
 
         // Push the retrieved DocumentSnapshot objects to the categoryPostListDocumentSnapshot array
         categoryPostListDocumentSnapshot.push(...postListDocumentSnapshot);
@@ -142,9 +140,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const postListDocumentDelete: WriteResult[] = await Promise
                 .all(categoryPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<WriteResult> => documentReference.delete()))
-                .catch(() => {
-                  throw new Error('fastify/firestore/failed-delete-post');
-                });
+                .catch((error: any) => request.server.helperPlugin.throwError('firestore/delete-document-failed', error, request));
 
               // Extract URLs of post images associated with category
               const postListImageList: string[] = categoryPostList
@@ -159,9 +155,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 // Move the post image to temporary storage
                 const tempListImageList: string[] = await request.server.storagePlugin
                   .setImageListMove(postListImageListDestination, 'temp')
-                  .catch(() => {
-                    throw new Error('fastify/storage/failed-move-post-image-to-temp');
-                  });
+                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
                 //! Define rollback action for post images moved to temporary storage
                 requestRollback.tempListImageList = async (): Promise<void> => {
@@ -183,9 +177,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                   .all(postListMarkdownList.map(async (postMarkdownList: string[]): Promise<string[]> => {
                     return request.server.storagePlugin.setImageListMove(postMarkdownList, 'temp');
                   }))
-                  .catch(() => {
-                    throw new Error('fastify/storage/failed-move-post-image-to-temp');
-                  });
+                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
                 //! Define rollback action for post markdown images moved to temporary storage
                 requestRollback.tempListMarkdownList = async (): Promise<void> => {

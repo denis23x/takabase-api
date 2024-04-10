@@ -90,17 +90,16 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // prettier-ignore
       const postDocumentSnapshot: DocumentSnapshot = await postDocumentReference
         .get()
-        .catch(() => {
-          throw new Error('fastify/firestore/failed-get-post');
-        });
+        .catch((error: any) => request.server.helperPlugin.throwError('firestore/get-document-failed', error, request));
 
       // Create the destination path for the post image
       const postImageListDestination: string = [postDocumentReference.path, 'image'].join('/');
+
+      // Retrieve the list of post image from the storage
+      // prettier-ignore
       const postImageList: string[] = await request.server.storagePlugin
         .getImageList(postImageListDestination)
-        .catch(() => {
-          throw new Error('fastify/storage/failed-read-file-list');
-        });
+        .catch((error: any) => request.server.helperPlugin.throwError('storage/get-filelist-failed', error, request));
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -124,9 +123,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Move the unused image to temporary storage
               const tempImageList: string[] = await request.server.storagePlugin
                 .setImageListMove(postImageListUnused, 'temp')
-                .catch(() => {
-                  throw new Error('fastify/storage/failed-move-post-image-to-temp');
-                });
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               //! Define rollback action for post image moved to temporary storage
               requestRollback.tempImageList = async (): Promise<void> => {
@@ -144,9 +141,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Move the updated image to the post image destination
               const updatedPostImageList: string[] = await request.server.storagePlugin
                 .setImageListMove(updatedTempImageList, postImageListDestination)
-                .catch(() => {
-                  throw new Error('fastify/storage/failed-move-temp-image-to-post');
-                });
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               //! Define rollback action for moving post image to destination
               requestRollback.updatedPostImageList = async (): Promise<void> => {
@@ -176,9 +171,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Move the temporary markdown images to the post markdown destination
               const postMarkdownList: string[] = await request.server.storagePlugin
                 .setImageListMove(tempMarkdownList, postMarkdownListDestination)
-                .catch(() => {
-                  throw new Error('fastify/storage/failed-move-temp-image-to-post');
-                });
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               //! Define rollback action for moving markdown images to post markdown destination
               requestRollback.postMarkdownList = async (): Promise<void> => {
@@ -199,18 +192,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const updatedPostMarkdownListUnused: string[] = await request.server.storagePlugin
               .getImageList(postMarkdownListDestination)
               .then((imageList: string[]) => imageList.filter((imageUrl: string) => !updatedPostMarkdownList.includes(encodeURIComponent(imageUrl))))
-              .catch(() => {
-                throw new Error('fastify/storage/failed-read-file-list');
-              });
+              .catch((error: any) => request.server.helperPlugin.throwError('storage/get-filelist-failed', error, request));
 
             // If there are unused post markdown images
             if (updatedPostMarkdownListUnused.length) {
               // Move the unused post markdown images to temporary storage
               const updatedTempMarkdownList: string[] = await request.server.storagePlugin
                 .setImageListMove(updatedPostMarkdownListUnused, 'temp')
-                .catch(() => {
-                  throw new Error('fastify/storage/failed-move-post-image-to-temp');
-                });
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               //! Define rollback action for moving unused markdown images to temporary storage
               requestRollback.updatedTempMarkdownList = async (): Promise<void> => {
@@ -233,9 +222,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const postDocumentUpdate: WriteResult = await postDocumentReference
               .update(postDocumentUpdateDto)
-              .catch(() => {
-                throw new Error('fastify/firestore/failed-update-post');
-              });
+              .catch((error: any) => request.server.helperPlugin.throwError('firestore/update-document-failed', error, request));
 
             // Define the arguments for updating post
             const postUpdateArgs: Prisma.PostUpdateArgs = {
