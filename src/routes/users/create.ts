@@ -99,7 +99,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 ...request.server.prismaPlugin.getUserSelect()
               },
               data: {
-                ...request.body,
                 name: request.body.name,
                 terms: request.body.terms,
                 firebaseUid: userFirebaseRecord.uid

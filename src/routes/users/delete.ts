@@ -6,6 +6,7 @@ import { ParamsId } from '../../types/crud/params/params-id';
 import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
 import { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
+import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 import { parse } from 'path';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
@@ -51,6 +52,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Extract common information from request object
       const userId: number = Number(request.user.id);
       const userFirebaseUid: string = String(request.user.firebaseUid);
+
+      // Get Auth user record
+      const userAuthRecord: UserRecord = await request.server.auth.getUser(request.user.firebaseUid);
 
       // Construct Firestore document references for user
       // prettier-ignore
@@ -193,6 +197,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // @ts-ignore
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const userDocumentDelete: WriteResult = await userDocumentReference.delete();
+
+            //! Define rollback action for user Auth record
+            requestRollback.userRecord = async (): Promise<void> => {
+              await request.server.auth.createUser({
+                email: userAuthRecord.email,
+                emailVerified: userAuthRecord.emailVerified,
+                // TODO: add password
+                // password: userAuthRecord.password,
+                displayName: userAuthRecord.displayName,
+                disabled: userAuthRecord.disabled
+              });
+            };
+
+            // Delete user Auth record
+            // @ts-ignore
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const userAuthRecordDelete: UserRecord = await request.server.auth.deleteUser(userAuthRecord.uid);
 
             // Fetch the list of user avatars
             const userAvatarListDestination: string = ['users', userFirebaseUid, 'avatar'].join('/');
