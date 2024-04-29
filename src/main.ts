@@ -19,6 +19,7 @@ import { swaggerConfig } from './config/swagger.config';
 import { jwtConfig } from './config/jwt.config';
 import { rateLimitConfig } from './config/rate-limit.config';
 
+import authPlugin from './plugins/auth.plugin';
 import firebasePlugin from './plugins/firebase.plugin';
 import firestorePlugin from './plugins/firestore.plugin';
 import helperPlugin from './plugins/helper.plugin';
@@ -66,13 +67,18 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(fastifyJwt, jwtConfig);
   await fastifyInstance.register(fastifyRateLimit, rateLimitConfig);
 
-  await fastifyInstance.register(firebasePlugin);
-  await fastifyInstance.register(firestorePlugin);
+  // FIREBASE
+
+  fastifyInstance.register(firebasePlugin).after(async () => {
+    await fastifyInstance.register(authPlugin);
+    await fastifyInstance.register(firestorePlugin);
+    await fastifyInstance.register(storagePlugin);
+  });
+
   await fastifyInstance.register(helperPlugin);
   await fastifyInstance.register(jwtPlugin);
   await fastifyInstance.register(markdownPlugin);
   await fastifyInstance.register(prismaPlugin);
-  await fastifyInstance.register(storagePlugin);
 
   // JSON SCHEMA CRUD
 
