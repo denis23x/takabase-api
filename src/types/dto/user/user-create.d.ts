@@ -3,5 +3,5 @@
 import type { Prisma } from '../../../database/client';
 
 export interface UserCreateDto {
-  Body: Prisma.UserCreateInput;
+  Body: Prisma.UserCreateInput & Record<string, string>;
 }
