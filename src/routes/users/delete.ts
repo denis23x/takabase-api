@@ -3,11 +3,11 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Post, Prisma, PrismaClient, User } from '../../database/client';
 import { ParamsId } from '../../types/crud/params/params-id';
-import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
 import { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
 import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 import { parse } from 'path';
+import { UserDeleteDto } from '../../types/dto/user/user-delete';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -24,6 +24,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       ],
       params: {
         $ref: 'paramsIdSchema#'
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          password: {
+            type: 'string',
+            default: 'password123',
+            pattern: '^((?=.*\\d)|(?=.*[!@#$%^&*]))(?=.*[a-zA-Z]).{6,32}$'
+          }
+        },
+        required: ['password'],
+        additionalProperties: false
       },
       response: {
         200: {
@@ -45,7 +57,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<ParamsId & QuerystringSearch>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<ParamsId & UserDeleteDto>, reply: FastifyReply): Promise<any> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
@@ -201,10 +213,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             //! Define rollback action for user Auth record
             requestRollback.userRecord = async (): Promise<void> => {
               await request.server.auth.createUser({
+                uid: request.user.firebaseUid,
                 email: userAuthRecord.email,
                 emailVerified: userAuthRecord.emailVerified,
-                // TODO: add password
-                // password: userAuthRecord.password,
+                password: request.query.password,
                 displayName: userAuthRecord.displayName,
                 disabled: userAuthRecord.disabled
               });
@@ -235,9 +247,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Define arguments to delete user
             const userDeleteArgs: Prisma.UserDeleteArgs = {
-              select: {
-                ...request.server.prismaPlugin.getUserSelect()
-              },
+              select: request.server.prismaPlugin.getUserSelect(),
               where: {
                 id: userId
               }

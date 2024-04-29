@@ -18,7 +18,7 @@ const jwtPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fastif
   });
 
   fastifyInstance.decorate('authenticateHandler', {
-    signUser: (user: User): string => {
+    signUser: (user: Partial<User>): string => {
       return fastifyInstance.jwt.sign({
         id: user.id,
         firebaseUid: user.firebaseUid

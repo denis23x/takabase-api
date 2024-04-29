@@ -135,15 +135,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Define the arguments for updating user
             const userUpdateArgs: Prisma.UserUpdateArgs = {
-              select: {
-                ...request.server.prismaPlugin.getUserSelect()
-              },
+              select: request.server.prismaPlugin.getUserSelect(),
               where: {
                 id: userId
               },
-              data: {
-                ...request.body
-              }
+              data: request.body
             };
 
             // Update the user

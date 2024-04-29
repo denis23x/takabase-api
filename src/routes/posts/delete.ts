@@ -3,7 +3,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Post, Prisma, PrismaClient } from '../../database/client';
 import { ParamsId } from '../../types/crud/params/params-id';
-import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
 import { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
 
@@ -43,7 +42,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<ParamsId & QuerystringSearch>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<ParamsId>, reply: FastifyReply): Promise<any> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 

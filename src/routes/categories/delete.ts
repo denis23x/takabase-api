@@ -219,9 +219,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Define arguments to delete category
             const categoryDeleteArgs: Prisma.CategoryDeleteArgs = {
-              select: {
-                ...request.server.prismaPlugin.getCategorySelect(),
-              },
+              select: request.server.prismaPlugin.getCategorySelect(),
               where: {
                 id: categoryId,
                 userId

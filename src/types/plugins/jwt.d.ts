@@ -6,7 +6,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     authenticate: any;
     authenticateHandler: {
-      signUser: (user: User) => string;
+      signUser: (user: Partial<User>) => string;
     };
   }
 }

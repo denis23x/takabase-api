@@ -229,23 +229,17 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               select: {
                 ...request.server.prismaPlugin.getPostSelect(),
                 category: {
-                  select: {
-                    ...request.server.prismaPlugin.getCategorySelect()
-                  }
+                  select: request.server.prismaPlugin.getCategorySelect()
                 },
                 user: {
-                  select: {
-                    ...request.server.prismaPlugin.getUserSelect()
-                  }
+                  select: request.server.prismaPlugin.getUserSelect()
                 }
               },
               where: {
                 userId,
                 id: postId
               },
-              data: {
-                ...request.body
-              }
+              data: request.body
             };
 
             // Update the post

@@ -46,9 +46,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const { name, query, orderBy, scope, size, page }: Record<string, any> = request.query;
 
       const userFindManyArgs: Prisma.UserFindManyArgs = {
-        select: {
-          ...request.server.prismaPlugin.getUserSelect()
-        },
+        select: request.server.prismaPlugin.getUserSelect(),
         orderBy: {
           id: 'desc'
         },

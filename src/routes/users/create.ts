@@ -24,16 +24,19 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           },
           email: {
             type: 'string',
-            default: 'email@example.com',
+            default: 'email@takabase.com',
             format: 'email'
           },
           password: {
             type: 'string',
-            default: 'email@example.com',
+            default: 'password123',
             pattern: '^((?=.*\\d)|(?=.*[!@#$%^&*]))(?=.*[a-zA-Z]).{6,32}$'
           },
           terms: {
             const: true
+          },
+          appearance: {
+            type: 'object'
           }
         },
         required: ['name', 'email', 'password', 'terms'],
@@ -95,9 +98,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Define arguments to create post
             const userCreateArgs: Prisma.UserCreateArgs = {
-              select: {
-                ...request.server.prismaPlugin.getUserSelect()
-              },
+              select: request.server.prismaPlugin.getUserSelect(),
               data: {
                 name: request.body.name,
                 terms: request.body.terms,
@@ -112,11 +113,17 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Get the reference to the user document
             const userDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(userPath);
 
+            // Firestore user document data
+            const userDocumentCreateData: any = {
+              userId: user.id,
+              appearance: request.body.appearance
+            }
+
             // Create Firestore user document
             // @ts-ignore
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const userDocumentCreate: WriteResult = await userDocumentReference
-              .create({ userId: user.id })
+              .create(userDocumentCreateData)
               .catch((error: any) => request.server.helperPlugin.throwError('firestore/update-document-failed', error, request));
 
             //! Define rollback action for delete Firestore user document
