@@ -2,8 +2,10 @@
 
 import { FastifyInstance } from 'fastify';
 
-import createMethod from './create';
+import loginMethod from './login';
+import logoutRevokeMethod from './logout-revoke';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
-  fastify.register(createMethod);
+  fastify.register(loginMethod);
+  fastify.register(logoutRevokeMethod);
 }
