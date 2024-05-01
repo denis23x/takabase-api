@@ -4,6 +4,7 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Post } from '../../database/client';
 import { QuerystringScope } from '../../types/crud/querystring/querystring-scope';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
+import { ParamsId } from '../../types/crud/params/params-id';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -57,7 +58,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<QuerystringScope>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<ParamsId & QuerystringScope>, reply: FastifyReply): Promise<any> {
       const { userId, userName, categoryId, scope }: Record<string, any> = request.query;
 
       const postFindUniqueOrThrowArgs: Prisma.PostFindUniqueOrThrowArgs = {
