@@ -54,9 +54,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         take: size
       };
 
-      /** Search */
+      /** Profile */
 
       if (name) {
+        userFindManyArgs.select = {
+          ...userFindManyArgs.select,
+          description: true
+        };
+
         userFindManyArgs.where = {
           ...userFindManyArgs.where,
           name
