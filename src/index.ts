@@ -39,8 +39,8 @@ main()
     });
 
     const options: FastifyListenOptions = {
-      port: Number(fastifyInstance.config.APP_PORT),
-      host: String(fastifyInstance.config.APP_HOST)
+      port: Number(process.env.APP_PORT),
+      host: String(process.env.APP_HOST)
     };
 
     // PROCESS
@@ -60,11 +60,18 @@ main()
 
 /** FIREBASE */
 
+// prettier-ignore
 export const apiHttpsOptions: HttpsOptions = {
   region: 'us-central1',
   minInstances: 0,
   maxInstances: 4,
-  memory: '256MiB'
+  memory: '256MiB',
+  secrets: [
+    'APP_SERVICE_ACCOUNT',
+    'JWT_SECRET',
+    'JWT_TTL',
+    'MYSQL_DATABASE_URL'
+  ]
 };
 
 export const api: HttpsFunction = onRequest(apiHttpsOptions, async (request: Request, response: express.Response) => {

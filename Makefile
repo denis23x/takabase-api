@@ -1,7 +1,7 @@
 .PHONY: up down exec
 
 up:
-	docker compose up --remove-orphans
+	docker compose --env-file .env.takabase-local up --remove-orphans
 down:
 	docker compose down
 exec:
