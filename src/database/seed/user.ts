@@ -2,9 +2,12 @@
 
 import { faker } from '@faker-js/faker';
 import { PrismaClient } from '../client';
-import * as dotenv from 'dotenv';
+import { config } from 'dotenv';
 
-dotenv.config();
+config({
+  path: '.env.takabase-local',
+  override: false
+});
 
 export const userRaw = async (): Promise<any> => {
   // @ts-ignore

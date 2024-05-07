@@ -42,7 +42,6 @@ lerna-debug.log*
 
 # .env Files
 .env*
-!.env.example
 
 # Firebase
 .firebase
@@ -51,6 +50,3 @@ lerna-debug.log*
 
 # Husky
 .husky
-
-# GCP
-.gcp*

@@ -1,7 +1,6 @@
 /** @format */
 
 import fastify, { FastifyReply, FastifyRequest, HookHandlerDoneFunction } from 'fastify';
-import fastifyEnv from '@fastify/env';
 import fastifyCors from '@fastify/cors';
 import fastifyCompress from '@fastify/compress';
 import fastifyHelmet from '@fastify/helmet';
@@ -10,7 +9,6 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import fastifyJwt from '@fastify/jwt';
 import fastifyRateLimit from '@fastify/rate-limit';
 
-import { envConfig } from './config/env.config';
 import { corsConfig } from './config/cors.config';
 import { loggerConfig } from './config/logger.config';
 import { compressConfig } from './config/compress.config';
@@ -60,7 +58,6 @@ export const main = async (): Promise<FastifyInstance> => {
 
   // PLUGINS
 
-  await fastifyInstance.register(fastifyEnv, envConfig);
   await fastifyInstance.register(fastifyCors, corsConfig);
   await fastifyInstance.register(fastifyCompress, compressConfig);
   await fastifyInstance.register(fastifyHelmet, helmetConfig);
@@ -95,7 +92,7 @@ export const main = async (): Promise<FastifyInstance> => {
 
   // LOCALHOST
   // prettier-ignore
-  if (fastifyInstance.config.NODE_ENV === 'localhost') {
+  if (process.env.NODE_ENV === 'localhost') {
     fastifyInstance.addHook('onRequest', (request: FastifyRequest, reply: FastifyReply, done: HookHandlerDoneFunction) => {
       setTimeout(() => {
         done();
@@ -112,7 +109,7 @@ export const main = async (): Promise<FastifyInstance> => {
 
   // GCP ISSUE
   // prettier-ignore
-  if (fastifyInstance.config.NODE_ENV !== 'localhost') {
+  if (process.env.NODE_ENV !== 'localhost') {
     fastifyInstance.addContentTypeParser('application/json', {}, (request: FastifyRequest, body: any, done: ContentTypeParserDoneFunction) => {
       done(null, body.body);
     });

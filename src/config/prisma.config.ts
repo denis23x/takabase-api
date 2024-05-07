@@ -1,9 +1,12 @@
 /** @format */
 
 import { Prisma } from '../database/client';
-import * as dotenv from 'dotenv';
+import { config } from 'dotenv';
 
-dotenv.config();
+config({
+  path: '.env.takabase-local',
+  override: false
+});
 
 // https://www.prisma.io/docs/concepts/components/prisma-client/working-with-prismaclient/logging
 

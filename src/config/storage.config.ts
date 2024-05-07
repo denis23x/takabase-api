@@ -1,8 +1,11 @@
 /** @format */
 
-import * as dotenv from 'dotenv';
+import { config } from 'dotenv';
 
-dotenv.config();
+config({
+  path: '.env.takabase-local',
+  override: false
+});
 
 // https://cloud.google.com/storage/docs/introduction
 

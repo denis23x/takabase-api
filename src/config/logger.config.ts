@@ -1,10 +1,13 @@
 /** @format */
 
 import { PinoLoggerOptions } from 'fastify/types/logger';
-import * as dotenv from 'dotenv';
 import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
+import { config } from 'dotenv';
 
-dotenv.config();
+config({
+  path: '.env.takabase-local',
+  override: false
+});
 
 const loggerConfigBase: PinoLoggerOptions = {
   base: null,
