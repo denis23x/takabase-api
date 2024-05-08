@@ -21,7 +21,8 @@ export const userRaw = async (): Promise<any> => {
 
   // prettier-ignore
   const getAvatarPath = (): any => {
-    const avatarPath: string = String(process.env.APP_SEED);
+    const avatarStorage: string = String(process.env.APP_STORAGE);
+    const avatarPath: string = [avatarStorage, 'o/seed'].join('/');
     const avatarFile: string = faker.number.int({ min: 1, max: 32 }) + '.webp';
 
     return [avatarPath, avatarFile].join('%2F');

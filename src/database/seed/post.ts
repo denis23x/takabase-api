@@ -25,7 +25,8 @@ export const postRaw = async (): Promise<any> => {
 
   // prettier-ignore
   const getImagePath = (): any => {
-    const imagePath: string = String(process.env.APP_SEED);
+    const imageStorage: string = String(process.env.APP_STORAGE);
+    const imagePath: string = [imageStorage, 'o/seed'].join('/');
     const imageFile: string = faker.number.int({ min: 1, max: 32 }) + '.webp';
 
     return [imagePath, imageFile].join('%2F');
