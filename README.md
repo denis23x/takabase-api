@@ -5,6 +5,7 @@ Setup
 - `npm install`
 - Setup **Prettier**
 - Setup **ESLint**
+- Setup [husky](https://github.com/typicode/husky)
 
 Processes
 
@@ -29,7 +30,7 @@ Prisma
 
 Some configurations
 
-- `.env.example` app .env (also `src/config/env.config.ts`)
+- `.env.example` app `.env.takabase-local`
 - `ecosystem.config.js` process handler (production docker)
 - `firebase.json` dev deploy config
 

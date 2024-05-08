@@ -1,6 +1,7 @@
 /** @format */
 
-import fastify, { FastifyReply, FastifyRequest, HookHandlerDoneFunction } from 'fastify';
+import fastify, { FastifyReply, FastifyRequest, FastifyInstance, HookHandlerDoneFunction } from 'fastify';
+import { ContentTypeParserDoneFunction } from 'fastify/types/content-type-parser';
 import fastifyCors from '@fastify/cors';
 import fastifyCompress from '@fastify/compress';
 import fastifyHelmet from '@fastify/helmet';
@@ -9,6 +10,8 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import fastifyJwt from '@fastify/jwt';
 import fastifyRateLimit from '@fastify/rate-limit';
 
+// CONFIGURATIONS
+
 import { corsConfig } from './config/cors.config';
 import { loggerConfig } from './config/logger.config';
 import { compressConfig } from './config/compress.config';
@@ -16,6 +19,8 @@ import { helmetConfig } from './config/helmet.config';
 import { swaggerConfig } from './config/swagger.config';
 import { jwtConfig } from './config/jwt.config';
 import { rateLimitConfig } from './config/rate-limit.config';
+
+// PLUGINS
 
 import authPlugin from './plugins/auth.plugin';
 import firebasePlugin from './plugins/firebase.plugin';
@@ -26,23 +31,23 @@ import markdownPlugin from './plugins/markdown.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
 import storagePlugin from './plugins/storage.plugin';
 
+// ROUTES
+
 import authorizationRoutes from './routes/authorization';
 import categoriesRoutes from './routes/categories';
 import postsRoutes from './routes/posts';
 import usersRoutes from './routes/users';
 import testsRoutes from './routes/tests';
 
+// SCHEMAS
+
 import { paramsIdSchema } from './schema/crud/params/params-id.schema';
 import { querystringScopeSchema } from './schema/crud/querystring/querystring-scope.schema';
 import { querystringSearchSchema } from './schema/crud/querystring/querystring-search.schema';
 import { responseErrorSchema } from './schema/crud/response/response-error.schema';
-
 import { categorySchema } from './schema/category.schema';
 import { postSchema } from './schema/post.schema';
 import { userSchema } from './schema/user.schema';
-
-import { FastifyInstance } from 'fastify/types/instance';
-import { ContentTypeParserDoneFunction } from 'fastify/types/content-type-parser';
 
 export const main = async (): Promise<FastifyInstance> => {
   const fastifyInstance: FastifyInstance = fastify({
@@ -72,6 +77,8 @@ export const main = async (): Promise<FastifyInstance> => {
     await fastifyInstance.register(storagePlugin);
   });
 
+  // PLUGINS HANDMADE
+
   await fastifyInstance.register(helperPlugin);
   await fastifyInstance.register(jwtPlugin);
   await fastifyInstance.register(markdownPlugin);
@@ -91,8 +98,9 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(userSchema);
 
   // LOCALHOST
-  // prettier-ignore
+
   if (process.env.NODE_ENV === 'localhost') {
+    // prettier-ignore
     fastifyInstance.addHook('onRequest', (request: FastifyRequest, reply: FastifyReply, done: HookHandlerDoneFunction) => {
       setTimeout(() => {
         done();
@@ -108,8 +116,9 @@ export const main = async (): Promise<FastifyInstance> => {
   }
 
   // GCP ISSUE
-  // prettier-ignore
+
   if (process.env.NODE_ENV !== 'localhost') {
+    // prettier-ignore
     fastifyInstance.addContentTypeParser('application/json', {}, (request: FastifyRequest, body: any, done: ContentTypeParserDoneFunction) => {
       done(null, body.body);
     });
