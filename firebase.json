@@ -49,6 +49,9 @@
       ],
       "predeploy": [
         "npm --prefix \"$RESOURCE_DIR\" run build:prod"
+      ],
+      "postdeploy": [
+        "firebase use takabase-local"
       ]
     }
   ]
