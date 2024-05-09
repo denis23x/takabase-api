@@ -99,7 +99,7 @@ export const main = async (): Promise<FastifyInstance> => {
 
   // LOCALHOST
 
-  if (process.env.NODE_ENV === 'localhost') {
+  if (process.env.APP_NODE_ENV === 'localhost') {
     // prettier-ignore
     fastifyInstance.addHook('onRequest', (request: FastifyRequest, reply: FastifyReply, done: HookHandlerDoneFunction) => {
       setTimeout(() => {
@@ -117,7 +117,7 @@ export const main = async (): Promise<FastifyInstance> => {
 
   // GCP ISSUE
 
-  if (process.env.NODE_ENV !== 'localhost') {
+  if (process.env.APP_NODE_ENV !== 'localhost') {
     // prettier-ignore
     fastifyInstance.addContentTypeParser('application/json', {}, (request: FastifyRequest, body: any, done: ContentTypeParserDoneFunction) => {
       done(null, body.body);

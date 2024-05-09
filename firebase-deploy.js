@@ -15,18 +15,13 @@ const projectList = {
     type: 'select',
     name: 'project',
     message: 'Select an environment',
-    choices: [
-      {
-        title: 'takabase-dev',
-        value: 'takabase-dev',
-        description: 'https://takabase-dev-api.web.app',
-      },
-      {
-        title: 'takabase-prod',
-        value: 'takabase-prod',
-        description: 'https://takabase-prod-api.web.app',
-      },
-    ],
+    choices: Object.keys(projectList).map((key ) => {
+      return {
+        title: key,
+        value: key,
+        description: projectList[key].url,
+      }
+    }),
     initial: 0
   });
 

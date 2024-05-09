@@ -24,11 +24,11 @@ const jwtConfigList: Record<string, FastifyJWTOptions> = {
     }
   },
   production: {
-    secret: String(process.env.JWT_SECRET),
+    secret: String(process.env.API_JWT_SECRET),
     sign: {
-      expiresIn: String(process.env.JWT_TTL) + 'ms'
+      expiresIn: String(process.env.API_JWT_TTL) + 'ms'
     }
   }
 };
 
-export const jwtConfig: FastifyJWTOptions = jwtConfigList[String(process.env.NODE_ENV)];
+export const jwtConfig: FastifyJWTOptions = jwtConfigList[String(process.env.APP_NODE_ENV)];

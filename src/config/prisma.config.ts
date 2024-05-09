@@ -39,4 +39,4 @@ const prismaConfigList: Record<string, Prisma.PrismaClientOptions> = {
   }
 };
 
-export const prismaConfig: Prisma.PrismaClientOptions = prismaConfigList[String(process.env.NODE_ENV)];
+export const prismaConfig: Prisma.PrismaClientOptions = prismaConfigList[String(process.env.APP_NODE_ENV)];

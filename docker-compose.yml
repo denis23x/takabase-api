@@ -14,8 +14,12 @@ services:
     tty: true
     env_file:
       - .env.takabase-local
+    environment:
+      APP_PORT: 4400
+      APP_HOST: 0.0.0.0
     ports:
-      - ${APP_PORT}:${APP_PORT}
+      - "8080:8080"
+      - "4400:4400"
       - "5555:5555"
       - "9229:9229"
     volumes:
@@ -33,10 +37,8 @@ services:
       - .env.takabase-local
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     healthcheck:
-      test: mysqladmin ping -h 127.0.0.1 -u ${MYSQL_USER} --password=${MYSQL_PASSWORD}
+      test: mysqladmin ping -h 127.0.0.1 -u ${API_MYSQL_USER} --password=${API_MYSQL_PASSWORD}
       interval: 3s
       timeout: 5s
       retries: 10

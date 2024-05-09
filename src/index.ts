@@ -38,9 +38,10 @@ main()
       });
     });
 
+    // DOCKER
     const options: FastifyListenOptions = {
-      port: Number(process.env.APP_PORT),
-      host: String(process.env.APP_HOST)
+      port: process.env.APP_PORT ? Number(process.env.APP_PORT) : 4400,
+      host: process.env.APP_HOST ? String(process.env.APP_HOST) : 'localhost'
     };
 
     // PROCESS
@@ -67,10 +68,11 @@ export const apiHttpsOptions: HttpsOptions = {
   maxInstances: 4,
   memory: '256MiB',
   secrets: [
+    'APP_NODE_ENV',
     'APP_SERVICE_ACCOUNT',
-    'JWT_SECRET',
-    'JWT_TTL',
-    'MYSQL_DATABASE_URL'
+    'API_JWT_SECRET',
+    'API_JWT_TTL',
+    'API_MYSQL_DATABASE_URL'
   ]
 };
 

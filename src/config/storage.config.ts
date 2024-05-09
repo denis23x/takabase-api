@@ -24,4 +24,4 @@ const storageConfigList: Record<string, any> = {
   }
 };
 
-export const storageConfig: Record<string, any> = storageConfigList[String(process.env.NODE_ENV)];
+export const storageConfig: Record<string, any> = storageConfigList[String(process.env.APP_NODE_ENV)];

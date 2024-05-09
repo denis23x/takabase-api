@@ -17,7 +17,7 @@ Builds
 
 Makefile (using Docker)
 
-- `make up` swagger http://localhost:4400/docs
+- `make up` swagger http://localhost:8080/docs `GCP Emulator`
 - `make down` stop docker container
 - `make exec` go into running container
 

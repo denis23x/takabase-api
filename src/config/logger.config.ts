@@ -68,4 +68,4 @@ const loggerConfigList: Record<string, PinoLoggerOptions | boolean> = {
   }
 };
 
-export const loggerConfig: PinoLoggerOptions | boolean = loggerConfigList[String(process.env.NODE_ENV)];
+export const loggerConfig: PinoLoggerOptions | boolean = loggerConfigList[String(process.env.APP_NODE_ENV)];
