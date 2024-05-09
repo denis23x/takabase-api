@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "takabase-dev"
+    "default": "takabase-local"
   },
   "targets": {
     "takabase-dev": {

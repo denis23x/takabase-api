@@ -1,11 +1,5 @@
 const prompts = require('prompts');
 const spawn = require('child_process').spawn;
-const config = require('dotenv').config;
-
-config({
-  path: '.env.takabase-local',
-  override: false
-});
 
 const projectList = {
   ['takabase-dev']: {
@@ -75,7 +69,7 @@ const projectList = {
     type: 'confirm',
     name: 'confirm',
     message: 'Can you confirm?',
-    initial: project.value !== 'takabase-prod'
+    initial: project.project !== 'takabase-prod'
   });
 
   if (project.project && action.action && confirm.confirm) {
