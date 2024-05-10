@@ -66,7 +66,7 @@ export const apiHttpsOptions: HttpsOptions = {
   region: 'us-central1',
   minInstances: 0,
   maxInstances: 4,
-  memory: '256MiB',
+  memory: '512MiB',
   secrets: [
     'APP_NODE_ENV',
     'APP_SERVICE_ACCOUNT',

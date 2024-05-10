@@ -110,6 +110,19 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const user: User = await prismaClient.user.create(userCreateArgs);
             const userPath: string = ['users', userFirebaseRecord.uid].join('/');
 
+            //! Define rollback action for delete user
+            requestRollback.user = async (): Promise<void> => {
+              // Define arguments to delete user
+              const userDeleteArgs: Prisma.UserDeleteArgs = {
+                select: request.server.prismaPlugin.getUserSelect(),
+                where: {
+                  id: user.id
+                }
+              };
+
+              await prismaClient.user.delete(userDeleteArgs);
+            };
+
             // Get the reference to the user document
             const userDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(userPath);
 
@@ -128,7 +141,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             //! Define rollback action for delete Firestore user document
             requestRollback.userDocument = async (): Promise<void> => {
-              await userDocumentReference.delete()
+              await userDocumentReference.delete();
             };
 
             // Return user

@@ -17,10 +17,9 @@
     "start:functions": "*.ts"
   },
   "scripts": {
-    "start:dev": "npm run build:prod && npm-watch start:functions",
+    "start:dev": "nodemon src/index.ts",
     "start:deploy": "node firebase-deploy.js",
     "start:debug": "nodemon --inspect=0.0.0.0:9229 src/index.ts",
-    "start:functions": "tsc -p tsconfig.json && npx @google-cloud/functions-framework --target=api --port=8080",
     "build:prod": "tsc -p tsconfig.json && npx prisma generate && mkdir -p dist/database/client && cp -R src/database/client dist/database"
   },
   "keywords": [
@@ -39,7 +38,9 @@
     "@fastify/rate-limit": "^8.0.3",
     "@fastify/swagger": "^8.3.1",
     "@fastify/swagger-ui": "^2.1.0",
-    "@prisma/client": "^5.11.0",
+    "@prisma/client": "^5.13.0",
+    "@tidbcloud/prisma-adapter": "^5.11.1",
+    "@tidbcloud/serverless": "^0.1.1",
     "dotenv": "^16.0.3",
     "fastify": "^4.15.0",
     "firebase-admin": "^12.1.0",
@@ -62,7 +63,7 @@
     "npm-watch": "^0.12.0",
     "pino-pretty": "^10.0.0",
     "prettier": "^3.0.3",
-    "prisma": "^5.11.0",
+    "prisma": "^5.13.0",
     "prompts": "^2.4.2",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.3"

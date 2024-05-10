@@ -2,13 +2,13 @@ generator client {
   provider        = "prisma-client-js"
   output          = "client"
   binaryTargets   = ["native", "linux-arm64-openssl-3.0.x", "debian-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
-  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+  previewFeatures = ["fullTextSearch", "fullTextIndex","driverAdapters"]
 }
 
 datasource db {
   provider     = "mysql"
-  url          = env("API_MYSQL_DATABASE_URL")
   relationMode = "prisma"
+  url          = env("API_MYSQL_DATABASE_URL")
 }
 
 model User {

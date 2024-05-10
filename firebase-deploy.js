@@ -79,17 +79,17 @@ const projectList = {
     }
 
     if (action.action === 'migration') {
-      command.push(`export MYSQL_DATABASE_URL=$(firebase functions:secrets:access MYSQL_DATABASE_URL)`);
+      command.push(`export API_MYSQL_DATABASE_URL=$(firebase functions:secrets:access API_MYSQL_DATABASE_URL)`);
       command.push(`npx prisma migrate deploy`);
     }
 
     if (action.action === 'studio') {
-      command.push(`export MYSQL_DATABASE_URL=$(firebase functions:secrets:access MYSQL_DATABASE_URL)`);
+      command.push(`export API_MYSQL_DATABASE_URL=$(firebase functions:secrets:access API_MYSQL_DATABASE_URL)`);
       command.push(`npx prisma studio`);
     }
 
     if (action.action === 'seed') {
-      command.push(`export MYSQL_DATABASE_URL=$(firebase functions:secrets:access MYSQL_DATABASE_URL)`);
+      command.push(`export API_MYSQL_DATABASE_URL=$(firebase functions:secrets:access API_MYSQL_DATABASE_URL)`);
       command.push(`export APP_STORAGE=https://firebasestorage.googleapis.com/v0/b/${project.project}.appspot.com`);
       command.push(`npx prisma db seed`);
     }
