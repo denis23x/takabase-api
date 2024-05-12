@@ -90,21 +90,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         categoryFindManyArgs.where = {
           ...categoryFindManyArgs.where,
           name: {
-            search: query + '*'
-          },
-          description: {
-            search: query + '*'
-          }
-        };
-
-        /** Default relevant order */
-
-        categoryFindManyArgs.orderBy = {
-          // ...categoryFindManyArgs.orderBy,
-          _relevance: {
-            fields: ['name', 'description'],
-            sort: 'asc',
-            search: query
+            contains: query
           }
         };
       }

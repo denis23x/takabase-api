@@ -2,7 +2,7 @@ generator client {
   provider        = "prisma-client-js"
   output          = "client"
   binaryTargets   = ["native", "linux-arm64-openssl-3.0.x", "debian-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
-  previewFeatures = ["fullTextSearch", "fullTextIndex","driverAdapters"]
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -23,8 +23,6 @@ model User {
   terms       Boolean    @default(true) @db.TinyInt
   categories  Category[]
   posts       Post[]
-
-  @@fulltext([name])
 }
 
 model Category {
@@ -40,7 +38,6 @@ model Category {
 
   @@unique([name, userId])
   @@index([userId])
-  @@fulltext([name, description])
 }
 
 model Post {
@@ -61,5 +58,4 @@ model Post {
   @@unique([name, categoryId])
   @@index([categoryId])
   @@index([userId])
-  @@fulltext([name, description])
 }

@@ -74,18 +74,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         userFindManyArgs.where = {
           ...userFindManyArgs.where,
           name: {
-            search: query + '*'
-          }
-        };
-
-        /** Default relevant order */
-
-        userFindManyArgs.orderBy = {
-          // ...userFindManyArgs.orderBy,
-          _relevance: {
-            fields: ['name'],
-            sort: 'asc',
-            search: query
+            contains: query
           }
         };
       }
