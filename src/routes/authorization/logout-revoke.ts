@@ -42,7 +42,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         .revokeRefreshTokens(firebaseUid)
         .then(() => {
           return reply.status(200).send({
-            data: 'Ok',
+            data: {
+              status: 'Ok'
+            },
             statusCode: 200
           });
         })

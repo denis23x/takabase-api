@@ -26,7 +26,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         type: 'object',
         allOf: [
           {
-            $ref: 'bodyPostUpsertSchema#'
+            $ref: 'postUpsertSchema#'
           },
           {
             $ref: 'partsFirebaseUidSchema#'

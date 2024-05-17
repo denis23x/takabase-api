@@ -30,7 +30,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
           },
           {
-            $ref: 'bodyUserUpsertSchema#'
+            $ref: 'partsUserNameSchema#'
           },
           {
             $ref: 'partsUserEmailSchema#'

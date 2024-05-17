@@ -4,11 +4,12 @@ export const partsUserNameSchema: Record<string, any> = {
   $id: 'partsUserNameSchema',
   type: 'object',
   properties: {
-    userName: {
+    name: {
       type: 'string',
-      minLength: 2,
-      maxLength: 16,
-      pattern: '^(?!@)\\S{2,16}$'
+      default: 'batman',
+      minLength: 4,
+      maxLength: 32,
+      pattern: '^(?!@)\\S{4,32}$'
     }
   }
 };

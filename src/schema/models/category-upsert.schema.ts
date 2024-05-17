@@ -1,8 +1,7 @@
 /** @format */
 
-// prettier-ignore
-export const bodyCategoryUpsertSchema: Record<string, any> = {
-  $id: 'bodyCategoryUpsertSchema',
+export const categoryUpsertSchema: Record<string, any> = {
+  $id: 'categoryUpsertSchema',
   type: 'object',
   properties: {
     name: {
@@ -16,7 +15,7 @@ export const bodyCategoryUpsertSchema: Record<string, any> = {
       default: 'Dolor sit amet, co.',
       nullable: true,
       minLength: 16,
-      maxLength: 192,
+      maxLength: 192
     }
   }
 };

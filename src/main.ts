@@ -41,22 +41,21 @@ import testsRoutes from './routes/tests';
 
 // SCHEMAS
 
-import { bodyCategoryUpsertSchema } from './schema/crud/body/body-category-upsert.schema';
-import { bodyUserUpsertSchema } from './schema/crud/body/body-user-upsert.schema';
-import { bodyPostUpsertSchema } from './schema/crud/body/body-post-upsert.schema';
+import { categoryUpsertSchema } from './schema/models/category-upsert.schema';
+import { postUpsertSchema } from './schema/models/post-upsert.schema';
 import { paramsIdSchema } from './schema/crud/params/params-id.schema';
-import { querystringSearchSchema } from './schema/crud/querystring/querystring-search.schema';
-import { querystringSearchCategorySchema } from './schema/crud/querystring/querystring-search-category.schema';
-import { querystringSearchPostSchema } from './schema/crud/querystring/querystring-search-post.schema';
 import { responseErrorSchema } from './schema/crud/response/response-error.schema';
-import { partsUserEmailSchema } from './schema/parts/parts-user-email.schema';
-import { partsUserPasswordSchema } from './schema/parts/parts-user-password.schema';
 import { partsFirebaseUidSchema } from './schema/parts/parts-firebase-uid.schema';
+import { partsSearchSchema } from './schema/parts/parts-search.schema';
+import { partsSearchPaginationSchema } from './schema/parts/parts-search-pagination.schema';
 import { partsSearchScopeSchema } from './schema/parts/parts-search-scope.schema';
+import { partsSearchUserNameSchema } from './schema/parts/parts-search-user-name.schema';
+import { partsUserEmailSchema } from './schema/parts/parts-user-email.schema';
 import { partsUserNameSchema } from './schema/parts/parts-user-name.schema';
-import { categorySchema } from './schema/category.schema';
-import { postSchema } from './schema/post.schema';
-import { userSchema } from './schema/user.schema';
+import { partsUserPasswordSchema } from './schema/parts/parts-user-password.schema';
+import { categorySchema } from './schema/models/category.schema';
+import { postSchema } from './schema/models/post.schema';
+import { userSchema } from './schema/models/user.schema';
 
 export const main = async (): Promise<FastifyInstance> => {
   const fastifyInstance: FastifyInstance = fastify({
@@ -95,19 +94,18 @@ export const main = async (): Promise<FastifyInstance> => {
 
   // JSON SCHEMA CRUD
 
-  fastifyInstance.addSchema(bodyCategoryUpsertSchema);
-  fastifyInstance.addSchema(bodyPostUpsertSchema);
-  fastifyInstance.addSchema(bodyUserUpsertSchema);
+  fastifyInstance.addSchema(categoryUpsertSchema);
+  fastifyInstance.addSchema(postUpsertSchema);
   fastifyInstance.addSchema(paramsIdSchema);
-  fastifyInstance.addSchema(querystringSearchSchema);
-  fastifyInstance.addSchema(querystringSearchCategorySchema);
-  fastifyInstance.addSchema(querystringSearchPostSchema);
   fastifyInstance.addSchema(responseErrorSchema);
-  fastifyInstance.addSchema(partsUserNameSchema);
-  fastifyInstance.addSchema(partsUserEmailSchema);
-  fastifyInstance.addSchema(partsUserPasswordSchema);
   fastifyInstance.addSchema(partsFirebaseUidSchema);
+  fastifyInstance.addSchema(partsSearchSchema);
+  fastifyInstance.addSchema(partsSearchPaginationSchema);
   fastifyInstance.addSchema(partsSearchScopeSchema);
+  fastifyInstance.addSchema(partsSearchUserNameSchema);
+  fastifyInstance.addSchema(partsUserEmailSchema);
+  fastifyInstance.addSchema(partsUserNameSchema);
+  fastifyInstance.addSchema(partsUserPasswordSchema);
 
   // JSON SCHEMA MODELS
 

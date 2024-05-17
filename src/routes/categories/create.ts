@@ -22,7 +22,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         type: 'object',
         allOf: [
           {
-            $ref: 'bodyCategoryUpsertSchema#'
+            $ref: 'categoryUpsertSchema#'
           }
         ],
         required: ['name'],

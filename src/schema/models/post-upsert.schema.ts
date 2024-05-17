@@ -1,8 +1,8 @@
 /** @format */
 
 // prettier-ignore
-export const bodyPostUpsertSchema: Record<string, any> = {
-  $id: 'bodyPostUpsertSchema',
+export const postUpsertSchema: Record<string, any> = {
+  $id: 'postUpsertSchema',
   type: 'object',
   properties: {
     name: {

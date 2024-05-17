@@ -1,18 +1,9 @@
 /** @format */
 
-export const querystringSearchSchema: Record<string, any> = {
-  $id: 'querystringSearchSchema',
+export const partsSearchPaginationSchema: Record<string, any> = {
+  $id: 'partsSearchPaginationSchema',
   type: 'object',
   properties: {
-    query: {
-      type: 'string',
-      minLength: 2,
-      maxLength: 24
-    },
-    orderBy: {
-      type: 'string',
-      enum: ['newest', 'oldest']
-    },
     page: {
       type: 'number',
       default: 1,
