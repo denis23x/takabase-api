@@ -11,33 +11,21 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     method: 'GET',
     url: ':id',
     schema: {
+      tags: ['Posts'],
+      description: 'Get a single post',
       params: {
         $ref: 'paramsIdSchema#'
       },
       querystring: {
         allOf: [
           {
-            type: 'object',
-            properties: {
-              categoryId: {
-                type: 'number'
-              },
-              userId: {
-                type: 'number'
-              },
-              userName: {
-                type: 'string',
-                pattern: '^\\S*$'
-              }
-            }
+            $ref: 'querystringSearchPostSchema#'
           },
           {
             $ref: 'querystringScopeSchema#'
           }
         ]
       },
-      tags: ['Posts'],
-      description: 'Get a single post',
       response: {
         200: {
           type: 'object',

@@ -22,27 +22,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       ],
       body: {
         type: 'object',
-        properties: {
-          firebaseUid: {
-            type: 'string'
-          },
-          name: {
-            type: 'string'
-          },
-          description: {
-            type: 'string'
-          },
-          markdown: {
-            type: 'string'
-          },
-          image: {
-            type: 'string',
-            nullable: true
-          },
-          categoryId: {
-            type: 'number'
+        allOf: [
+          {
+            $ref: 'bodyPostUpsertSchema#'
           }
-        },
+        ],
         required: ['name', 'description', 'markdown', 'categoryId'],
         additionalProperties: false
       },

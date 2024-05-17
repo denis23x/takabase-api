@@ -6,11 +6,11 @@ export const querystringScopeSchema: Record<string, any> = {
   properties: {
     scope: {
       type: 'array',
-      collectionFormat: 'multi',
       items: {
         type: 'string'
       },
       default: [],
+      collectionFormat: 'multi',
       example: ['user', 'post', 'posts', 'category', 'categories']
     }
   }

@@ -10,8 +10,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     method: 'GET',
     url: '',
     schema: {
+      tags: ['Users'],
+      description: 'List all users, paginated',
       querystring: {
         allOf: [
+          {
+            $ref: 'querystringSearchUserSchema#'
+          },
           {
             $ref: 'querystringSearchSchema#'
           },
@@ -20,8 +25,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           }
         ]
       },
-      tags: ['Users'],
-      description: 'List all users, paginated',
       response: {
         200: {
           type: 'object',

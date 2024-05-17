@@ -16,29 +16,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Creates a new User',
       body: {
         type: 'object',
-        properties: {
-          name: {
-            type: 'string',
-            default: 'name',
-            pattern: '^\\S*$'
-          },
-          email: {
-            type: 'string',
-            default: 'email@takabase.com',
-            format: 'email'
-          },
-          password: {
-            type: 'string',
-            default: 'password123',
-            pattern: '^((?=.*\\d)|(?=.*[!@#$%^&*]))(?=.*[a-zA-Z]).{6,32}$'
-          },
-          terms: {
-            const: true
-          },
-          appearance: {
-            type: 'object'
+        allOf: [
+          {
+            $ref: 'bodyUserUpsertSchema#'
           }
-        },
+        ],
         required: ['name', 'email', 'password', 'terms'],
         additionalProperties: false
       },

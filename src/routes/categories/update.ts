@@ -23,15 +23,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       },
       body: {
         type: 'object',
-        properties: {
-          name: {
-            type: 'string'
-          },
-          description: {
-            type: 'string',
-            nullable: true
+        allOf: [
+          {
+            $ref: 'bodyCategoryUpsertSchema#'
           }
-        },
+        ],
+        required: [],
         additionalProperties: false
       },
       response: {

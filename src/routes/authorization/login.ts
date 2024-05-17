@@ -15,17 +15,21 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Creates a new Token',
       body: {
         type: 'object',
-        properties: {
-          firebaseUid: {
-            type: 'string'
+        allOf: [
+          {
+            type: 'object',
+            properties: {
+              email: {
+                type: 'string',
+                format: 'email'
+              }
+            }
           },
-          email: {
-            type: 'string',
-            default: 'email@takabase.com',
-            format: 'email'
+          {
+            $ref: 'querystringFirebaseUidSchema#'
           }
-        },
-        required: ['firebaseUid', 'email'],
+        ],
+        required: ['email', 'firebaseUid'],
         additionalProperties: false
       },
       response: {

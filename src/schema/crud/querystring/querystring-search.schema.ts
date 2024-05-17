@@ -20,8 +20,9 @@ export const querystringSearchSchema: Record<string, any> = {
     },
     size: {
       type: 'number',
+      default: 10,
       minimum: 10,
-      default: 10
+      maximum: 100
     }
   },
   required: ['page', 'size']

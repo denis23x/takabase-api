@@ -23,20 +23,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       },
       body: {
         type: 'object',
-        properties: {
-          name: {
-            type: 'string',
-            pattern: '^\\S*$'
-          },
-          description: {
-            type: 'string',
-            nullable: true
-          },
-          avatar: {
-            type: 'string',
-            nullable: true
+        allOf: [
+          {
+            $ref: 'bodyUserUpsertSchema#'
           }
-        },
+        ],
+        required: [],
         additionalProperties: false
       },
       response: {
