@@ -23,7 +23,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       ],
       params: {
-        $ref: 'paramsIdSchema#'
+        type: 'object',
+        allOf: [
+          {
+            $ref: 'partsIdSchema#'
+          }
+        ]
       },
       querystring: {
         type: 'object',
@@ -32,8 +37,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             type: 'number',
             minimum: 1
           }
-        },
-        additionalProperties: false
+        }
       },
       response: {
         200: {

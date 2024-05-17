@@ -41,11 +41,16 @@ import testsRoutes from './routes/tests';
 
 // SCHEMAS
 
+import { categorySchema } from './schema/models/category.schema';
 import { categoryUpsertSchema } from './schema/models/category-upsert.schema';
+import { postSchema } from './schema/models/post.schema';
 import { postUpsertSchema } from './schema/models/post-upsert.schema';
-import { paramsIdSchema } from './schema/crud/params/params-id.schema';
+import { userCreateSchema } from './schema/models/user-create.schema';
+import { userSchema } from './schema/models/user.schema';
+import { userUpdateSchema } from './schema/models/user-update.schema';
 import { responseErrorSchema } from './schema/crud/response/response-error.schema';
 import { partsFirebaseUidSchema } from './schema/parts/parts-firebase-uid.schema';
+import { partsIdSchema } from './schema/parts/parts-id.schema';
 import { partsSearchSchema } from './schema/parts/parts-search.schema';
 import { partsSearchPaginationSchema } from './schema/parts/parts-search-pagination.schema';
 import { partsSearchScopeSchema } from './schema/parts/parts-search-scope.schema';
@@ -53,9 +58,6 @@ import { partsSearchUserNameSchema } from './schema/parts/parts-search-user-name
 import { partsUserEmailSchema } from './schema/parts/parts-user-email.schema';
 import { partsUserNameSchema } from './schema/parts/parts-user-name.schema';
 import { partsUserPasswordSchema } from './schema/parts/parts-user-password.schema';
-import { categorySchema } from './schema/models/category.schema';
-import { postSchema } from './schema/models/post.schema';
-import { userSchema } from './schema/models/user.schema';
 
 export const main = async (): Promise<FastifyInstance> => {
   const fastifyInstance: FastifyInstance = fastify({
@@ -94,11 +96,16 @@ export const main = async (): Promise<FastifyInstance> => {
 
   // JSON SCHEMA CRUD
 
+  fastifyInstance.addSchema(categorySchema);
   fastifyInstance.addSchema(categoryUpsertSchema);
+  fastifyInstance.addSchema(postSchema);
   fastifyInstance.addSchema(postUpsertSchema);
-  fastifyInstance.addSchema(paramsIdSchema);
+  fastifyInstance.addSchema(userCreateSchema);
+  fastifyInstance.addSchema(userSchema);
+  fastifyInstance.addSchema(userUpdateSchema);
   fastifyInstance.addSchema(responseErrorSchema);
   fastifyInstance.addSchema(partsFirebaseUidSchema);
+  fastifyInstance.addSchema(partsIdSchema);
   fastifyInstance.addSchema(partsSearchSchema);
   fastifyInstance.addSchema(partsSearchPaginationSchema);
   fastifyInstance.addSchema(partsSearchScopeSchema);
@@ -106,12 +113,6 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsUserEmailSchema);
   fastifyInstance.addSchema(partsUserNameSchema);
   fastifyInstance.addSchema(partsUserPasswordSchema);
-
-  // JSON SCHEMA MODELS
-
-  fastifyInstance.addSchema(categorySchema);
-  fastifyInstance.addSchema(postSchema);
-  fastifyInstance.addSchema(userSchema);
 
   // LOCALHOST
 

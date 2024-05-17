@@ -5,20 +5,18 @@ export const userSchema: Record<string, any> = {
   type: 'object',
   allOf: [
     {
-      $ref: 'paramsIdSchema#'
+      $ref: 'partsIdSchema#'
     },
     {
       $ref: 'partsFirebaseUidSchema#'
     },
     {
-      $ref: 'partsUserNameSchema#'
+      $ref: 'userUpdateSchema#'
     },
     {
       properties: {
-        id: {
-          type: 'number'
-        },
         terms: {
+          type: 'boolean',
           const: true
         },
         categories: {

@@ -1,13 +1,12 @@
 /** @format */
 
-export const paramsIdSchema: Record<string, any> = {
-  $id: 'paramsIdSchema',
+export const partsIdSchema: Record<string, any> = {
+  $id: 'partsIdSchema',
   type: 'object',
   properties: {
     id: {
       type: 'number',
       minimum: 1
     }
-  },
-  required: ['id']
+  }
 };

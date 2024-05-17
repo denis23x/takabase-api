@@ -3,38 +3,38 @@
 export const categorySchema: Record<string, any> = {
   $id: 'categorySchema',
   type: 'object',
-  properties: {
-    id: {
-      type: 'number'
+  allOf: [
+    {
+      $ref: 'partsIdSchema#'
     },
-    name: {
-      type: 'string'
+    {
+      $ref: 'categoryUpsertSchema#'
     },
-    description: {
-      type: 'string',
-      nullable: true
-    },
-    user: {
-      $ref: 'userSchema#'
-    },
-    posts: {
-      type: 'array',
-      items: {
-        $ref: 'postSchema#'
+    {
+      properties: {
+        user: {
+          $ref: 'userSchema#'
+        },
+        posts: {
+          type: 'array',
+          items: {
+            $ref: 'postSchema#'
+          }
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time'
+        },
+        updatedAt: {
+          type: 'string',
+          format: 'date-time'
+        },
+        deletedAt: {
+          type: 'string',
+          nullable: true,
+          format: 'date-time'
+        }
       }
-    },
-    createdAt: {
-      type: 'string',
-      format: 'date-time'
-    },
-    updatedAt: {
-      type: 'string',
-      format: 'date-time'
-    },
-    deletedAt: {
-      type: 'string',
-      nullable: true,
-      format: 'date-time'
     }
-  }
+  ]
 };

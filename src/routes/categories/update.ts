@@ -19,7 +19,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       ],
       params: {
-        $ref: 'paramsIdSchema#'
+        type: 'object',
+        allOf: [
+          {
+            $ref: 'partsIdSchema#'
+          }
+        ]
       },
       body: {
         type: 'object',
@@ -27,8 +32,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           {
             $ref: 'categoryUpsertSchema#'
           }
-        ],
-        additionalProperties: false
+        ]
       },
       response: {
         200: {

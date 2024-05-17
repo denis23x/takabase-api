@@ -19,34 +19,20 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       ],
       params: {
-        $ref: 'paramsIdSchema#'
+        type: 'object',
+        allOf: [
+          {
+            $ref: 'partsIdSchema#'
+          }
+        ]
       },
       body: {
         type: 'object',
         allOf: [
           {
-            properties: {
-              description: {
-                type: 'string',
-                default: 'Dolor sit amet, co.',
-                nullable: true,
-                minLength: 16,
-                maxLength: 192
-              },
-              // prettier-ignore
-              avatar: {
-                type: 'string',
-                default: `https://firebasestorage.googleapis.com/v0/b/${JSON.parse(process.env.APP_SERVICE_ACCOUNT).project_id}.appspot.com/o/seed/1.webp`,
-                pattern: '^https:\\/\\/firebasestorage\\.googleapis\\.com(:\\d+)?(\\/[-a-zA-Z0-9@:%._+~#=]*)*(\\?[;&amp;a-zA-Z0-9@:%_+.~#?&amp;\\/=]*)?(#[a-zA-Z0-9_@:%#?&amp;\\/=+-]*)?$',
-                nullable: true
-              }
-            }
-          },
-          {
-            $ref: 'partsUserNameSchema#'
+            $ref: 'userUpdateSchema#'
           }
-        ],
-        additionalProperties: false
+        ]
       },
       response: {
         200: {
