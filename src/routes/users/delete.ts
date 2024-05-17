@@ -27,13 +27,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       },
       querystring: {
         type: 'object',
-        properties: {
-          password: {
-            type: 'string',
-            default: 'password123',
-            pattern: '^((?=.*\\d)|(?=.*[!@#$%^&*]))(?=.*[a-zA-Z]).{6,32}$'
+        allOf: [
+          {
+            $ref: 'partsUserPasswordSchema#'
           }
-        },
+        ],
         required: ['password'],
         additionalProperties: false
       },

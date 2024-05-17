@@ -17,16 +17,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         type: 'object',
         allOf: [
           {
-            type: 'object',
-            properties: {
-              email: {
-                type: 'string',
-                format: 'email'
-              }
-            }
+            $ref: 'partsUserEmailSchema#'
           },
           {
-            $ref: 'querystringFirebaseUidSchema#'
+            $ref: 'partsFirebaseUidSchema#'
           }
         ],
         required: ['email', 'firebaseUid'],

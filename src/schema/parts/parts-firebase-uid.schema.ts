@@ -1,7 +1,7 @@
 /** @format */
 
-export const querystringFirebaseUidSchema: Record<string, any> = {
-  $id: 'querystringFirebaseUidSchema',
+export const partsFirebaseUidSchema: Record<string, any> = {
+  $id: 'partsFirebaseUidSchema',
   type: 'object',
   properties: {
     firebaseUid: {

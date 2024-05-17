@@ -15,8 +15,8 @@ export const querystringSearchSchema: Record<string, any> = {
     },
     page: {
       type: 'number',
-      minimum: 1,
-      default: 1
+      default: 1,
+      minimum: 1
     },
     size: {
       type: 'number',

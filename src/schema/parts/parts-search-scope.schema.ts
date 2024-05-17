@@ -1,7 +1,7 @@
 /** @format */
 
-export const querystringScopeSchema: Record<string, any> = {
-  $id: 'querystringScopeSchema',
+export const partsSearchScopeSchema: Record<string, any> = {
+  $id: 'partsSearchScopeSchema',
   type: 'object',
   properties: {
     scope: {

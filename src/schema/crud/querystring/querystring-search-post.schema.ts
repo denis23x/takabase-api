@@ -18,7 +18,7 @@ export const querystringSearchPostSchema: Record<string, any> = {
       }
     },
     {
-      $ref: 'querystringSearchUserNameSchema#'
+      $ref: 'partsUserNameSchema#'
     }
   ]
 };

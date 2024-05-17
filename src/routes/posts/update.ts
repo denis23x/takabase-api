@@ -29,7 +29,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             $ref: 'bodyPostUpsertSchema#'
           },
           {
-            $ref: 'querystringFirebaseUidSchema#'
+            $ref: 'partsFirebaseUidSchema#'
           }
         ],
         required: ['firebaseUid'],

@@ -15,13 +15,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       querystring: {
         allOf: [
           {
-            $ref: 'querystringSearchUserSchema#'
-          },
-          {
             $ref: 'querystringSearchSchema#'
           },
           {
-            $ref: 'querystringScopeSchema#'
+            $ref: 'partsSearchScopeSchema#'
           }
         ]
       },

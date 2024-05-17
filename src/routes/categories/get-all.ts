@@ -21,7 +21,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             $ref: 'querystringSearchSchema#'
           },
           {
-            $ref: 'querystringScopeSchema#'
+            $ref: 'partsSearchScopeSchema#'
           }
         ]
       },

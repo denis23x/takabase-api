@@ -45,14 +45,15 @@ import { bodyCategoryUpsertSchema } from './schema/crud/body/body-category-upser
 import { bodyUserUpsertSchema } from './schema/crud/body/body-user-upsert.schema';
 import { bodyPostUpsertSchema } from './schema/crud/body/body-post-upsert.schema';
 import { paramsIdSchema } from './schema/crud/params/params-id.schema';
-import { querystringFirebaseUidSchema } from './schema/crud/querystring/querystring-firebase-uid.schema';
-import { querystringScopeSchema } from './schema/crud/querystring/querystring-scope.schema';
 import { querystringSearchSchema } from './schema/crud/querystring/querystring-search.schema';
 import { querystringSearchCategorySchema } from './schema/crud/querystring/querystring-search-category.schema';
 import { querystringSearchPostSchema } from './schema/crud/querystring/querystring-search-post.schema';
-import { querystringSearchUserSchema } from './schema/crud/querystring/querystring-search-user.schema';
-import { querystringSearchUserNameSchema } from './schema/crud/querystring/querystring-search-user-name.schema';
 import { responseErrorSchema } from './schema/crud/response/response-error.schema';
+import { partsUserEmailSchema } from './schema/parts/parts-user-email.schema';
+import { partsUserPasswordSchema } from './schema/parts/parts-user-password.schema';
+import { partsFirebaseUidSchema } from './schema/parts/parts-firebase-uid.schema';
+import { partsSearchScopeSchema } from './schema/parts/parts-search-scope.schema';
+import { partsUserNameSchema } from './schema/parts/parts-user-name.schema';
 import { categorySchema } from './schema/category.schema';
 import { postSchema } from './schema/post.schema';
 import { userSchema } from './schema/user.schema';
@@ -98,14 +99,15 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(bodyPostUpsertSchema);
   fastifyInstance.addSchema(bodyUserUpsertSchema);
   fastifyInstance.addSchema(paramsIdSchema);
-  fastifyInstance.addSchema(querystringFirebaseUidSchema);
-  fastifyInstance.addSchema(querystringScopeSchema);
   fastifyInstance.addSchema(querystringSearchSchema);
   fastifyInstance.addSchema(querystringSearchCategorySchema);
   fastifyInstance.addSchema(querystringSearchPostSchema);
-  fastifyInstance.addSchema(querystringSearchUserSchema);
-  fastifyInstance.addSchema(querystringSearchUserNameSchema);
   fastifyInstance.addSchema(responseErrorSchema);
+  fastifyInstance.addSchema(partsUserNameSchema);
+  fastifyInstance.addSchema(partsUserEmailSchema);
+  fastifyInstance.addSchema(partsUserPasswordSchema);
+  fastifyInstance.addSchema(partsFirebaseUidSchema);
+  fastifyInstance.addSchema(partsSearchScopeSchema);
 
   // JSON SCHEMA MODELS
 

@@ -18,7 +18,25 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         type: 'object',
         allOf: [
           {
+            type: 'object',
+            properties: {
+              terms: {
+                type: 'boolean',
+                const: true
+              },
+              appearance: {
+                type: 'object'
+              }
+            }
+          },
+          {
             $ref: 'bodyUserUpsertSchema#'
+          },
+          {
+            $ref: 'partsUserEmailSchema#'
+          },
+          {
+            $ref: 'partsUserPasswordSchema#'
           }
         ],
         required: ['name', 'email', 'password', 'terms'],
