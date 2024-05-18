@@ -7,5 +7,6 @@ import { join } from 'path';
 
 export const staticConfig: FastifyStaticOptions = {
   root: join(__dirname, '../'),
-  serve: false
+  serve: false,
+  wildcard: false
 };
