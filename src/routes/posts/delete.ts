@@ -2,7 +2,7 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Post, Prisma, PrismaClient } from '../../database/client';
-import { ParamsId } from '../../types/crud/params/params-id';
+import { PostDeleteDto } from '../../types/dto/post/post-delete';
 import { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
 
@@ -27,6 +27,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           }
         }
       },
+      querystring: {
+        type: 'object',
+        properties: {
+          firebaseUid: {
+            $ref: 'partsFirebaseUidSchema#'
+          },
+          image: {
+            $ref: 'partsFirebaseUrlStorageSchema#'
+          }
+        },
+        required: ['firebaseUid']
+      },
       response: {
         200: {
           type: 'object',
@@ -47,13 +59,17 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<ParamsId>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<PostDeleteDto>, reply: FastifyReply): Promise<any> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
       // Extract common information from request object
       const userId: number = Number(request.user.id);
       const userFirebaseUid: string = String(request.user.firebaseUid);
+
+      // Extract post information from the request object
+      const postFirebaseUid: string = String(request.query.firebaseUid);
+      const postImage: string | undefined = request.query.image;
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -81,11 +97,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               }
             };
 
-            // Delete post
-            const post: Post = await prismaClient.post.delete(postDeleteArgs);
-            const postFirebaseUid: string = String(post.firebaseUid);
+            // Prepare the post image URLs
             const postPath: string = ['users', userFirebaseUid, 'posts', postFirebaseUid].join('/');
-            const postImage: string | null = post.image;
             const postMarkdownListDestination: string = [postPath, 'markdown'].join('/');
 
             // Get the reference to the post document
@@ -143,7 +156,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
 
             // Delete post
-            return post;
+            return prismaClient.post.delete(postDeleteArgs);
           }).then((post: Post) => {
             // Send success response with deleted post
             return reply.status(200).send({

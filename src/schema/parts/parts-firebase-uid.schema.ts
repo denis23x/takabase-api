@@ -3,5 +3,5 @@
 export const partsFirebaseUidSchema: Record<string, any> = {
   $id: 'partsFirebaseUidSchema',
   type: 'string',
-  pattern: '^[A-Za-z0-9_-]{28}$'
+  pattern: '^[a-zA-Z0-9_-]{20,}$'
 };

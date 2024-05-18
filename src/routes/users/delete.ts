@@ -2,7 +2,6 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Post, Prisma, PrismaClient, User } from '../../database/client';
-import { ParamsId } from '../../types/crud/params/params-id';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
 import { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
 import { UserRecord } from 'firebase-admin/lib/auth/user-record';
@@ -60,7 +59,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<ParamsId & UserDeleteDto>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<UserDeleteDto>, reply: FastifyReply): Promise<any> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 

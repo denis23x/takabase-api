@@ -2,8 +2,7 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Category, Post, Prisma, PrismaClient } from '../../database/client';
-import { ParamsId } from '../../types/crud/params/params-id';
-import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
+import { CategoryDeleteDto } from '../../types/dto/category/category-delete';
 import { DocumentReference, DocumentSnapshot } from 'firebase-admin/firestore';
 import { DocumentData, WriteResult } from 'firebase-admin/lib/firestore';
 import { parse } from 'path';
@@ -58,7 +57,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<ParamsId & QuerystringSearch>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<CategoryDeleteDto>, reply: FastifyReply): Promise<any> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
