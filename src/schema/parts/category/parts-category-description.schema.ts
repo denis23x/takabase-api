@@ -3,8 +3,6 @@
 export const partsCategoryDescriptionSchema: Record<string, any> = {
   $id: 'partsCategoryDescriptionSchema',
   type: 'string',
-  default: 'Dolor sit amet, co.',
-  nullable: true,
-  minLength: 16,
+  example: 'Dolor sit amet, co.',
   maxLength: 192
 };
