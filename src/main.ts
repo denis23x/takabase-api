@@ -9,6 +9,7 @@ import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import fastifyJwt from '@fastify/jwt';
 import fastifyRateLimit from '@fastify/rate-limit';
+import fastifyStatic from '@fastify/static';
 import fastifyEtag from '@fastify/etag';
 
 // CONFIGURATIONS
@@ -20,6 +21,7 @@ import { helmetConfig } from './config/helmet.config';
 import { swaggerConfig } from './config/swagger.config';
 import { jwtConfig } from './config/jwt.config';
 import { rateLimitConfig } from './config/rate-limit.config';
+import { staticConfig } from './config/static.config';
 
 // PLUGINS
 
@@ -84,7 +86,14 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(fastifyHelmet, helmetConfig);
   await fastifyInstance.register(fastifyJwt, jwtConfig);
   await fastifyInstance.register(fastifyRateLimit, rateLimitConfig);
+  await fastifyInstance.register(fastifyStatic, staticConfig);
   await fastifyInstance.register(fastifyEtag);
+
+  // INDEX
+
+  fastifyInstance.setNotFoundHandler((request: FastifyRequest, reply: FastifyReply) => {
+    return reply.code(404).type('text/html').sendFile('index.html');
+  });
 
   // FIREBASE
 
