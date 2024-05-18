@@ -9,6 +9,7 @@ import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import fastifyJwt from '@fastify/jwt';
 import fastifyRateLimit from '@fastify/rate-limit';
+import fastifyEtag from '@fastify/etag';
 
 // CONFIGURATIONS
 
@@ -83,6 +84,7 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(fastifyHelmet, helmetConfig);
   await fastifyInstance.register(fastifyJwt, jwtConfig);
   await fastifyInstance.register(fastifyRateLimit, rateLimitConfig);
+  await fastifyInstance.register(fastifyEtag);
 
   // FIREBASE
 
