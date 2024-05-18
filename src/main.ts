@@ -92,7 +92,7 @@ export const main = async (): Promise<FastifyInstance> => {
   // INDEX
 
   fastifyInstance.setNotFoundHandler((request: FastifyRequest, reply: FastifyReply) => {
-    return reply.code(404).type('text/html').sendFile('index.html');
+    return reply.type('text/html').sendFile('index.html');
   });
 
   // FIREBASE
