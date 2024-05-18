@@ -33,7 +33,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             $ref: 'partsCategoryNameSchema#'
           },
           description: {
-            $ref: 'partsCategoryDescriptionSchema#'
+            oneOf: [
+              {
+                type: 'null'
+              },
+              {
+                $ref: 'partsCategoryDescriptionSchema#'
+              }
+            ]
           }
         }
       },

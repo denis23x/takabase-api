@@ -46,7 +46,6 @@ export const userSchema: Record<string, any> = {
     },
     deletedAt: {
       type: 'string',
-      nullable: true,
       format: 'date-time'
     }
   }

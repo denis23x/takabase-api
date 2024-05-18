@@ -38,7 +38,6 @@ export const postSchema: Record<string, any> = {
     },
     deletedAt: {
       type: 'string',
-      nullable: true,
       format: 'date-time'
     }
   }
