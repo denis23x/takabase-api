@@ -3,19 +3,17 @@
 import { SwaggerOptions } from '@fastify/swagger';
 
 export const swaggerConfig: SwaggerOptions = {
-  swagger: {
+  openapi: {
     info: {
       title: 'RESTful APIs using Fastify',
-      description: 'CRUDs using Swagger, Fastify and Prisma',
-      version: '0.0.1'
+      description: '## CRUDs using Swagger, Fastify and Prisma',
+      contact: {
+        name: 'denis23x',
+        url: 'https://takabase.com',
+        email: 'damage.23x@gmail.com'
+      },
+      version: '1.0.0'
     },
-    externalDocs: {
-      url: 'https://swagger.io',
-      description: 'Find more info here'
-    },
-    schemes: ['http', 'https'],
-    consumes: ['application/json'],
-    produces: ['application/json'],
     tags: [
       {
         name: 'Authorization',
@@ -34,11 +32,13 @@ export const swaggerConfig: SwaggerOptions = {
         description: 'User related end-points'
       }
     ],
-    securityDefinitions: {
-      Authorization: {
-        type: 'apiKey',
-        name: 'Authorization',
-        in: 'header'
+    components: {
+      securitySchemes: {
+        swaggerBearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
       }
     }
   }

@@ -3,48 +3,51 @@
 export const userSchema: Record<string, any> = {
   $id: 'userSchema',
   type: 'object',
-  allOf: [
-    {
+  properties: {
+    id: {
       $ref: 'partsIdSchema#'
     },
-    {
+    firebaseUid: {
       $ref: 'partsFirebaseUidSchema#'
     },
-    {
-      $ref: 'userUpdateSchema#'
+    name: {
+      $ref: 'partsUserNameSchema#'
     },
-    {
-      properties: {
-        terms: {
-          type: 'boolean',
-          const: true
-        },
-        categories: {
-          type: 'array',
-          items: {
-            $ref: 'categorySchema#'
-          }
-        },
-        posts: {
-          type: 'array',
-          items: {
-            $ref: 'postSchema#'
-          }
-        },
-        createdAt: {
-          type: 'string',
-          format: 'date-time'
-        },
-        updatedAt: {
-          type: 'string',
-          format: 'date-time'
-        },
-        deletedAt: {
-          type: 'string',
-          nullable: true,
-          format: 'date-time'
-        }
-      }
+    description: {
+      $ref: 'partsUserDescriptionSchema#'
+    },
+    avatar: {
+      $ref: 'partsFirebaseUrlStorageSchema#'
+    },
+    terms: {
+      $ref: 'partsUserTermsSchema#'
+    },
+    categories: {
+      type: 'array',
+      items: {
+        $ref: 'categorySchema#'
+      },
+      example: []
+    },
+    posts: {
+      type: 'array',
+      items: {
+        $ref: 'postSchema#'
+      },
+      example: []
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time'
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time'
+    },
+    deletedAt: {
+      type: 'string',
+      nullable: true,
+      format: 'date-time'
     }
-  ]
+  }
 };

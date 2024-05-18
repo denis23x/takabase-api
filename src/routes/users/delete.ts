@@ -19,24 +19,24 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Removes specific User from the database',
       security: [
         {
-          Authorization: []
+          swaggerBearerAuth: []
         }
       ],
       params: {
         type: 'object',
-        allOf: [
-          {
+        properties: {
+          id: {
             $ref: 'partsIdSchema#'
           }
-        ]
+        }
       },
       querystring: {
         type: 'object',
-        allOf: [
-          {
+        properties: {
+          password: {
             $ref: 'partsUserPasswordSchema#'
           }
-        ],
+        },
         required: ['password'],
         additionalProperties: false
       },

@@ -16,27 +16,39 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Updates a Post',
       security: [
         {
-          Authorization: []
+          swaggerBearerAuth: []
         }
       ],
       params: {
         type: 'object',
-        allOf: [
-          {
+        properties: {
+          id: {
             $ref: 'partsIdSchema#'
           }
-        ]
+        }
       },
       body: {
         type: 'object',
-        allOf: [
-          {
-            $ref: 'postUpsertSchema#'
+        properties: {
+          name: {
+            $ref: 'partsPostNameSchema#'
           },
-          {
+          description: {
+            $ref: 'partsPostDescriptionSchema#'
+          },
+          markdown: {
+            $ref: 'partsPostMarkdownSchema#'
+          },
+          image: {
+            $ref: 'partsFirebaseUrlStorageSchema#'
+          },
+          categoryId: {
+            $ref: 'partsIdSchema#'
+          },
+          firebaseUid: {
             $ref: 'partsFirebaseUidSchema#'
           }
-        ],
+        },
         required: ['firebaseUid'],
         additionalProperties: false
       },

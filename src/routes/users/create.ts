@@ -16,11 +16,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Creates a new User',
       body: {
         type: 'object',
-        allOf: [
-          {
-            $ref: 'userCreateSchema#'
+        properties: {
+          name: {
+            $ref: 'partsUserNameSchema#'
+          },
+          email: {
+            $ref: 'partsUserEmailSchema#'
+          },
+          password: {
+            $ref: 'partsUserPasswordSchema#'
+          },
+          terms: {
+            $ref: 'partsUserTermsSchema#'
+          },
+          appearance: {
+            $ref: 'partsUserAppearanceSchema#'
           }
-        ],
+        },
         required: ['name', 'email', 'password', 'terms'],
         additionalProperties: false
       },

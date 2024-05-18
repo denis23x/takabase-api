@@ -15,14 +15,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Creates a new Token',
       body: {
         type: 'object',
-        allOf: [
-          {
+        properties: {
+          email: {
             $ref: 'partsUserEmailSchema#'
           },
-          {
+          firebaseUid: {
             $ref: 'partsFirebaseUidSchema#'
           }
-        ],
+        },
         required: ['email', 'firebaseUid'],
         additionalProperties: false
       },

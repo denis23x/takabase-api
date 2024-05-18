@@ -3,7 +3,7 @@
 export interface QuerystringSearch {
   Querystring: {
     name?: string;
-    query?: string;
+    search?: string;
     userId?: number;
     userName?: string;
     categoryId?: number;

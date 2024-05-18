@@ -13,17 +13,36 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       tags: ['Users'],
       description: 'List all users, paginated',
       querystring: {
-        allOf: [
-          {
+        type: 'object',
+        properties: {
+          name: {
+            $ref: 'partsSearchUserNameSchema#'
+          },
+          search: {
             $ref: 'partsSearchSchema#'
           },
-          {
-            $ref: 'partsSearchScopeSchema#'
+          orderBy: {
+            $ref: 'partsPageOrderBySchema#'
           },
-          {
-            $ref: 'partsSearchPaginationSchema#'
+          page: {
+            $ref: 'partsPageSchema#'
+          },
+          size: {
+            $ref: 'partsPageSizeSchema#'
+          },
+          scope: {
+            allOf: [
+              {
+                $ref: 'partsScopeSchema#'
+              },
+              {
+                default: ['categories', 'posts'],
+                example: ['categories', 'posts']
+              }
+            ]
           }
-        ]
+        },
+        required: ['page', 'size']
       },
       response: {
         200: {
@@ -46,7 +65,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<QuerystringSearch>, reply: FastifyReply): Promise<any> {
-      const { name, query, orderBy, scope, size, page }: Record<string, any> = request.query;
+      const { name, search, orderBy, scope, size, page }: Record<string, any> = request.query;
 
       const userFindManyArgs: Prisma.UserFindManyArgs = {
         select: request.server.prismaPlugin.getUserSelect(),
@@ -73,11 +92,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       /** Search */
 
-      if (query) {
+      if (search) {
         userFindManyArgs.where = {
           ...userFindManyArgs.where,
           name: {
-            contains: query
+            contains: search
           }
         };
       }

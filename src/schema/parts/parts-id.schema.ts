@@ -2,11 +2,6 @@
 
 export const partsIdSchema: Record<string, any> = {
   $id: 'partsIdSchema',
-  type: 'object',
-  properties: {
-    id: {
-      type: 'number',
-      minimum: 1
-    }
-  }
+  type: 'number',
+  minimum: 1
 };

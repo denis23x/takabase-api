@@ -15,18 +15,27 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Get a single category',
       params: {
         type: 'object',
-        allOf: [
-          {
+        properties: {
+          id: {
             $ref: 'partsIdSchema#'
           }
-        ]
+        }
       },
       querystring: {
-        allOf: [
-          {
-            $ref: 'partsSearchScopeSchema#'
+        type: 'object',
+        properties: {
+          scope: {
+            allOf: [
+              {
+                $ref: 'partsScopeSchema#'
+              },
+              {
+                default: ['user', 'posts'],
+                example: ['user', 'posts']
+              }
+            ]
           }
-        ]
+        }
       },
       response: {
         200: {

@@ -17,16 +17,28 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Creates a new Post',
       security: [
         {
-          Authorization: []
+          swaggerBearerAuth: []
         }
       ],
       body: {
         type: 'object',
-        allOf: [
-          {
-            $ref: 'postUpsertSchema#'
+        properties: {
+          name: {
+            $ref: 'partsPostNameSchema#'
+          },
+          description: {
+            $ref: 'partsPostDescriptionSchema#'
+          },
+          markdown: {
+            $ref: 'partsPostMarkdownSchema#'
+          },
+          image: {
+            $ref: 'partsFirebaseUrlStorageSchema#'
+          },
+          categoryId: {
+            $ref: 'partsIdSchema#'
           }
-        ],
+        },
         required: ['name', 'description', 'markdown', 'categoryId'],
         additionalProperties: false
       },

@@ -16,16 +16,16 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Removes specific Post from the database',
       security: [
         {
-          Authorization: []
+          swaggerBearerAuth: []
         }
       ],
       params: {
         type: 'object',
-        allOf: [
-          {
+        properties: {
+          id: {
             $ref: 'partsIdSchema#'
           }
-        ]
+        }
       },
       response: {
         200: {

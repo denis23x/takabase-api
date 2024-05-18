@@ -13,7 +13,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Revoke refresh tokens ',
       security: [
         {
-          Authorization: []
+          swaggerBearerAuth: []
         }
       ],
       response: {

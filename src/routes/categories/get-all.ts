@@ -13,29 +13,39 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       tags: ['Categories'],
       description: 'List all categories, paginated',
       querystring: {
-        allOf: [
-          {
-            type: 'object',
-            properties: {
-              userId: {
-                type: 'number',
-                minimum: 1
-              }
-            }
+        type: 'object',
+        properties: {
+          userId: {
+            $ref: 'partsIdSchema#'
           },
-          {
+          userName: {
             $ref: 'partsSearchUserNameSchema#'
           },
-          {
+          search: {
             $ref: 'partsSearchSchema#'
           },
-          {
-            $ref: 'partsSearchScopeSchema#'
+          orderBy: {
+            $ref: 'partsPageOrderBySchema#'
           },
-          {
-            $ref: 'partsSearchPaginationSchema#'
+          page: {
+            $ref: 'partsPageSchema#'
+          },
+          size: {
+            $ref: 'partsPageSizeSchema#'
+          },
+          scope: {
+            allOf: [
+              {
+                $ref: 'partsScopeSchema#'
+              },
+              {
+                default: ['user', 'posts'],
+                example: ['user', 'posts']
+              }
+            ]
           }
-        ]
+        },
+        required: ['page', 'size']
       },
       response: {
         200: {
@@ -58,7 +68,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<QuerystringSearch>, reply: FastifyReply): Promise<any> {
-      const { userId, userName, query, orderBy, scope, size, page }: Record<string, any> = request.query;
+      const { userId, userName, search, orderBy, scope, size, page }: Record<string, any> = request.query;
 
       const categoryFindManyArgs: Prisma.CategoryFindManyArgs = {
         select: request.server.prismaPlugin.getCategorySelect(),
@@ -89,11 +99,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       /** Search */
 
-      if (query) {
+      if (search) {
         categoryFindManyArgs.where = {
           ...categoryFindManyArgs.where,
           name: {
-            contains: query
+            contains: search
           }
         };
       }

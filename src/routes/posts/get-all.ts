@@ -13,33 +13,42 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       tags: ['Posts'],
       description: 'List all posts, paginated',
       querystring: {
-        allOf: [
-          {
-            type: 'object',
-            properties: {
-              categoryId: {
-                type: 'number',
-                minimum: 1
-              },
-              userId: {
-                type: 'number',
-                minimum: 1
-              }
-            }
+        type: 'object',
+        properties: {
+          categoryId: {
+            $ref: 'partsIdSchema#'
           },
-          {
+          userId: {
+            $ref: 'partsIdSchema#'
+          },
+          userName: {
             $ref: 'partsSearchUserNameSchema#'
           },
-          {
+          search: {
             $ref: 'partsSearchSchema#'
           },
-          {
-            $ref: 'partsSearchScopeSchema#'
+          orderBy: {
+            $ref: 'partsPageOrderBySchema#'
           },
-          {
-            $ref: 'partsSearchPaginationSchema#'
+          page: {
+            $ref: 'partsPageSchema#'
+          },
+          size: {
+            $ref: 'partsPageSizeSchema#'
+          },
+          scope: {
+            allOf: [
+              {
+                $ref: 'partsScopeSchema#'
+              },
+              {
+                default: ['user', 'category'],
+                example: ['user', 'category']
+              }
+            ]
           }
-        ]
+        },
+        required: ['page', 'size']
       },
       response: {
         200: {
@@ -62,7 +71,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<QuerystringSearch>, reply: FastifyReply): Promise<any> {
-      const { userId, userName, categoryId, query, orderBy, scope, size, page }: Record<string, any> = request.query;
+      const { userId, userName, categoryId, search, orderBy, scope, size, page }: Record<string, any> = request.query;
 
       const postFindManyArgs: Prisma.PostFindManyArgs = {
         select: request.server.prismaPlugin.getPostSelect(),
@@ -82,6 +91,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         };
       }
 
+      if (categoryId) {
+        postFindManyArgs.where = {
+          ...postFindManyArgs.where,
+          categoryId
+        };
+      }
+
       if (userName) {
         postFindManyArgs.where = {
           ...postFindManyArgs.where,
@@ -91,20 +107,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         };
       }
 
-      if (categoryId) {
-        postFindManyArgs.where = {
-          ...postFindManyArgs.where,
-          categoryId
-        };
-      }
-
       /** Search */
 
-      if (query) {
+      if (search) {
         postFindManyArgs.where = {
           ...postFindManyArgs.where,
           name: {
-            contains: query
+            contains: search
           }
         };
       }

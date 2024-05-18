@@ -15,16 +15,19 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Creates a new Category',
       security: [
         {
-          Authorization: []
+          swaggerBearerAuth: []
         }
       ],
       body: {
         type: 'object',
-        allOf: [
-          {
-            $ref: 'categoryUpsertSchema#'
+        properties: {
+          name: {
+            $ref: 'partsCategoryNameSchema#'
+          },
+          description: {
+            $ref: 'partsCategoryDescriptionSchema#'
           }
-        ],
+        },
         required: ['name'],
         additionalProperties: false
       },

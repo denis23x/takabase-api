@@ -19,23 +19,22 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Removes specific Category from the database',
       security: [
         {
-          Authorization: []
+          swaggerBearerAuth: []
         }
       ],
       params: {
         type: 'object',
-        allOf: [
-          {
+        properties: {
+          id: {
             $ref: 'partsIdSchema#'
           }
-        ]
+        }
       },
       querystring: {
         type: 'object',
         properties: {
           categoryId: {
-            type: 'number',
-            minimum: 1
+            $ref: 'partsIdSchema#'
           }
         }
       },

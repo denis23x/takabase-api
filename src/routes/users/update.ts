@@ -15,24 +15,30 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       description: 'Updates a User',
       security: [
         {
-          Authorization: []
+          swaggerBearerAuth: []
         }
       ],
       params: {
         type: 'object',
-        allOf: [
-          {
+        properties: {
+          id: {
             $ref: 'partsIdSchema#'
           }
-        ]
+        }
       },
       body: {
         type: 'object',
-        allOf: [
-          {
-            $ref: 'userUpdateSchema#'
+        properties: {
+          name: {
+            $ref: 'partsUserNameSchema#'
+          },
+          description: {
+            $ref: 'partsUserDescriptionSchema#'
+          },
+          avatar: {
+            $ref: 'partsFirebaseUrlStorageSchema#'
           }
-        ]
+        }
       },
       response: {
         200: {
