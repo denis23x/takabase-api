@@ -45,26 +45,24 @@ import { categorySchema } from './schema/models/category.schema';
 import { postSchema } from './schema/models/post.schema';
 import { userSchema } from './schema/models/user.schema';
 import { responseErrorSchema } from './schema/crud/response/response-error.schema';
-import { partsCategoryDescriptionSchema } from './schema/parts/parts-category-description.schema';
-import { partsCategoryNameSchema } from './schema/parts/parts-category-name.schema';
+import { partsCategoryDescriptionSchema } from './schema/parts/category/parts-category-description.schema';
+import { partsCategoryNameSchema } from './schema/parts/category/parts-category-name.schema';
 import { partsFirebaseUidSchema } from './schema/parts/parts-firebase-uid.schema';
 import { partsFirebaseUrlStorageSchema } from './schema/parts/parts-firebase-url-storage.schema';
 import { partsIdSchema } from './schema/parts/parts-id.schema';
-import { partsPostDescriptionSchema } from './schema/parts/parts-post-description.schema';
-import { partsPostMarkdownSchema } from './schema/parts/parts-post-markdown.schema';
-import { partsPostNameSchema } from './schema/parts/parts-post-name.schema';
+import { partsPostDescriptionSchema } from './schema/parts/post/parts-post-description.schema';
+import { partsPostMarkdownSchema } from './schema/parts/post/parts-post-markdown.schema';
+import { partsPostNameSchema } from './schema/parts/post/parts-post-name.schema';
 import { partsSearchSchema } from './schema/parts/parts-search.schema';
-import { partsPageSchema } from './schema/parts/parts-page.schema';
-import { partsPageOrderBySchema } from './schema/parts/parts-page-order-by.schema';
-import { partsPageSizeSchema } from './schema/parts/parts-page-size.schema';
+import { partsPageSchema } from './schema/parts/page/parts-page.schema';
+import { partsPageOrderBySchema } from './schema/parts/page/parts-page-order-by.schema';
+import { partsPageSizeSchema } from './schema/parts/page/parts-page-size.schema';
 import { partsScopeSchema } from './schema/parts/parts-scope.schema';
-import { partsSearchUserNameSchema } from './schema/parts/parts-search-user-name.schema';
-import { partsUserAppearanceSchema } from './schema/parts/parts-user-appearance.schema';
-import { partsUserDescriptionSchema } from './schema/parts/parts-user-description.schema';
-import { partsUserEmailSchema } from './schema/parts/parts-user-email.schema';
-import { partsUserNameSchema } from './schema/parts/parts-user-name.schema';
-import { partsUserPasswordSchema } from './schema/parts/parts-user-password.schema';
-import { partsUserTermsSchema } from './schema/parts/parts-user-terms.schema';
+import { partsUserDescriptionSchema } from './schema/parts/user/parts-user-description.schema';
+import { partsUserEmailSchema } from './schema/parts/user/parts-user-email.schema';
+import { partsUserNameSchema } from './schema/parts/user/parts-user-name.schema';
+import { partsUserPasswordSchema } from './schema/parts/user/parts-user-password.schema';
+import { partsUserTermsSchema } from './schema/parts/user/parts-user-terms.schema';
 
 export const main = async (): Promise<FastifyInstance> => {
   const fastifyInstance: FastifyInstance = fastify({
@@ -120,8 +118,6 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsPostNameSchema);
   fastifyInstance.addSchema(partsSearchSchema);
   fastifyInstance.addSchema(partsScopeSchema);
-  fastifyInstance.addSchema(partsSearchUserNameSchema);
-  fastifyInstance.addSchema(partsUserAppearanceSchema);
   fastifyInstance.addSchema(partsUserDescriptionSchema);
   fastifyInstance.addSchema(partsUserEmailSchema);
   fastifyInstance.addSchema(partsUserNameSchema);

@@ -6,6 +6,5 @@ export const partsScopeSchema: Record<string, any> = {
   items: {
     type: 'string'
   },
-  default: [],
   collectionFormat: 'multi'
 };

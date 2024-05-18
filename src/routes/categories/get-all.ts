@@ -19,7 +19,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             $ref: 'partsIdSchema#'
           },
           userName: {
-            $ref: 'partsSearchUserNameSchema#'
+            $ref: 'partsUserNameSchema#'
           },
           search: {
             $ref: 'partsSearchSchema#'

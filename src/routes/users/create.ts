@@ -30,7 +30,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             $ref: 'partsUserTermsSchema#'
           },
           appearance: {
-            $ref: 'partsUserAppearanceSchema#'
+            type: 'object'
           }
         },
         required: ['name', 'email', 'password', 'terms'],
