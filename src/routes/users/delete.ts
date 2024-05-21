@@ -36,8 +36,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             $ref: 'partsUserPasswordSchema#'
           }
         },
-        required: ['password'],
-        additionalProperties: false
+        required: ['password']
       },
       response: {
         200: {

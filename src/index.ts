@@ -4,7 +4,7 @@ import { main } from './main';
 import { FastifyInstance } from 'fastify';
 import { FastifyListenOptions } from 'fastify/types/instance';
 import { HttpsFunction, onRequest, Request, HttpsOptions } from 'firebase-functions/v2/https';
-import * as express from 'express';
+import { Response } from 'express';
 
 /** FASTIFY */
 
@@ -76,7 +76,7 @@ export const apiHttpsOptions: HttpsOptions = {
   ]
 };
 
-export const api: HttpsFunction = onRequest(apiHttpsOptions, async (request: Request, response: express.Response) => {
+export const api: HttpsFunction = onRequest(apiHttpsOptions, async (request: Request, response: Response) => {
   const fastifyInstance: FastifyInstance = await main();
 
   await fastifyInstance.ready();

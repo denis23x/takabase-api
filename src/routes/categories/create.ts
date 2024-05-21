@@ -35,8 +35,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             ]
           }
         },
-        required: ['name'],
-        additionalProperties: false
+        required: ['name']
       },
       response: {
         201: {

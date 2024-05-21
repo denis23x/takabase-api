@@ -46,8 +46,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             $ref: 'partsIdSchema#'
           }
         },
-        required: ['name', 'description', 'markdown', 'categoryId'],
-        additionalProperties: false
+        required: ['name', 'description', 'markdown', 'categoryId']
       },
       response: {
         201: {

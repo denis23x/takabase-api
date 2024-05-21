@@ -33,8 +33,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             type: 'object'
           }
         },
-        required: ['name', 'email', 'password', 'terms'],
-        additionalProperties: false
+        required: ['name', 'email', 'password', 'terms']
       },
       response: {
         201: {

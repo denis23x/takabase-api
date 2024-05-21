@@ -23,8 +23,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             $ref: 'partsFirebaseUidSchema#'
           }
         },
-        required: ['email', 'firebaseUid'],
-        additionalProperties: false
+        required: ['email', 'firebaseUid']
       },
       response: {
         200: {
