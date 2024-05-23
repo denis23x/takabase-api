@@ -84,9 +84,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const userAvatar: string | null | undefined = request.body.avatar as any;
 
       // Create the destination path for the user avatar
-      const userAvatarListDestination: string = ['users', userFirebaseUid, 'avatar'].join('/');
-      const userAvatarList: string[] = await request.server.storagePlugin
-        .getImageList(userAvatarListDestination)
+      const userAvatarStorageListDestination: string = ['users', userFirebaseUid, 'avatar'].join('/');
+
+      // Retrieve the list of user avatars from the storage
+      // prettier-ignore
+      const userAvatarStorageList: string[] = await request.server.storagePlugin
+        .getImageList(userAvatarStorageListDestination)
         .catch((error: any) => request.server.helperPlugin.throwError('storage/get-filelist-failed', error, request));
 
       // Counter for transaction retries
@@ -106,7 +109,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Define a function to set the user avatar and move unused avatar to temporary storage
             const setUserAvatar = async (userAvatarNext: string | null): Promise<string | null> => {
               // Filter out the unused user avatar URL
-              const userAvatarListUnused: string[] = userAvatarList.filter((userAvatar: string) => userAvatar !== userAvatarNext);
+              const userAvatarListUnused: string[] = userAvatarStorageList.filter((userAvatarStorage: string) => userAvatarStorage !== userAvatarNext);
 
               // Move the unused avatar to temporary storage
               const tempAvatarList: string[] = await request.server.storagePlugin
@@ -115,7 +118,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
               //! Define rollback action for user avatar moved to temporary storage
               requestRollback.tempAvatarList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(tempAvatarList, userAvatarListDestination);
+                await request.server.storagePlugin.setImageListMove(tempAvatarList, userAvatarStorageListDestination);
               };
 
               return userAvatarNext;
@@ -123,25 +126,32 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // If there is a post image
             if (userAvatar) {
-              // Extract the new avatar URL with the appropriate destination
-              const updatedTempAvatarList: string[] = request.server.markdownPlugin.getImageListRelativeUrl([userAvatar]);
+              const userAvatarStorage: boolean = userAvatarStorageList.some((userAvatarStorage: string) => {
+                return decodeURIComponent(userAvatar).includes(userAvatarStorage);
+              });
 
-              // Move the updated avatar to the user avatar destination
-              const updatedUserAvatarList: string[] = await request.server.storagePlugin
-                .setImageListMove(updatedTempAvatarList, userAvatarListDestination)
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+              // Check if the user avatar is stored in any of the specified locations
+              if (!userAvatarStorage) {
+                // Extract the new avatar URL with the appropriate destination
+                const updatedTempAvatarList: string[] = request.server.markdownPlugin.getImageListRelativeUrl([userAvatar]);
 
-              //! Define rollback action for moving user avatar to destination
-              requestRollback.updatedUserAvatarList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(updatedUserAvatarList, 'temp');
-              };
+                // Move the updated avatar to the user avatar destination
+                const updatedUserAvatarList: string[] = await request.server.storagePlugin
+                  .setImageListMove(updatedTempAvatarList, userAvatarStorageListDestination)
+                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
-              // Set the request body avatar with the updated user avatar
-              request.body.avatar = request.server.markdownPlugin.getImageListRewrite(userAvatar, updatedTempAvatarList, updatedUserAvatarList);
+                //! Define rollback action for moving user avatar to destination
+                requestRollback.updatedUserAvatarList = async (): Promise<void> => {
+                  await request.server.storagePlugin.setImageListMove(updatedUserAvatarList, 'temp');
+                };
 
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const updatedUserAvatar: string = await setUserAvatar(decodeURIComponent([...updatedUserAvatarList].shift()));
+                // Set the request body avatar with the updated user avatar
+                request.body.avatar = request.server.markdownPlugin.getImageListRewrite(userAvatar, updatedTempAvatarList, updatedUserAvatarList);
+
+                // @ts-ignore
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const updatedUserAvatar: string = await setUserAvatar(decodeURIComponent([...updatedUserAvatarList].shift()));
+              }
             } else {
               // @ts-ignore
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
