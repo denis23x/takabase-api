@@ -12,7 +12,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'DELETE',
     url: ':id',
-    onRequest: fastify.authenticate,
+    onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Users'],
       description: 'Removes specific User from the database',

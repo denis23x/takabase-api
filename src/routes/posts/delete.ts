@@ -10,7 +10,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'DELETE',
     url: ':id',
-    onRequest: fastify.authenticate,
+    onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Posts'],
       description: 'Removes specific Post from the database',
@@ -64,11 +64,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const MAX_RETRIES: number = 3;
 
       // Extract common information from request object
-      const userId: number = Number(request.user.id);
-      const userFirebaseUid: string = String(request.user.firebaseUid);
+      const userFirebaseUid: string = request.user.uid;
 
       // Extract post information from the request object
-      const postFirebaseUid: string = String(request.query.firebaseUid);
+      const postFirebaseUid: string = request.query.firebaseUid;
       const postImage: string | undefined = request.query.image;
 
       // Counter for transaction retries
@@ -87,13 +86,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Define arguments to delete post
             const postDeleteArgs: Prisma.PostDeleteArgs = {
-              select: {
-                firebaseUid: true,
-                image: true
-              },
               where: {
-                userId,
-                id: request.params.id
+                id: request.params.id,
+                user: {
+                  firebaseUid: userFirebaseUid
+                }
               }
             };
 

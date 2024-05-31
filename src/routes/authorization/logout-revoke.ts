@@ -7,7 +7,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'POST',
     url: 'logout/revoke',
-    onRequest: fastify.authenticate,
+    onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Authorization'],
       description: 'Revoke refresh tokens ',

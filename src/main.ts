@@ -7,7 +7,6 @@ import fastifyCompress from '@fastify/compress';
 import fastifyHelmet from '@fastify/helmet';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
-import fastifyJwt from '@fastify/jwt';
 import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
 import fastifyEtag from '@fastify/etag';
@@ -19,7 +18,6 @@ import { loggerConfig } from './config/logger.config';
 import { compressConfig } from './config/compress.config';
 import { helmetConfig } from './config/helmet.config';
 import { swaggerConfig } from './config/swagger.config';
-import { jwtConfig } from './config/jwt.config';
 import { rateLimitConfig } from './config/rate-limit.config';
 import { staticConfig } from './config/static.config';
 
@@ -29,7 +27,6 @@ import authPlugin from './plugins/auth.plugin';
 import firebasePlugin from './plugins/firebase.plugin';
 import firestorePlugin from './plugins/firestore.plugin';
 import helperPlugin from './plugins/helper.plugin';
-import jwtPlugin from './plugins/jwt.plugin';
 import markdownPlugin from './plugins/markdown.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
 import storagePlugin from './plugins/storage.plugin';
@@ -85,7 +82,6 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(fastifyCors, corsConfig);
   await fastifyInstance.register(fastifyCompress, compressConfig);
   await fastifyInstance.register(fastifyHelmet, helmetConfig);
-  await fastifyInstance.register(fastifyJwt, jwtConfig);
   await fastifyInstance.register(fastifyRateLimit, rateLimitConfig);
   await fastifyInstance.register(fastifyStatic, staticConfig);
   await fastifyInstance.register(fastifyEtag);
@@ -107,7 +103,6 @@ export const main = async (): Promise<FastifyInstance> => {
   // PLUGINS HANDMADE
 
   await fastifyInstance.register(helperPlugin);
-  await fastifyInstance.register(jwtPlugin);
   await fastifyInstance.register(markdownPlugin);
   await fastifyInstance.register(prismaPlugin);
 

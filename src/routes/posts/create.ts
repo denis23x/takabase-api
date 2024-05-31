@@ -11,7 +11,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'POST',
     url: '',
-    onRequest: fastify.authenticate,
+    onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Posts'],
       description: 'Creates a new Post',
@@ -73,14 +73,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const MAX_RETRIES: number = 3;
 
       // Extract common information from request object
-      const userId: number = Number(request.user.id);
-      const userFirebaseUid: string = String(request.user.firebaseUid);
+      const userFirebaseUid: string = request.user.uid;
 
       // Extract post information from the request object
       const postPath: string = ['users', userFirebaseUid, 'posts'].join('/');
       const postImage: string | null | undefined = request.body.image;
       const postCategoryId: number = Number(request.body.categoryId);
-      const postMarkdown: string = String(request.body.markdown);
+      const postMarkdown: string = request.body.markdown;
 
       // Delete for more adjustable Prisma input
       delete request.body.categoryId;
@@ -184,7 +183,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 firebaseUid: postDocumentReference.id,
                 user: {
                   connect: {
-                    id: userId
+                    firebaseUid: userFirebaseUid
                   }
                 },
                 category: {

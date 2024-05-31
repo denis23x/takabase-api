@@ -9,7 +9,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'POST',
     url: '',
-    onRequest: fastify.authenticate,
+    onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Categories'],
       description: 'Creates a new Category',
@@ -64,7 +64,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           ...request.body,
           user: {
             connect: {
-              id: Number(request.user.id)
+              firebaseUid: request.user.uid
             }
           }
         }

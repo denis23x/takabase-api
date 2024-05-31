@@ -9,7 +9,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'PUT',
     url: ':id',
-    onRequest: fastify.authenticate,
+    onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Users'],
       description: 'Updates a User',
@@ -79,8 +79,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const MAX_RETRIES: number = 3;
 
       // Extract common information from request object
-      const userId: number = Number(request.user.id);
-      const userFirebaseUid: string = String(request.user.firebaseUid);
+      const userFirebaseUid: string = String(request.user.uid);
       const userAvatar: string | null | undefined = request.body.avatar as any;
 
       // Create the destination path for the user avatar
@@ -165,7 +164,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 description: true
               },
               where: {
-                id: userId
+                firebaseUid: userFirebaseUid
               },
               data: request.body
             };
