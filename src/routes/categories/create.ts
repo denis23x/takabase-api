@@ -58,18 +58,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<CategoryCreateDto>, reply: FastifyReply): Promise<any> {
+      // Extract the firebaseUid from the authenticated user
+      const userFirebaseUid: string = request.user.uid;
+
+      // Define the arguments for creating a new category
       const categoryCreateArgs: Prisma.CategoryCreateArgs = {
         select: request.server.prismaPlugin.getCategorySelect(),
         data: {
           ...request.body,
           user: {
             connect: {
-              firebaseUid: request.user.uid
+              firebaseUid: userFirebaseUid
             }
           }
         }
       };
 
+      // Create a new category
       await reply.server.prisma.category
         .create(categoryCreateArgs)
         .then((category: Category) => {

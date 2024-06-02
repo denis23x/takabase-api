@@ -11,7 +11,14 @@ export const categorySchema: Record<string, any> = {
       $ref: 'partsCategoryNameSchema#'
     },
     description: {
-      $ref: 'partsCategoryDescriptionSchema#'
+      allOf: [
+        {
+          $ref: 'partsCategoryDescriptionSchema#'
+        },
+        {
+          nullable: true
+        }
+      ]
     },
     user: {
       $ref: 'userSchema#'

@@ -20,7 +20,14 @@ export const postSchema: Record<string, any> = {
       $ref: 'partsPostMarkdownSchema#'
     },
     image: {
-      $ref: 'partsFirebaseUrlStorageSchema#'
+      allOf: [
+        {
+          $ref: 'partsFirebaseUrlStorageSchema#'
+        },
+        {
+          nullable: true
+        }
+      ]
     },
     user: {
       $ref: 'userSchema#'

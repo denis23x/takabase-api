@@ -2,16 +2,20 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, User } from '../../database/client';
-import { AuthorizationLoginDto } from '../../types/dto/authorization/authorization-login';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'POST',
-    url: 'login',
+    url: 'profile',
     onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Authorization'],
-      description: 'Creates a new Token',
+      description: 'Retrieve authenticated user',
+      security: [
+        {
+          swaggerBearerAuth: []
+        }
+      ],
       response: {
         200: {
           type: 'object',
@@ -32,21 +36,29 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<AuthorizationLoginDto>, reply: FastifyReply): Promise<any> {
-      // Define arguments to find a unique user based on firebaseUid
-      const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {
+    handler: async function (request: FastifyRequest, reply: FastifyReply): Promise<any> {
+      // Extract the firebaseUid from the authenticated user
+      const firebaseUid: string = request.user.uid;
+
+      // Define arguments to upsert user based on firebaseUid
+      const userUpsertArgs: Prisma.UserUpsertArgs = {
         select: {
           ...request.server.prismaPlugin.getUserSelect(),
           description: true
         },
         where: {
-          firebaseUid: request.user.uid
+          firebaseUid
+        },
+        update: {},
+        create: {
+          name: [request.user.name, request.user.uid.slice(-8)].join('-'),
+          terms: true,
+          firebaseUid
         }
       };
 
       // Find the user based on the provided firebaseUid
-      await reply.server.prisma.user.findUniqueOrThrow(userFindUniqueOrThrowArgs).then((user: User) => {
-        // Send user data along with a bearer token for authentication
+      await reply.server.prisma.user.upsert(userUpsertArgs).then((user: User) => {
         return reply.status(200).send({
           data: user,
           statusCode: 200

@@ -70,8 +70,6 @@ export const apiHttpsOptions: HttpsOptions = {
   secrets: [
     'APP_NODE_ENV',
     'APP_SERVICE_ACCOUNT',
-    'API_JWT_SECRET',
-    'API_JWT_TTL',
     'API_MYSQL_DATABASE_URL'
   ]
 };

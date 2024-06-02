@@ -21,7 +21,8 @@ export const categoryRaw = async (): Promise<any> => {
     raw.push({
       name: faker.commerce.productName(),
       description: faker.datatype.boolean() ? faker.commerce.productDescription() : null,
-      userId: user.id
+      userId: user.id,
+      userFirebaseUid: user.firebaseUid
     });
   }
 

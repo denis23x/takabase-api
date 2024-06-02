@@ -18,6 +18,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           userId: {
             $ref: 'partsIdSchema#'
           },
+          userFirebaseUid: {
+            $ref: 'partsFirebaseUidSchema#'
+          },
           userName: {
             $ref: 'partsUserNameSchema#'
           },
@@ -68,7 +71,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<QuerystringSearch>, reply: FastifyReply): Promise<any> {
-      const { userId, userName, search, orderBy, scope, size, page }: Record<string, any> = request.query;
+      const { userId, userFirebaseUid, userName, search, orderBy, scope, size, page }: Record<string, any> =
+        request.query;
 
       const categoryFindManyArgs: Prisma.CategoryFindManyArgs = {
         select: request.server.prismaPlugin.getCategorySelect(),
@@ -85,6 +89,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         categoryFindManyArgs.where = {
           ...categoryFindManyArgs.where,
           userId
+        };
+      }
+
+      if (userFirebaseUid) {
+        categoryFindManyArgs.where = {
+          ...categoryFindManyArgs.where,
+          userFirebaseUid
         };
       }
 

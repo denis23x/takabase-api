@@ -35,7 +35,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     },
     handler: async function (request: FastifyRequest, reply: FastifyReply): Promise<any> {
       // Extract the firebaseUid from the authenticated user
-      const firebaseUid: string = String(request.user.firebaseUid);
+      const firebaseUid: string = request.user.uid;
 
       // Revoke all refresh tokens associated with the user's firebaseUid
       await request.server.auth

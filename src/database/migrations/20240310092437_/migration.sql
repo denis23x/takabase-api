@@ -12,7 +12,6 @@ CREATE TABLE `User` (
 
     UNIQUE INDEX `User_firebaseUid_key`(`firebaseUid`),
     UNIQUE INDEX `User_name_key`(`name`),
-    FULLTEXT INDEX `User_name_idx`(`name`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -28,7 +27,6 @@ CREATE TABLE `Category` (
 
     INDEX `Category_userId_idx`(`userId`),
     UNIQUE INDEX `Category_name_userId_key`(`name`, `userId`),
-    FULLTEXT INDEX `Category_name_description_idx`(`name`, `description`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -50,6 +48,5 @@ CREATE TABLE `Post` (
     INDEX `Post_categoryId_idx`(`categoryId`),
     INDEX `Post_userId_idx`(`userId`),
     UNIQUE INDEX `Post_name_categoryId_key`(`name`, `categoryId`),
-    FULLTEXT INDEX `Post_name_description_idx`(`name`, `description`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

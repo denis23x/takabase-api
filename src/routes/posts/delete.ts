@@ -63,10 +63,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
-      // Extract common information from request object
+      // Extract the firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
 
       // Extract post information from the request object
+      const postId: number = request.params.id;
       const postFirebaseUid: string = request.query.firebaseUid;
       const postImage: string | undefined = request.query.image;
 
@@ -87,10 +88,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Define arguments to delete post
             const postDeleteArgs: Prisma.PostDeleteArgs = {
               where: {
-                id: request.params.id,
-                user: {
-                  firebaseUid: userFirebaseUid
-                }
+                id: postId,
+                userFirebaseUid
               }
             };
 

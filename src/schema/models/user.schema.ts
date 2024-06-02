@@ -14,10 +14,24 @@ export const userSchema: Record<string, any> = {
       $ref: 'partsUserNameSchema#'
     },
     description: {
-      $ref: 'partsUserDescriptionSchema#'
+      allOf: [
+        {
+          $ref: 'partsUserDescriptionSchema#'
+        },
+        {
+          nullable: true
+        }
+      ]
     },
     avatar: {
-      $ref: 'partsFirebaseUrlStorageSchema#'
+      allOf: [
+        {
+          $ref: 'partsFirebaseUrlStorageSchema#'
+        },
+        {
+          nullable: true
+        }
+      ]
     },
     terms: {
       $ref: 'partsUserTermsSchema#'

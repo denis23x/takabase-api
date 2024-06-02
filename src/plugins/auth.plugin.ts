@@ -18,7 +18,7 @@ const authPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fasti
       const token: string = authorization.replace('Bearer', '').trim();
 
       return request.server.auth
-        .verifyIdToken(token)
+        .verifyIdToken(token, true)
         .then((decodedIdToken: DecodedIdToken) => (request.user = decodedIdToken));
     }
 

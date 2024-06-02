@@ -5,6 +5,7 @@ export interface QuerystringSearch {
     name?: string;
     search?: string;
     userId?: number;
+    userFirebaseUid?: string;
     userName?: string;
     categoryId?: number;
     orderBy?: string;

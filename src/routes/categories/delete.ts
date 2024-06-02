@@ -61,9 +61,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
-      // Extract common information from request object
-      const userId: number = Number(request.user.id);
-      const userFirebaseUid: string = String(request.user.firebaseUid);
+      // Extract the firebaseUid from the authenticated user
+      const userFirebaseUid: string = request.user.uid;
 
       // Extract category and post related information from the request object
       const categoryId: number = Number(request.params.id);
@@ -81,7 +80,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             image: true
           },
           where: {
-            userId,
+            userFirebaseUid,
             categoryId
           }
         };
@@ -192,7 +191,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Define arguments to delete category related posts
               const postDeleteManyArgs: Prisma.PostDeleteManyArgs = {
                 where: {
-                  userId,
+                  userFirebaseUid,
                   categoryId
                 }
               };
@@ -205,7 +204,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Define arguments to update category related posts
               const postUpdateManyArgs: Prisma.PostUpdateManyArgs = {
                 where: {
-                  userId,
+                  userFirebaseUid,
                   categoryId
                 },
                 data: {
@@ -224,7 +223,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               select: request.server.prismaPlugin.getCategorySelect(),
               where: {
                 id: categoryId,
-                userId
+                userFirebaseUid
               }
             };
 

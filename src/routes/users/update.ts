@@ -78,8 +78,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
-      // Extract common information from request object
-      const userFirebaseUid: string = String(request.user.uid);
+      // Extract the firebaseUid from the authenticated user
+      const userFirebaseUid: string = request.user.uid;
       const userAvatar: string | null | undefined = request.body.avatar as any;
 
       // Create the destination path for the user avatar

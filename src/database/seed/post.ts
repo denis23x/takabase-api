@@ -45,6 +45,7 @@ export const postRaw = async (): Promise<any> => {
       markdown: faker.lorem.paragraphs(10),
       image: faker.datatype.boolean() ? getImagePath() : null,
       userId: category.userId,
+      userFirebaseUid: category.userFirebaseUid,
       categoryId: category.id
     });
   }

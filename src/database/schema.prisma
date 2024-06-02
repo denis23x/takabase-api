@@ -23,39 +23,50 @@ model User {
   terms       Boolean    @default(true) @db.TinyInt
   categories  Category[]
   posts       Post[]
+
+  @@unique([id, firebaseUid])
+
+  @@index([firebaseUid])
 }
 
 model Category {
-  id          Int       @id @default(autoincrement()) @db.Int
-  userId      Int       @db.Int
-  name        String    @db.VarChar(255)
-  description String?   @db.VarChar(255)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now()) @updatedAt
-  deletedAt   DateTime? @db.DateTime(6)
-  user        User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  posts       Post[]
+  id                Int       @id @default(autoincrement()) @db.Int
+  userId            Int       @db.Int
+  userFirebaseUid   String    @db.VarChar(255)
+  name              String    @db.VarChar(255)
+  description       String?   @db.VarChar(255)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
+  deletedAt         DateTime? @db.DateTime(6)
+  user              User      @relation(fields: [userId, userFirebaseUid], references: [id, firebaseUid], onDelete: NoAction, onUpdate: NoAction)
+  posts             Post[]
 
   @@unique([name, userId])
+
   @@index([userId])
+  @@index([userFirebaseUid])
 }
 
 model Post {
-  id          Int       @id @default(autoincrement()) @db.Int
-  name        String    @db.VarChar(255)
-  firebaseUid String    @unique @db.VarChar(255)
-  description String    @db.VarChar(255)
-  markdown    String    @db.Text
-  image       String?   @db.VarChar(255)
-  userId      Int       @db.Int
-  categoryId  Int       @db.Int
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now()) @updatedAt
-  deletedAt   DateTime? @db.DateTime(6)
-  category    Category  @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user        User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                Int       @id @default(autoincrement()) @db.Int
+  name              String    @db.VarChar(255)
+  firebaseUid       String    @unique @db.VarChar(255)
+  description       String    @db.VarChar(255)
+  markdown          String    @db.Text
+  image             String?   @db.VarChar(255)
+  userId            Int       @db.Int
+  userFirebaseUid   String    @db.VarChar(255)
+  categoryId        Int       @db.Int
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
+  deletedAt         DateTime? @db.DateTime(6)
+  category          Category  @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user              User      @relation(fields: [userId, userFirebaseUid], references: [id, firebaseUid], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([name, categoryId])
+
+  @@index([firebaseUid])
   @@index([categoryId])
   @@index([userId])
+  @@index([userFirebaseUid])
 }

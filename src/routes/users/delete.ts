@@ -62,12 +62,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
-      // Extract common information from request object
-      const userId: number = Number(request.user.id);
-      const userFirebaseUid: string = String(request.user.firebaseUid);
+      // Extract the firebaseUid from the authenticated user
+      const userFirebaseUid: string = request.user.uid;
 
       // Get Auth user record
-      const userAuthRecord: UserRecord = await request.server.auth.getUser(request.user.firebaseUid);
+      const userAuthRecord: UserRecord = await request.server.auth.getUser(userFirebaseUid);
 
       // Construct Firestore document references for user
       // prettier-ignore
@@ -84,7 +83,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           image: true
         },
         where: {
-          userId
+          userFirebaseUid
         }
       };
 
@@ -180,7 +179,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Define arguments to delete user's posts
             const postDeleteManyArgs: Prisma.PostDeleteManyArgs = {
               where: {
-                userId
+                userFirebaseUid
               }
             };
 
@@ -192,7 +191,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Define arguments to delete user's categories
             const categoryDeleteManyArgs: Prisma.CategoryDeleteManyArgs = {
               where: {
-                userId
+                userFirebaseUid
               }
             };
 
@@ -214,7 +213,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             //! Define rollback action for user Auth record
             requestRollback.userRecord = async (): Promise<void> => {
               await request.server.auth.createUser({
-                uid: request.user.firebaseUid,
+                uid: userFirebaseUid,
                 email: userAuthRecord.email,
                 emailVerified: userAuthRecord.emailVerified,
                 password: request.query.password,
@@ -250,7 +249,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const userDeleteArgs: Prisma.UserDeleteArgs = {
               select: request.server.prismaPlugin.getUserSelect(),
               where: {
-                id: userId
+                firebaseUid: userFirebaseUid
               }
             };
 

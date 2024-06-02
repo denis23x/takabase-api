@@ -65,15 +65,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<CategoryUpdateDto>, reply: FastifyReply): Promise<any> {
+      // Extract the firebaseUid from the authenticated user
+      const userFirebaseUid: string = request.user.uid;
+
+      // Extract post information from the request object
+      const categoryId: number = Number(request.params.id);
+
+      // Define the arguments for updating category
       const categoryUpdateArgs: Prisma.CategoryUpdateArgs = {
         select: request.server.prismaPlugin.getCategorySelect(),
         where: {
-          userId: Number(request.user.id),
-          id: Number(request.params.id)
+          id: categoryId,
+          userFirebaseUid
         },
         data: request.body
       };
 
+      // Update category
       await reply.server.prisma.category
         .update(categoryUpdateArgs)
         .then((category: Category) => {
