@@ -45,12 +45,16 @@
     "dotenv": "^16.4.5",
     "fastify": "^4.27.0",
     "firebase-admin": "^12.1.0",
-    "firebase-functions": "^5.0.1"
+    "firebase-functions": "^5.0.1",
+    "nanoid": "^3.3.4",
+    "nanoid-dictionary": "^4.3.0",
+    "unique-names-generator": "^4.7.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
     "@faker-js/faker": "^8.4.1",
+    "@types/nanoid-dictionary": "^4.2.3",
     "@types/node": "^20.12.12",
     "@typescript-eslint/eslint-plugin": "^7.9.0",
     "@typescript-eslint/parser": "^7.9.0",

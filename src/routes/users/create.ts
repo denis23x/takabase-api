@@ -4,36 +4,32 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, PrismaClient, User } from '../../database/client';
 import { UserCreateDto } from '../../types/dto/user/user-create';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
-import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 import { DocumentReference, WriteResult } from 'firebase-admin/lib/firestore';
+import { customAlphabet } from 'nanoid';
+import { alphanumeric } from 'nanoid-dictionary';
+import { animals, colors, uniqueNamesGenerator } from 'unique-names-generator';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'POST',
     url: '',
+    onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Users'],
       description: 'Creates a new User',
+      security: [
+        {
+          swaggerBearerAuth: []
+        }
+      ],
       body: {
         type: 'object',
         properties: {
           name: {
             $ref: 'partsUserNameSchema#'
-          },
-          email: {
-            $ref: 'partsUserEmailSchema#'
-          },
-          password: {
-            $ref: 'partsUserPasswordSchema#'
-          },
-          terms: {
-            $ref: 'partsUserTermsSchema#'
-          },
-          appearance: {
-            type: 'object'
           }
         },
-        required: ['name', 'email', 'password', 'terms']
+        nullable: true
       },
       response: {
         201: {
@@ -59,6 +55,29 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
+      // Extract the firebaseUid from the authenticated user
+      const userFirebaseUid: string = request.user.uid;
+      const userPath: string = ['users', userFirebaseUid].join('/');
+
+      // Make unique name before start transaction (if not provided in body)
+      if (!request.body?.name) {
+        // Generate a unique UID with 8 alphanumeric characters and convert it to lowercase
+        const userNameUid: string = customAlphabet(alphanumeric, 8)().toLowerCase();
+        const userNameSeparator: string = '-';
+
+        // Generate a name by combining words from the 'colors' and 'animals' dictionaries
+        const userNameGenerated: string = uniqueNamesGenerator({
+          dictionaries: [colors, animals],
+          separator: userNameSeparator,
+          length: 2
+        });
+
+        request.body = {
+          ...request.body,
+          name: [userNameGenerated, userNameUid].join(userNameSeparator)
+        };
+      }
+
       // Counter for transaction retries
       let requestRetries: number = 0;
 
@@ -73,56 +92,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Re-initialize requestRollback object
             requestRollback = {};
 
-            // Create Auth user record
-            const userFirebaseRecord: UserRecord = await request.server.auth
-              .createUser({
-                email: request.body.email,
-                emailVerified: false,
-                password: request.body.password,
-                displayName: request.body.name,
-                disabled: false
-              })
-              .catch((error: any) => request.server.helperPlugin.throwError('auth/create-user-failed', error, request));
-
-            //! Define rollback action for delete Auth user record
-            requestRollback.userRecord = async (): Promise<void> => {
-              await request.server.auth.deleteUser(userFirebaseRecord.uid);
-            };
-
-            // Define arguments to create post
-            const userCreateArgs: Prisma.UserCreateArgs = {
-              select: request.server.prismaPlugin.getUserSelect(),
-              data: {
-                name: request.body.name,
-                terms: request.body.terms,
-                firebaseUid: userFirebaseRecord.uid
-              }
-            };
-
-            // Create the user
-            const user: User = await prismaClient.user.create(userCreateArgs);
-            const userPath: string = ['users', userFirebaseRecord.uid].join('/');
-
-            //! Define rollback action for delete user
-            requestRollback.user = async (): Promise<void> => {
-              // Define arguments to delete user
-              const userDeleteArgs: Prisma.UserDeleteArgs = {
-                select: request.server.prismaPlugin.getUserSelect(),
-                where: {
-                  id: user.id
-                }
-              };
-
-              await prismaClient.user.delete(userDeleteArgs);
-            };
-
             // Get the reference to the user document
             const userDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(userPath);
 
             // Firestore user document data
             const userDocumentCreateData: any = {
-              userId: user.id,
-              appearance: request.body.appearance
+              appearance: {
+                dropdownBackdrop: false,
+                language: 'en-US',
+                markdownMonospace: true,
+                pageRedirectHome: false,
+                pageScrollToTop: false,
+                pageScrollInfinite: false,
+                theme: 'auto',
+                themeBackground: 'cosy-creatures',
+                themePrism: 'auto',
+                windowButtonPosition: 'left'
+              }
             }
 
             // Create Firestore user document
@@ -137,8 +123,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               await userDocumentReference.delete();
             };
 
-            // Return user
-            return user;
+            // Define the arguments for create user
+            const userCreateArgs: Prisma.UserCreateArgs = {
+              select: request.server.prismaPlugin.getUserSelect(),
+              data: {
+                name: request.body.name,
+                terms: true,
+                firebaseUid: userFirebaseUid
+              }
+            };
+
+            // Create the user
+            return prismaClient.user.create(userCreateArgs);
           }).then((user: User) => {
             // Send success response with created user
             return reply.status(200).send({

@@ -2,6 +2,7 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, User } from '../../database/client';
+import { ResponseError } from '../../types/crud/response/response-error.schema';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -38,32 +39,38 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     },
     handler: async function (request: FastifyRequest, reply: FastifyReply): Promise<any> {
       // Extract the firebaseUid from the authenticated user
-      const firebaseUid: string = request.user.uid;
+      const userFirebaseUid: string = request.user.uid;
 
-      // Define arguments to upsert user based on firebaseUid
-      const userUpsertArgs: Prisma.UserUpsertArgs = {
+      // Define arguments for finding a unique user in the database
+      const userFindUniqueArgs: Prisma.UserFindUniqueArgs = {
         select: {
           ...request.server.prismaPlugin.getUserSelect(),
           description: true
         },
         where: {
-          firebaseUid
-        },
-        update: {},
-        create: {
-          name: [request.user.name, request.user.uid.slice(-8)].join('-'),
-          terms: true,
-          firebaseUid
+          firebaseUid: userFirebaseUid
         }
       };
 
-      // Find the user based on the provided firebaseUid
-      await reply.server.prisma.user.upsert(userUpsertArgs).then((user: User) => {
-        return reply.status(200).send({
-          data: user,
-          statusCode: 200
+      // Use Prisma to find a unique user based on the defined arguments
+      await reply.server.prisma.user
+        .findUnique(userFindUniqueArgs)
+        .then((user: User) => {
+          if (user) {
+            return reply.status(200).send({
+              data: user,
+              statusCode: 200
+            });
+          }
+
+          // If no user is found, redirect to the user create endpoint
+          return reply.status(307).redirect('/api/v1/users/');
+        })
+        .catch((error: Error) => {
+          const responseError: ResponseError = reply.server.prismaPlugin.getError(error) as ResponseError;
+
+          return reply.status(responseError.statusCode).send(responseError);
         });
-      });
     }
   });
 }
