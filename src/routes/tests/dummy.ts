@@ -10,10 +10,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       tags: ['Tests'],
       description: 'Test endpoint no special purpose',
       response: {
-        400: {
+        '4xx': {
           $ref: 'responseErrorSchema#'
         },
-        500: {
+        '5xx': {
           $ref: 'responseErrorSchema#'
         }
       }

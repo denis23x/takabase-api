@@ -49,7 +49,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         required: ['name', 'description', 'markdown', 'categoryId']
       },
       response: {
-        201: {
+        '201': {
           type: 'object',
           properties: {
             data: {
@@ -60,10 +60,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
           }
         },
-        400: {
+        '4xx': {
           $ref: 'responseErrorSchema#'
         },
-        500: {
+        '5xx': {
           $ref: 'responseErrorSchema#'
         }
       }

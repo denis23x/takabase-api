@@ -17,7 +17,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       ],
       response: {
-        200: {
+        '200': {
           type: 'object',
           properties: {
             data: {
@@ -28,7 +28,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
           }
         },
-        500: {
+        '5xx': {
           $ref: 'responseErrorSchema#'
         }
       }
