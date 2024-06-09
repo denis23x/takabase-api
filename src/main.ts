@@ -1,6 +1,6 @@
 /** @format */
 
-import fastify, { FastifyReply, FastifyRequest, FastifyInstance, HookHandlerDoneFunction } from 'fastify';
+import fastify, { FastifyReply, FastifyRequest, FastifyInstance } from 'fastify';
 import { ContentTypeParserDoneFunction } from 'fastify/types/content-type-parser';
 import fastifyCors from '@fastify/cors';
 import fastifyCompress from '@fastify/compress';
@@ -134,15 +134,6 @@ export const main = async (): Promise<FastifyInstance> => {
   // LOCALHOST
 
   if (process.env.APP_NODE_ENV === 'localhost') {
-    // prettier-ignore
-    fastifyInstance.addHook('onRequest', (request: FastifyRequest, reply: FastifyReply, done: HookHandlerDoneFunction) => {
-      setTimeout(() => {
-        done();
-      }, 1000);
-    });
-
-    // SWAGGER
-
     await fastifyInstance.register(fastifySwagger, swaggerConfig);
     await fastifyInstance.register(fastifySwaggerUi, {
       routePrefix: '/docs'

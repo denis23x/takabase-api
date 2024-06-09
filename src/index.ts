@@ -40,8 +40,9 @@ main()
 
     // DOCKER
     const options: FastifyListenOptions = {
-      port: process.env.APP_PORT ? Number(process.env.APP_PORT) : 4400,
-      host: process.env.APP_HOST ? String(process.env.APP_HOST) : 'localhost'
+      port: 4400,
+      host: 'localhost',
+      listenTextResolver: () => ''
     };
 
     // PROCESS
