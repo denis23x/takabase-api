@@ -46,11 +46,6 @@ const projectList = {
         description: 'https://prisma.io/docs/orm/prisma-migrate/getting-started',
       },
       {
-        title: 'Prisma studio',
-        value: 'studio',
-        description: 'https://prisma.io/studio',
-      },
-      {
         title: 'Prisma seeding',
         value: 'seed',
         description: 'https://prisma.io/docs/orm/prisma-migrate/workflows/seeding',
@@ -79,17 +74,14 @@ const projectList = {
     }
 
     if (action.action === 'migration') {
-      command.push(`export API_MYSQL_DATABASE_URL=$(firebase functions:secrets:access API_MYSQL_DATABASE_URL)`);
+      command.push(`export API_DATABASE_URL=$(firebase functions:secrets:access API_DATABASE_URL)`);
+      command.push(`export API_DATABASE_DIRECT_URL=$(firebase functions:secrets:access API_DATABASE_DIRECT_URL)`);
       command.push(`npx prisma migrate deploy`);
     }
 
-    if (action.action === 'studio') {
-      command.push(`export API_MYSQL_DATABASE_URL=$(firebase functions:secrets:access API_MYSQL_DATABASE_URL)`);
-      command.push(`npx prisma studio`);
-    }
-
     if (action.action === 'seed') {
-      command.push(`export API_MYSQL_DATABASE_URL=$(firebase functions:secrets:access API_MYSQL_DATABASE_URL)`);
+      command.push(`export API_DATABASE_URL=$(firebase functions:secrets:access API_DATABASE_URL)`);
+      command.push(`export API_DATABASE_DIRECT_URL=$(firebase functions:secrets:access API_DATABASE_DIRECT_URL)`);
       command.push(`export APP_STORAGE=https://firebasestorage.googleapis.com/v0/b/${project.project}.appspot.com`);
       command.push(`npx prisma db seed`);
     }

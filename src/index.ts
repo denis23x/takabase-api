@@ -71,7 +71,8 @@ export const apiHttpsOptions: HttpsOptions = {
   secrets: [
     'APP_NODE_ENV',
     'APP_SERVICE_ACCOUNT',
-    'API_MYSQL_DATABASE_URL'
+    'API_DATABASE_URL',
+    'API_DATABASE_DIRECT_URL'
   ]
 };
 

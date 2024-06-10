@@ -2,7 +2,7 @@
 
 import { Prisma } from '../database/client';
 import { config } from 'dotenv';
-import { connect, Connection } from '@tidbcloud/serverless';
+import { connect } from '@tidbcloud/serverless';
 import { PrismaTiDBCloud } from '@tidbcloud/prisma-adapter';
 
 config({
@@ -11,13 +11,11 @@ config({
 });
 
 // https://docs.pingcap.com/tidbcloud/serverless-driver-prisma-example
-
-const connection: Connection = connect({
-  url: String(process.env.API_MYSQL_DATABASE_URL),
+// prettier-ignore
+const prismaTiDBCloud: any = new PrismaTiDBCloud(connect({
+  url: String(process.env.API_DATABASE_URL),
   debug: false
-});
-
-const prismaTiDBCloud: any = new PrismaTiDBCloud(connection);
+}));
 
 // https://www.prisma.io/docs/concepts/components/prisma-client/working-with-prismaclient/logging
 
@@ -28,7 +26,8 @@ const prismaConfigList: Record<string, Prisma.PrismaClientOptions> = {
     transactionOptions: {
       maxWait: 2000,
       timeout: 5000
-    }
+    },
+    adapter: prismaTiDBCloud
   },
   development: {
     errorFormat: 'pretty',

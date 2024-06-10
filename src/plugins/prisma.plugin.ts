@@ -15,7 +15,6 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
       id: true,
       name: true,
       description: true,
-      userId: false,
       createdAt: true,
       updatedAt: true,
       deletedAt: false
@@ -27,7 +26,6 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
       description: true,
       markdown: false,
       image: true,
-      userId: false,
       categoryId: false,
       createdAt: true,
       updatedAt: true,
