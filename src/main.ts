@@ -23,6 +23,7 @@ import { staticConfig } from './config/static.config';
 
 // PLUGINS
 
+import algoliaPlugin from './plugins/algolia.plugin';
 import authPlugin from './plugins/auth.plugin';
 import firebasePlugin from './plugins/firebase.plugin';
 import firestorePlugin from './plugins/firestore.plugin';
@@ -102,6 +103,7 @@ export const main = async (): Promise<FastifyInstance> => {
 
   // PLUGINS HANDMADE
 
+  await fastifyInstance.register(algoliaPlugin);
   await fastifyInstance.register(helperPlugin);
   await fastifyInstance.register(markdownPlugin);
   await fastifyInstance.register(prismaPlugin);
@@ -142,12 +144,12 @@ export const main = async (): Promise<FastifyInstance> => {
 
   // GCP ISSUE
 
-  if (process.env.APP_NODE_ENV !== 'localhost') {
-    // prettier-ignore
-    fastifyInstance.addContentTypeParser('application/json', {}, (request: FastifyRequest, body: any, done: ContentTypeParserDoneFunction) => {
-      done(null, body.body);
-    });
-  }
+  fastifyInstance.removeAllContentTypeParsers();
+
+  // prettier-ignore
+  fastifyInstance.addContentTypeParser('application/json', {}, (request: FastifyRequest, body: any, done: ContentTypeParserDoneFunction) => {
+    done(null, body.body);
+  });
 
   // API
 

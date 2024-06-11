@@ -15,6 +15,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
       id: true,
       name: true,
       description: true,
+      userFirebaseUid: false,
       createdAt: true,
       updatedAt: true,
       deletedAt: false
@@ -23,6 +24,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
       id: true,
       name: true,
       firebaseUid: false,
+      userFirebaseUid: false,
       description: true,
       markdown: false,
       image: true,
@@ -162,23 +164,26 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
       }
     },
     getErrorTransaction: (error: any, retriesLimitReached: boolean): ResponseError | null => {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (retriesLimitReached) {
+      switch (true) {
+        case error instanceof Prisma.PrismaClientKnownRequestError: {
+          if (retriesLimitReached) {
+            return {
+              message: 'Something unexpected occurred. Please try again later',
+              error: 'Internal Server Error',
+              statusCode: 500
+            };
+          }
+
+          return fastifyInstance.prismaPlugin.getError(error);
+        }
+        default: {
           return {
-            message: 'Something unexpected occurred. Please try again later',
+            code: error.message,
+            message: 'Fastify application error',
             error: 'Internal Server Error',
             statusCode: 500
           };
         }
-
-        return fastifyInstance.prismaPlugin.getError(error);
-      } else {
-        return {
-          code: error.message,
-          message: 'Fastify application error',
-          error: 'Internal Server Error',
-          statusCode: 500
-        };
       }
     },
     setErrorTransaction: async (error: any, retriesLimitReached: boolean, requestRollback: any): Promise<ResponseError | null> => {
