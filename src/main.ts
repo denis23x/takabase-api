@@ -34,6 +34,7 @@ import storagePlugin from './plugins/storage.plugin';
 
 // ROUTES
 
+import algoliaRoutes from './routes/algolia';
 import authorizationRoutes from './routes/authorization';
 import categoriesRoutes from './routes/categories';
 import postsRoutes from './routes/posts';
@@ -46,6 +47,8 @@ import { categorySchema } from './schema/models/category.schema';
 import { postSchema } from './schema/models/post.schema';
 import { userSchema } from './schema/models/user.schema';
 import { responseErrorSchema } from './schema/crud/response/response-error.schema';
+import { partsAlgoliaAddRecordsSchema } from './schema/parts/algolia/parts-algolia-add-records.schema';
+import { partsAlgoliaResponseSchema } from './schema/parts/algolia/parts-algolia-response.schema';
 import { partsCategoryDescriptionSchema } from './schema/parts/category/parts-category-description.schema';
 import { partsCategoryNameSchema } from './schema/parts/category/parts-category-name.schema';
 import { partsFirebaseUidSchema } from './schema/parts/parts-firebase-uid.schema';
@@ -114,6 +117,8 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(postSchema);
   fastifyInstance.addSchema(userSchema);
   fastifyInstance.addSchema(responseErrorSchema);
+  fastifyInstance.addSchema(partsAlgoliaAddRecordsSchema);
+  fastifyInstance.addSchema(partsAlgoliaResponseSchema);
   fastifyInstance.addSchema(partsCategoryDescriptionSchema);
   fastifyInstance.addSchema(partsCategoryNameSchema);
   fastifyInstance.addSchema(partsFirebaseUidSchema);
@@ -155,6 +160,9 @@ export const main = async (): Promise<FastifyInstance> => {
 
   await fastifyInstance.register(
     async (api: FastifyInstance): Promise<void> => {
+      api.register(algoliaRoutes, {
+        prefix: '/algolia/'
+      });
       api.register(authorizationRoutes, {
         prefix: '/authorization/'
       });

@@ -20,6 +20,10 @@ export const swaggerConfig: SwaggerOptions = {
         description: 'Authorization end-points'
       },
       {
+        name: 'Algolia',
+        description: 'Algolia search end-points'
+      },
+      {
         name: 'Categories',
         description: 'Category related end-points'
       },
@@ -30,6 +34,10 @@ export const swaggerConfig: SwaggerOptions = {
       {
         name: 'Users',
         description: 'User related end-points'
+      },
+      {
+        name: 'Tests',
+        description: 'Testing end-points'
       }
     ],
     components: {

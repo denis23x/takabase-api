@@ -34,7 +34,7 @@ export const postRaw = async (): Promise<any> => {
 
   const raw: any[] = [];
 
-  for (let i: number = 0; i < categoriesDB.length * 10; i++) {
+  for (let i: number = 0; i < categoriesDB.length * 5; i++) {
     const categoryIndex: number = faker.number.int({ min: 0, max: categoriesDB.length - 1 });
     const category: Category = categoriesDB[categoryIndex];
 
