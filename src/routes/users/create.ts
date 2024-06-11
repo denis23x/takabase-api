@@ -8,6 +8,8 @@ import { DocumentReference, WriteResult } from 'firebase-admin/lib/firestore';
 import { customAlphabet } from 'nanoid';
 import { alphanumeric } from 'nanoid-dictionary';
 import { animals, colors, uniqueNamesGenerator } from 'unique-names-generator';
+import { SaveObjectResponse } from '@algolia/client-search';
+import { SearchIndex } from 'algoliasearch';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -58,6 +60,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Extract the firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
       const userPath: string = ['users', userFirebaseUid].join('/');
+      const userIndex: SearchIndex = request.server.algolia.initIndex('user');
 
       // Make unique name before start transaction (if not provided in body)
       if (!request.body?.name) {
@@ -134,7 +137,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             };
 
             // Create the user
-            return prismaClient.user.create(userCreateArgs);
+            const user: User = await prismaClient.user.create(userCreateArgs);
+
+            // Create new object in Algolia user index
+            const userIndexObject: SaveObjectResponse = await userIndex.saveObject({
+              objectID: user.id,
+              id: user.id,
+              name: user.name,
+              description: null,
+              firebaseUid: userFirebaseUid
+            });
+
+            //! Define rollback action for Algolia delete user object
+            requestRollback.userIndexObjects = async (): Promise<void> => {
+              await userIndex.deleteObjects([userIndexObject.objectID]);
+            };
+
+            return user;
           }).then((user: User) => {
             // Send success response with created user
             return reply.status(200).send({

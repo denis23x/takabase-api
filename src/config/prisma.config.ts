@@ -24,8 +24,8 @@ const prismaConfigList: Record<string, Prisma.PrismaClientOptions> = {
     errorFormat: 'pretty',
     log: ['warn', 'error'],
     transactionOptions: {
-      maxWait: 2000,
-      timeout: 5000
+      maxWait: 3000,
+      timeout: 8000
     },
     adapter: prismaTiDBCloud
   },
@@ -33,16 +33,16 @@ const prismaConfigList: Record<string, Prisma.PrismaClientOptions> = {
     errorFormat: 'pretty',
     log: ['warn', 'error'],
     transactionOptions: {
-      maxWait: 2000,
-      timeout: 5000
+      maxWait: 3000,
+      timeout: 8000
     },
     adapter: prismaTiDBCloud
   },
   production: {
     errorFormat: 'minimal',
     transactionOptions: {
-      maxWait: 2000,
-      timeout: 5000
+      maxWait: 3000,
+      timeout: 8000
     },
     adapter: prismaTiDBCloud
   }

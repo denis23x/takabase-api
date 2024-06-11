@@ -4,6 +4,8 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, PrismaClient, User } from '../../database/client';
 import { UserUpdateDto } from '../../types/dto/user/user-update';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
+import { GetObjectsResponse, SaveObjectResponse } from '@algolia/client-search';
+import { SearchIndex } from 'algoliasearch';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -80,7 +82,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Extract the firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
+      const userId: number = Number(request.params.id);
       const userAvatar: string | null | undefined = request.body.avatar as any;
+      const userIndex: SearchIndex = request.server.algolia.initIndex('user');
+      const userIndexObjects: GetObjectsResponse<any> = await userIndex.getObjects([String(userId)]);
 
       // Create the destination path for the user avatar
       const userAvatarStorageListDestination: string = ['users', userFirebaseUid, 'avatar'].join('/');
@@ -157,6 +162,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               const updatedUserAvatar: null = await setUserAvatar(null);
             }
 
+            // Check if there are results in the fetched user index objects
+            if (userIndexObjects.results.length) {
+              // Update object in Algolia user index
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const userIndexObject: SaveObjectResponse = await userIndex.partialUpdateObjects([{
+                objectID: userId,
+                name: request.body.name,
+                description: request.body.description || null
+              }]);
+
+              //! Define rollback action for Algolia update user object
+              requestRollback.userIndexObjects = async (): Promise<void> => {
+                await userIndex.partialUpdateObjects([...userIndexObjects.results]);
+              };
+            }
+
             // Define the arguments for updating user
             const userUpdateArgs: Prisma.UserUpdateArgs = {
               select: {
@@ -164,6 +186,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 description: true
               },
               where: {
+                id: userId,
                 firebaseUid: userFirebaseUid
               },
               data: request.body

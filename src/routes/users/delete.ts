@@ -1,12 +1,14 @@
 /** @format */
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Post, Prisma, PrismaClient, User } from '../../database/client';
+import { Category, Post, Prisma, PrismaClient, User } from '../../database/client';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
 import { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
 import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 import { parse } from 'path';
 import { UserDeleteDto } from '../../types/dto/user/user-delete';
+import { ChunkedBatchResponse, GetObjectsResponse } from '@algolia/client-search';
+import { SearchIndex } from 'algoliasearch';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -63,6 +65,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Extract the firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
+      const userId: number = Number(request.params.id);
+      const userIndex: SearchIndex = request.server.algolia.initIndex('user');
+      const userIndexObjects: GetObjectsResponse<any> = await userIndex.getObjects([String(userId)]);
 
       // Get Auth user record
       const userAuthRecord: UserRecord = await request.server.auth.getUser(userFirebaseUid);
@@ -78,6 +83,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Define arguments to fetch user's posts from Prisma
       const userPostFindManyArgs: Prisma.PostFindManyArgs = {
         select: {
+          id: true,
           firebaseUid: true,
           image: true
         },
@@ -89,6 +95,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Fetch user's posts from the database
       const userPostList: Post[] = await request.server.prisma.post.findMany(userPostFindManyArgs);
 
+      // Initialize the Algolia search index for category related posts objects
+      const postIndex: SearchIndex = request.server.algolia.initIndex('post');
+      const postIndexIDs: string[] = userPostList.map((post: Post) => String(post.id));
+      const postIndexObjects: GetObjectsResponse<any> = await postIndex.getObjects([...postIndexIDs]);
+
       // Construct Firestore document references for user's posts
       const userPostListDocumentReference: DocumentReference[] = userPostList
         .map((post: Post) => ['users', userFirebaseUid, 'posts', post.firebaseUid].join('/'))
@@ -96,10 +107,25 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Fetch document snapshots for user's posts from Firestore
       // prettier-ignore
-      const userPostListDocumentSnapshot: DocumentSnapshot[] = await Promise
-        .all(userPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<DocumentSnapshot> => {
-          return documentReference.get();
-        }));
+      const userPostListDocumentSnapshot: DocumentSnapshot[] = await Promise.all(userPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<DocumentSnapshot> => documentReference.get()));
+
+      // Define arguments to fetch user's categories from Prisma
+      const categoryPostFindManyArgs: Prisma.CategoryFindManyArgs = {
+        select: {
+          id: true
+        },
+        where: {
+          userFirebaseUid
+        }
+      };
+
+      // Fetch user's categories from the database
+      const categoryPostList: Category[] = await request.server.prisma.category.findMany(categoryPostFindManyArgs);
+
+      // Initialize the Algolia search index for category objects
+      const categoryIndex: SearchIndex = request.server.algolia.initIndex('category');
+      const categoryIndexIDs: string[] = categoryPostList.map((category: Category) => String(category.id));
+      const categoryIndexObjects: GetObjectsResponse<any> = await categoryIndex.getObjects([...categoryIndexIDs]);
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -175,6 +201,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
             }
 
+            // Check if there are results in the fetched post index objects
+            if (postIndexObjects.results.length) {
+              //! Define rollback action for Algolia delete category related post objects
+              requestRollback.postIndexObjects = async (): Promise<void> => {
+                await postIndex.saveObjects([...postIndexObjects.results]);
+              };
+
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const postIndexObjectsDelete: ChunkedBatchResponse = await postIndex.deleteObjects([...postIndexIDs]);
+            }
+
             // Define arguments to delete user's posts
             const postDeleteManyArgs: Prisma.PostDeleteManyArgs = {
               where: {
@@ -186,6 +224,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // @ts-ignore
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const postList: Prisma.BatchPayload = await prismaClient.post.deleteMany(postDeleteManyArgs);
+
+            // Check if there are results in the fetched category index objects
+            if (categoryIndexObjects.results.length) {
+              //! Define rollback action for Algolia delete category objects
+              requestRollback.categoryIndexObjects = async (): Promise<void> => {
+                await categoryIndex.saveObjects([...categoryIndexObjects.results]);
+              };
+
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const categoryIndexObjectsDelete: ChunkedBatchResponse = await categoryIndex.deleteObjects([...categoryIndexIDs]);
+            }
 
             // Define arguments to delete user's categories
             const categoryDeleteManyArgs: Prisma.CategoryDeleteManyArgs = {
@@ -244,10 +294,24 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
             }
 
+            // Check if there are results in the fetched user index objects
+            if (userIndexObjects.results.length) {
+              //! Define rollback action for Algolia delete user object
+              requestRollback.userIndexObjects = async (): Promise<void> => {
+                await userIndex.saveObjects([...userIndexObjects.results]);
+              };
+
+              // Delete Algolia user index object
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const userIndexObjectsDelete: ChunkedBatchResponse = await userIndex.deleteObjects([String(userId)]);
+            }
+
             // Define arguments to delete user
             const userDeleteArgs: Prisma.UserDeleteArgs = {
               select: request.server.prismaPlugin.getUserSelect(),
               where: {
+                id: userId,
                 firebaseUid: userFirebaseUid
               }
             };
