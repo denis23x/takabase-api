@@ -6,6 +6,8 @@ import { DocumentReference } from 'firebase-admin/firestore';
 import { Post, Prisma, PrismaClient } from '../../database/client';
 import { WriteResult } from 'firebase-admin/lib/firestore';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
+import { SaveObjectResponse } from '@algolia/client-search';
+import { SearchIndex } from 'algoliasearch';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -80,6 +82,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const postImage: string | null | undefined = request.body.image;
       const postCategoryId: number = Number(request.body.categoryId);
       const postMarkdown: string = request.body.markdown;
+      const postIndex: SearchIndex = request.server.algolia.initIndex('post');
 
       // Delete for more adjustable Prisma input
       delete request.body.categoryId;
@@ -195,7 +198,25 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             };
 
             // Create the post
-            return prismaClient.post.create(postCreateArgs);
+            const post: Post = await prismaClient.post.create(postCreateArgs);
+
+            // Create new object in Algolia post index
+            const postIndexObject: SaveObjectResponse = await postIndex.saveObject({
+              objectID: post.id,
+              id: post.id,
+              name: post.name,
+              description: post.description,
+              firebaseUid: postDocumentReference.id,
+              categoryId: postCategoryId,
+              userFirebaseUid
+            });
+
+            //! Define rollback action for Algolia delete post object
+            requestRollback.postIndexObjects = async (): Promise<void> => {
+              await postIndex.deleteObjects([postIndexObject.objectID]);
+            };
+
+            return post;
           }).then((post: Post) => {
             // Send success response with created post
             return reply.status(201).send({

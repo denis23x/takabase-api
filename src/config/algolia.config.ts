@@ -13,15 +13,15 @@ config({
 const algoliaConfigList: Record<string, SearchClientOptions> = {
   localhost: {
     appId: '9R4WFD8I42',
-    apiKey: '8fefeb46b0e8c8f221343c3d55c7f07b'
+    apiKey: '0b5c73d2b1d45cfb677227ddca285533'
   },
   development: {
     appId: 'SOTX1SV4EX',
-    apiKey: '3c1ca68cc62bf3a5ac9286ee939402c5'
+    apiKey: '861d86b5757fdf5550cad894e29da38c'
   },
   production: {
     appId: 'HOGBJRS60N',
-    apiKey: '55331aeb9ebe423032247ace53a2f62d'
+    apiKey: '250899caaaef577de962111bfe98b23a'
   }
 };
 

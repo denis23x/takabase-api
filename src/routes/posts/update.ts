@@ -5,6 +5,8 @@ import { Prisma, Post, PrismaClient } from '../../database/client';
 import { PostUpdateDto } from '../../types/dto/post/post-update';
 import { DocumentReference, DocumentSnapshot, DocumentData, WriteResult } from 'firebase-admin/firestore';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
+import { SearchIndex } from 'algoliasearch';
+import { GetObjectsResponse, SaveObjectResponse } from '@algolia/client-search';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -92,6 +94,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const postImage: string | null | undefined = request.body.image as any;
       const postMarkdown: string = String(request.body.markdown || '');
       const postMarkdownListDestination: string = [postPath, 'markdown'].join('/');
+      const postIndex: SearchIndex = request.server.algolia.initIndex('post');
+      const postIndexObjects: GetObjectsResponse<any> = await postIndex.getObjects([String(postId)]);
 
       // Define an array of DocumentReference objects for the post documents in Firestore
       const postDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(postPath);
@@ -240,6 +244,24 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const postDocumentUpdate: WriteResult = await postDocumentReference
               .update(postDocumentUpdateDto)
               .catch((error: any) => request.server.helperPlugin.throwError('firestore/update-document-failed', error, request));
+
+            // Check if there are results in the fetched post index objects
+            if (postIndexObjects.results.length) {
+              // Update object in Algolia post index
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const postIndexObject: SaveObjectResponse = await postIndex.partialUpdateObjects([{
+                objectID: String(postId),
+                name: request.body.name,
+                description: request.body.description,
+                categoryId: request.body.categoryId
+              }]);
+
+              //! Define rollback action for Algolia update post object
+              requestRollback.postIndexObjects = async (): Promise<void> => {
+                await postIndex.partialUpdateObjects([...postIndexObjects.results]);
+              };
+            }
 
             // Define the arguments for updating post
             const postUpdateArgs: Prisma.PostUpdateArgs = {

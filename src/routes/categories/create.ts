@@ -100,8 +100,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const category: Category = await prismaClient.category.create(categoryCreateArgs);
 
             // Create new object in Algolia category index
-            // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const categoryIndexObject: SaveObjectResponse = await categoryIndex.saveObject({
               objectID: category.id,
               id: category.id,
@@ -109,6 +107,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               description: category.description,
               userFirebaseUid
             });
+
+            //! Define rollback action for Algolia delete category object
+            requestRollback.categoryIndexObjects = async (): Promise<void> => {
+              await categoryIndex.deleteObjects([categoryIndexObject.objectID]);
+            };
 
             return category;
           }).then((category: Category) => {

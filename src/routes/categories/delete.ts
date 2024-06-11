@@ -68,12 +68,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Extract category and post related information from the request object
       const categoryId: number = Number(request.params.id);
-      const categoryIndex: SearchIndex = request.server.algolia.initIndex('category');
-      const categoryIndexObjects: GetObjectsResponse<any> = await categoryIndex.getObjects([String(categoryId)]);
       const categoryPostListMoveTo: number = Number(request.query.categoryId);
       const categoryPostList: Post[] = [];
       const categoryPostListDocumentReference: DocumentReference[] = [];
       const categoryPostListDocumentSnapshot: DocumentSnapshot[] = [];
+      const categoryIndex: SearchIndex = request.server.algolia.initIndex('category');
+      const categoryIndexObjects: GetObjectsResponse<any> = await categoryIndex.getObjects([String(categoryId)]);
 
       // Define arguments to find posts associated with the category
       const postFindManyArgs: Prisma.PostFindManyArgs = {
@@ -258,15 +258,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               const postList: Prisma.BatchPayload = await prismaClient.post.updateMany(postUpdateManyArgs);
             }
 
-            //! Define rollback action for Algolia delete category object
-            requestRollback.categoryIndexObjects = async (): Promise<void> => {
-              await categoryIndex.saveObjects([...categoryIndexObjects.results]);
-            };
+            // Check if there are results in the fetched category index objects
+            if (categoryIndexObjects.results.length) {
+              //! Define rollback action for Algolia delete category object
+              requestRollback.categoryIndexObjects = async (): Promise<void> => {
+                await categoryIndex.saveObjects([...categoryIndexObjects.results]);
+              };
 
-            // Delete Algolia category index object
-            // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const categoryIndexObjectsDelete: ChunkedBatchResponse = await categoryIndex.deleteObjects([String(categoryId)]);
+              // Delete Algolia category index object
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const categoryIndexObjectsDelete: ChunkedBatchResponse = await categoryIndex.deleteObjects([String(categoryId)]);
+            }
 
             // Define arguments to delete category
             const categoryDeleteArgs: Prisma.CategoryDeleteArgs = {

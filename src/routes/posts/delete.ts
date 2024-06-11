@@ -5,6 +5,8 @@ import { Post, Prisma, PrismaClient } from '../../database/client';
 import { PostDeleteDto } from '../../types/dto/post/post-delete';
 import { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
+import { SearchIndex } from 'algoliasearch';
+import { ChunkedBatchResponse, GetObjectsResponse } from '@algolia/client-search';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -67,9 +69,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const userFirebaseUid: string = request.user.uid;
 
       // Extract post information from the request object
-      const postId: number = request.params.id;
+      const postId: number = Number(request.params.id);
       const postFirebaseUid: string = request.query.firebaseUid;
       const postImage: string | undefined = request.query.image;
+      const postIndex: SearchIndex = request.server.algolia.initIndex('post');
+      const postIndexObjects: GetObjectsResponse<any> = await postIndex.getObjects([String(postId)]);
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -84,14 +88,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<Post> => {
             // Re-initialize requestRollback object
             requestRollback = {};
-
-            // Define arguments to delete post
-            const postDeleteArgs: Prisma.PostDeleteArgs = {
-              where: {
-                id: postId,
-                userFirebaseUid
-              }
-            };
 
             // Prepare the post image URLs
             const postPath: string = ['users', userFirebaseUid, 'posts', postFirebaseUid].join('/');
@@ -150,6 +146,27 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 await request.server.storagePlugin.setImageListMove(tempMarkdownList, postMarkdownListDestination);
               };
             }
+
+            // Check if there are results in the fetched post index objects
+            if (postIndexObjects.results.length) {
+              //! Define rollback action for Algolia delete post object
+              requestRollback.postIndexObjects = async (): Promise<void> => {
+                await postIndex.saveObjects([...postIndexObjects.results]);
+              };
+
+              // Delete Algolia post index object
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const postIndexObjectsDelete: ChunkedBatchResponse = await postIndex.deleteObjects([String(postId)]);
+            }
+
+            // Define arguments to delete post
+            const postDeleteArgs: Prisma.PostDeleteArgs = {
+              where: {
+                id: postId,
+                userFirebaseUid
+              }
+            };
 
             // Delete post
             return prismaClient.post.delete(postDeleteArgs);
