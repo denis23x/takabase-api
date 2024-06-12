@@ -28,6 +28,22 @@ const authPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fasti
       statusCode: 401
     });
   });
+
+  // prettier-ignore
+  fastifyInstance.decorate('verifyAdmin', async function (request: FastifyRequest, reply: FastifyReply): Promise<void> {
+    const email: string = request.user.email;
+    const emailAdminList: string[] = [
+      'damage.23x@gmail.com'
+    ];
+
+    if (!email || !emailAdminList.includes(email)) {
+      reply.code(401).send({
+        error: 'Unauthorized',
+        message: 'Unauthorized request',
+        statusCode: 401
+      });
+    }
+  });
 });
 
 export default authPlugin;

@@ -206,6 +206,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               id: post.id,
               name: post.name,
               description: post.description,
+              image: request.body.image || null,
               firebaseUid: postDocumentReference.id,
               categoryId: postCategoryId,
               userFirebaseUid

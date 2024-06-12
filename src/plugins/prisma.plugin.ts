@@ -9,7 +9,6 @@ import { ResponseError } from '../types/crud/response/response-error.schema';
 const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('prisma', new PrismaClient(prismaConfig));
 
-  // prettier-ignore
   fastifyInstance.decorate('prismaPlugin', {
     getCategorySelect: (): Prisma.CategorySelect => ({
       id: true,
@@ -186,6 +185,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
         }
       }
     },
+    // prettier-ignore
     setErrorTransaction: async (error: any, retriesLimitReached: boolean, requestRollback: any): Promise<ResponseError | null> => {
       const rollbackList: Promise<any>[] = Object.values(requestRollback).map(async (rollback: any): Promise<any> => rollback());
 

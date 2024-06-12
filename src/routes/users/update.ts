@@ -170,7 +170,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               const userIndexObject: SaveObjectResponse = await userIndex.partialUpdateObjects([{
                 objectID: userId,
                 name: request.body.name,
-                description: request.body.description || null
+                description: request.body.description || null,
+                avatar: request.body.avatar || null
               }]);
 
               //! Define rollback action for Algolia update user object

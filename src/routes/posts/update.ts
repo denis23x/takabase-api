@@ -254,6 +254,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 objectID: String(postId),
                 name: request.body.name,
                 description: request.body.description,
+                image: request.body.image || null,
                 categoryId: request.body.categoryId
               }]);
 

@@ -145,6 +145,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               id: user.id,
               name: user.name,
               description: null,
+              avatar: null,
               firebaseUid: userFirebaseUid
             });
 

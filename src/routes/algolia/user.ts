@@ -2,14 +2,13 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { User } from '../../database/client';
-import { SearchIndex } from 'algoliasearch';
-import { ChunkedBatchResponse } from '@algolia/client-search';
+import { AlgoliaPostDto } from '../../types/dto/algolia/algolia-post';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'GET',
-    url: 'users',
-    onRequest: fastify.verifyIdToken,
+    url: 'user',
+    onRequest: [fastify.verifyIdToken, fastify.verifyAdmin],
     schema: {
       tags: ['Algolia'],
       description: 'Get database info for Algolia indices',
@@ -45,7 +44,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<any>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<AlgoliaPostDto>, reply: FastifyReply): Promise<any> {
       const user: User[] = await request.server.prisma.user.findMany({
         select: {
           id: true,
@@ -55,34 +54,17 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       });
 
-      const userObjects: any = user.map((user: User) => ({
-        objectID: user.id,
+      const userObjects: (User & Record<string, any>)[] = user.map((user: User) => ({
+        objectID: String(user.id),
         ...user
       }));
 
-      // @ts-ignore
       switch (request.query.addRecords) {
-        case 'File': {
-          const userObjectsString: string = JSON.stringify(userObjects);
-          const userObjectsBuffer: Buffer = Buffer.from(userObjectsString);
-
-          return reply
-            .header('Content-Disposition', 'attachment; filename=userObjects.json')
-            .type('application/json')
-            .status(200)
-            .send(userObjectsBuffer);
+        case 'Download file': {
+          return reply.server.algoliaPlugin.getFile(userObjects, reply);
         }
-        case 'API': {
-          const userIndex: SearchIndex = request.server.algolia.initIndex('user');
-
-          await userIndex.saveObjects(userObjects).then((chunkedBatchResponse: ChunkedBatchResponse) => {
-            return reply.status(200).send({
-              data: chunkedBatchResponse,
-              statusCode: 200
-            });
-          });
-
-          break;
+        case 'Use the API': {
+          return reply.server.algoliaPlugin.getSync('user', userObjects, reply);
         }
         default: {
           return reply.status(400).send({

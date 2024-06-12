@@ -2,14 +2,13 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Category } from '../../database/client';
-import { SearchIndex } from 'algoliasearch';
-import { ChunkedBatchResponse } from '@algolia/client-search';
+import { AlgoliaPostDto } from '../../types/dto/algolia/algolia-post';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'GET',
     url: 'category',
-    onRequest: fastify.verifyIdToken,
+    onRequest: [fastify.verifyIdToken, fastify.verifyAdmin],
     schema: {
       tags: ['Algolia'],
       description: 'Get database info for Algolia indices',
@@ -45,7 +44,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<any>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<AlgoliaPostDto>, reply: FastifyReply): Promise<any> {
       const category: Category[] = await request.server.prisma.category.findMany({
         select: {
           id: true,
@@ -55,34 +54,17 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       });
 
-      const categoryObjects: any = category.map((category: Category) => ({
+      const categoryObjects: (Category & Record<string, any>)[] = category.map((category: Category) => ({
         objectID: category.id,
         ...category
       }));
 
-      // @ts-ignore
       switch (request.query.addRecords) {
-        case 'File': {
-          const categoryObjectsString: string = JSON.stringify(categoryObjects);
-          const categoryObjectsBuffer: Buffer = Buffer.from(categoryObjectsString);
-
-          return reply
-            .header('Content-Disposition', 'attachment; filename=categoryObjects.json')
-            .type('application/json')
-            .status(200)
-            .send(categoryObjectsBuffer);
+        case 'Download file': {
+          return reply.server.algoliaPlugin.getFile(categoryObjects, reply);
         }
-        case 'API': {
-          const categoryIndex: SearchIndex = request.server.algolia.initIndex('category');
-
-          await categoryIndex.saveObjects(categoryObjects).then((chunkedBatchResponse: ChunkedBatchResponse) => {
-            return reply.status(200).send({
-              data: chunkedBatchResponse,
-              statusCode: 200
-            });
-          });
-
-          break;
+        case 'Use the API': {
+          return reply.server.algoliaPlugin.getSync('category', categoryObjects, reply);
         }
         default: {
           return reply.status(400).send({
