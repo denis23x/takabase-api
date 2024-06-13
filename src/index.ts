@@ -72,7 +72,9 @@ export const apiHttpsOptions: HttpsOptions = {
     'APP_NODE_ENV',
     'APP_SERVICE_ACCOUNT',
     'API_DATABASE_URL',
-    'API_DATABASE_DIRECT_URL'
+    'API_DATABASE_DIRECT_URL',
+    'API_ALGOLIA_APP_ID',
+    'API_ALGOLIA_API_KEY',
   ]
 };
 
