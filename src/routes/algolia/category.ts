@@ -50,7 +50,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           id: true,
           name: true,
           description: true,
-          userFirebaseUid: true
+          userFirebaseUid: true,
+          user: {
+            select: {
+              name: true,
+              avatar: true
+            }
+          }
         }
       });
 

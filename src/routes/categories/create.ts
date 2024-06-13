@@ -85,7 +85,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Define the arguments for creating a new category
             const categoryCreateArgs: Prisma.CategoryCreateArgs = {
-              select: request.server.prismaPlugin.getCategorySelect(),
+              select: {
+                ...request.server.prismaPlugin.getCategorySelect(),
+                user: {
+                  select: {
+                    name: true,
+                    avatar: true
+                  }
+                }
+              },
               data: {
                 ...request.body,
                 user: {
@@ -97,7 +105,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             };
 
             // Create a new category
-            const category: Category = await prismaClient.category.create(categoryCreateArgs);
+            const category: Category & Record<string, any> = await prismaClient.category.create(categoryCreateArgs);
 
             // Create new object in Algolia category index
             const categoryIndexObject: SaveObjectResponse = await categoryIndex.saveObject({
@@ -105,7 +113,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               id: category.id,
               name: category.name,
               description: category.description || null,
-              userFirebaseUid
+              userFirebaseUid,
+              user: {
+                name: category.user.name,
+                avatar: category.user.avatar || null
+              }
             });
 
             //! Define rollback action for Algolia delete category object
