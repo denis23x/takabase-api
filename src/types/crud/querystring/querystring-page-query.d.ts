@@ -1,10 +1,9 @@
 /** @format */
 
-export interface QuerystringSearch {
+export interface QuerystringPageQuery {
   Querystring: {
     name?: string;
-    search?: string;
-    userFirebaseUid?: string;
+    query?: string;
     userName?: string;
     categoryId?: number;
     orderBy?: string;

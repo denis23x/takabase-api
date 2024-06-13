@@ -2,8 +2,8 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Category } from '../../database/client';
-import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
+import { QuerystringPageQuery } from '../../types/crud/querystring/querystring-page-query';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -15,14 +15,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       querystring: {
         type: 'object',
         properties: {
-          userFirebaseUid: {
-            $ref: 'partsFirebaseUidSchema#'
-          },
           userName: {
             $ref: 'partsUserNameSchema#'
           },
-          search: {
-            $ref: 'partsSearchSchema#'
+          query: {
+            $ref: 'partsPageQuerySchema#'
           },
           orderBy: {
             $ref: 'partsPageOrderBySchema#'
@@ -67,8 +64,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<QuerystringSearch>, reply: FastifyReply): Promise<any> {
-      const { userFirebaseUid, userName, search, orderBy, scope, size, page }: Record<string, any> = request.query;
+    handler: async function (request: FastifyRequest<QuerystringPageQuery>, reply: FastifyReply): Promise<any> {
+      const { userName, query, orderBy, scope, size, page }: Record<string, any> = request.query;
 
       const categoryFindManyArgs: Prisma.CategoryFindManyArgs = {
         select: request.server.prismaPlugin.getCategorySelect(),
@@ -81,13 +78,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       /** Filter */
 
-      if (userFirebaseUid) {
-        categoryFindManyArgs.where = {
-          ...categoryFindManyArgs.where,
-          userFirebaseUid
-        };
-      }
-
       if (userName) {
         categoryFindManyArgs.where = {
           ...categoryFindManyArgs.where,
@@ -99,11 +89,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       /** Search */
 
-      if (search) {
+      if (query) {
         categoryFindManyArgs.where = {
           ...categoryFindManyArgs.where,
           name: {
-            contains: search
+            contains: query
           }
         };
       }

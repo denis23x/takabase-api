@@ -2,8 +2,8 @@
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Prisma, Post } from '../../database/client';
-import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
 import { ResponseError } from '../../types/crud/response/response-error.schema';
+import { QuerystringPageQuery } from '../../types/crud/querystring/querystring-page-query';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -18,14 +18,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           categoryId: {
             $ref: 'partsIdSchema#'
           },
-          userFirebaseUid: {
-            $ref: 'partsFirebaseUidSchema#'
-          },
           userName: {
             $ref: 'partsUserNameSchema#'
           },
-          search: {
-            $ref: 'partsSearchSchema#'
+          query: {
+            $ref: 'partsPageQuerySchema#'
           },
           orderBy: {
             $ref: 'partsPageOrderBySchema#'
@@ -70,9 +67,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<QuerystringSearch>, reply: FastifyReply): Promise<any> {
-      // prettier-ignore
-      const { userFirebaseUid, userName, categoryId, search, orderBy, scope, size, page }: Record<string, any> = request.query;
+    handler: async function (request: FastifyRequest<QuerystringPageQuery>, reply: FastifyReply): Promise<any> {
+      const { userName, categoryId, query, orderBy, scope, size, page }: Record<string, any> = request.query;
 
       const postFindManyArgs: Prisma.PostFindManyArgs = {
         select: request.server.prismaPlugin.getPostSelect(),
@@ -85,10 +81,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       /** Filter */
 
-      if (userFirebaseUid) {
+      if (userName) {
         postFindManyArgs.where = {
           ...postFindManyArgs.where,
-          userFirebaseUid
+          user: {
+            name: userName
+          }
         };
       }
 
@@ -99,22 +97,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         };
       }
 
-      if (userName) {
-        postFindManyArgs.where = {
-          ...postFindManyArgs.where,
-          user: {
-            name: userName
-          }
-        };
-      }
-
       /** Search */
 
-      if (search) {
+      if (query) {
         postFindManyArgs.where = {
           ...postFindManyArgs.where,
           name: {
-            contains: search
+            contains: query
           }
         };
       }
