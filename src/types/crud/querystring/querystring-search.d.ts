@@ -1,6 +1,6 @@
 /** @format */
 
-export interface QuerystringPageQuery {
+export interface QuerystringSearch {
   Querystring: {
     name?: string;
     query?: string;
