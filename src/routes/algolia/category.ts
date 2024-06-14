@@ -50,11 +50,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           id: true,
           name: true,
           description: true,
-          userFirebaseUid: true,
+          updatedAt: true,
+          createdAt: true,
           user: {
             select: {
+              id: true,
               name: true,
-              avatar: true
+              description: true,
+              avatar: true,
+              firebaseUid: true
             }
           }
         }
@@ -62,6 +66,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       const categoryObjects: (Category & Record<string, any>)[] = category.map((category: Category) => ({
         objectID: category.id,
+        updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.updatedAt),
+        createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.createdAt),
         ...category
       }));
 

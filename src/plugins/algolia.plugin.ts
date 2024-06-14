@@ -29,6 +29,9 @@ const AlgoliaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
         data: chunkedBatchResponse,
         statusCode: 200
       });
+    },
+    getUnixTimestamp: (date: Date): number => {
+      return Math.floor(date.getTime() / 1000);
     }
   });
 });

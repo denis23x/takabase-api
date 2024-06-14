@@ -198,7 +198,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             };
 
             // Create the post
-            const post: Post = await prismaClient.post.create(postCreateArgs);
+            const post: Post & Record<string, any> = await prismaClient.post.create(postCreateArgs);
 
             // Create new object in Algolia post index
             const postIndexObject: SaveObjectResponse = await postIndex.saveObject({
@@ -208,8 +208,21 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               description: post.description,
               image: request.body.image || null,
               firebaseUid: postDocumentReference.id,
-              categoryId: postCategoryId,
-              userFirebaseUid
+              updatedAt: post.updatedAt,
+              createdAt: post.createdAt,
+              updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(post.updatedAt),
+              createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(post.createdAt),
+              user: {
+                id: post.user.id,
+                name: post.user.name,
+                avatar: post.user.avatar || null,
+                firebaseUid: post.user.firebaseUid,
+              },
+              category: {
+                id: post.category.id,
+                name: post.category.name,
+                description: post.category.description || null,
+              },
             });
 
             //! Define rollback action for Algolia delete post object

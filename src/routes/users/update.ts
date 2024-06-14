@@ -171,7 +171,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 objectID: userId,
                 name: request.body.name,
                 description: request.body.description || null,
-                avatar: request.body.avatar || null
+                avatar: request.body.avatar || null,
+                // TODO: Should sync with DB?
+                updatedAt: new Date().toISOString(),
+                updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(new Date()),
               }]);
 
               //! Define rollback action for Algolia update user object

@@ -52,13 +52,30 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           description: true,
           image: true,
           firebaseUid: true,
-          categoryId: true,
-          userFirebaseUid: true
+          updatedAt: true,
+          createdAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              avatar: true,
+              firebaseUid: true
+            }
+          },
+          category: {
+            select: {
+              id: true,
+              name: true,
+              description: true
+            }
+          }
         }
       });
 
       const postObjects: (Post & Record<string, any>)[] = post.map((post: Post) => ({
         objectID: post.id,
+        updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(post.updatedAt),
+        createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(post.createdAt),
         ...post
       }));
 

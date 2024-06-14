@@ -9,6 +9,7 @@ declare module 'fastify' {
     algoliaPlugin: {
       getFile: (indexObjects: any, reply: FastifyReply) => FastifyReply;
       getSync: (index: string, indexObjects: any, reply: FastifyReply) => Promise<FastifyReply>;
+      getUnixTimestamp: (date: Date) => number;
     };
   }
 }

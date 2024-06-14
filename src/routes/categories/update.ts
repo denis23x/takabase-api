@@ -100,7 +100,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               const categoryIndexObject: SaveObjectResponse = await categoryIndex.partialUpdateObjects([{
                 objectID: String(categoryId),
                 name: request.body.name,
-                description: request.body.description || null
+                description: request.body.description || null,
+                // TODO: Should sync with DB?
+                updatedAt: new Date().toISOString(),
+                updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(new Date()),
               }]);
 
               //! Define rollback action for Algolia update category object

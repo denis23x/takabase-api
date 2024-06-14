@@ -255,7 +255,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 name: request.body.name,
                 description: request.body.description,
                 image: request.body.image || null,
-                categoryId: request.body.categoryId
+                categoryId: request.body.categoryId,
+                // TODO: Should sync with DB?
+                updatedAt: new Date().toISOString(),
+                updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(new Date()),
               }]);
 
               //! Define rollback action for Algolia update post object

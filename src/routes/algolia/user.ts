@@ -50,12 +50,17 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           id: true,
           name: true,
           description: true,
-          firebaseUid: true
+          avatar: true,
+          firebaseUid: true,
+          updatedAt: true,
+          createdAt: true
         }
       });
 
       const userObjects: (User & Record<string, any>)[] = user.map((user: User) => ({
         objectID: String(user.id),
+        updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(user.updatedAt),
+        createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(user.createdAt),
         ...user
       }));
 

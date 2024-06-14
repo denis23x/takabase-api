@@ -113,10 +113,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               id: category.id,
               name: category.name,
               description: category.description || null,
-              userFirebaseUid,
+              updatedAt: category.updatedAt,
+              createdAt: category.createdAt,
+              updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.updatedAt),
+              createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.createdAt),
               user: {
+                id: category.user.id,
                 name: category.user.name,
-                avatar: category.user.avatar || null
+                avatar: category.user.avatar || null,
+                firebaseUid: category.user.firebaseUid,
               }
             });
 

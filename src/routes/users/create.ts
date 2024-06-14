@@ -146,7 +146,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               name: user.name,
               description: null,
               avatar: null,
-              firebaseUid: userFirebaseUid
+              firebaseUid: userFirebaseUid,
+              updatedAt: user.updatedAt,
+              createdAt: user.createdAt,
+              updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(user.updatedAt),
+              createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(user.createdAt),
             });
 
             //! Define rollback action for Algolia delete user object
