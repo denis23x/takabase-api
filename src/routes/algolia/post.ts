@@ -47,36 +47,25 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     handler: async function (request: FastifyRequest<AlgoliaPostDto>, reply: FastifyReply): Promise<any> {
       const post: Post[] = await request.server.prisma.post.findMany({
         select: {
-          id: true,
-          name: true,
-          description: true,
-          image: true,
-          firebaseUid: true,
-          updatedAt: true,
-          createdAt: true,
+          ...request.server.prismaPlugin.getPostSelect(),
           user: {
             select: {
-              id: true,
-              name: true,
-              avatar: true,
-              firebaseUid: true
+              id: true
             }
           },
           category: {
             select: {
-              id: true,
-              name: true,
-              description: true
+              id: true
             }
           }
         }
       });
 
       const postObjects: (Post & Record<string, any>)[] = post.map((post: Post) => ({
-        objectID: post.id,
+        ...request.server.helperPlugin.mapObjectValuesToNull(post),
+        objectID: String(post.id),
         updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(post.updatedAt),
-        createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(post.createdAt),
-        ...post
+        createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(post.createdAt)
       }));
 
       switch (request.query.addRecords) {

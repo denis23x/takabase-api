@@ -245,28 +245,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               .update(postDocumentUpdateDto)
               .catch((error: any) => request.server.helperPlugin.throwError('firestore/update-document-failed', error, request));
 
-            // Check if there are results in the fetched post index objects
-            if (postIndexObjects.results.length) {
-              // Update object in Algolia post index
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const postIndexObject: SaveObjectResponse = await postIndex.partialUpdateObjects([{
-                objectID: String(postId),
-                name: request.body.name,
-                description: request.body.description,
-                image: request.body.image || null,
-                categoryId: request.body.categoryId,
-                // TODO: Should sync with DB?
-                updatedAt: new Date().toISOString(),
-                updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(new Date()),
-              }]);
-
-              //! Define rollback action for Algolia update post object
-              requestRollback.postIndexObjects = async (): Promise<void> => {
-                await postIndex.partialUpdateObjects([...postIndexObjects.results]);
-              };
-            }
-
             // Define the arguments for updating post
             const postUpdateArgs: Prisma.PostUpdateArgs = {
               select: {
@@ -286,7 +264,31 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             };
 
             // Update the post
-            return prismaClient.post.update(postUpdateArgs)
+            const post: Post & Record<string, any> = await prismaClient.post.update(postUpdateArgs);
+
+            // Check if there are results in the fetched post index objects
+            if (postIndexObjects.results.length) {
+              //! Define rollback action for Algolia update post object
+              requestRollback.postIndexObjects = async (): Promise<void> => {
+                await postIndex.partialUpdateObjects([...postIndexObjects.results]);
+              };
+
+              // Update object in Algolia post index object
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const postIndexObject: SaveObjectResponse = await postIndex.partialUpdateObjects([{
+                ...request.server.helperPlugin.mapObjectValuesToNull(post),
+                objectID: String(post.id),
+                updatedAt: post.updatedAt,
+                updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(post.updatedAt),
+                category: {
+                  id: post.category.id
+                }
+              }]);
+            }
+
+            // Return the post
+            return post;
           }).then((post: Post) => {
             // Send success response with updated post
             return reply.status(200).send({

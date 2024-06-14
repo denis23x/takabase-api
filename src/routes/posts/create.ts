@@ -202,26 +202,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Create new object in Algolia post index
             const postIndexObject: SaveObjectResponse = await postIndex.saveObject({
-              objectID: post.id,
-              id: post.id,
-              name: post.name,
-              description: post.description,
-              image: request.body.image || null,
-              firebaseUid: postDocumentReference.id,
-              updatedAt: post.updatedAt,
-              createdAt: post.createdAt,
+              ...request.server.helperPlugin.mapObjectValuesToNull(post),
+              objectID: String(post.id),
               updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(post.updatedAt),
               createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(post.createdAt),
               user: {
-                id: post.user.id,
-                name: post.user.name,
-                avatar: post.user.avatar || null,
-                firebaseUid: post.user.firebaseUid,
+                id: post.user.id
               },
               category: {
-                id: post.category.id,
-                name: post.category.name,
-                description: post.category.description || null,
+                id: post.category.id
               },
             });
 
@@ -230,6 +219,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               await postIndex.deleteObjects([postIndexObject.objectID]);
             };
 
+            // Return the post
             return post;
           }).then((post: Post) => {
             // Send success response with created post

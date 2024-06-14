@@ -111,7 +111,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               ...request.server.helperPlugin.mapObjectValuesToNull(category),
               objectID: String(category.id),
               updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.updatedAt),
-              createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.createdAt)
+              createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.createdAt),
+              user: {
+                id: category.user.id
+              },
             });
 
             //! Define rollback action for Algolia delete category object
@@ -119,6 +122,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               await categoryIndex.deleteObjects([categoryIndexObject.objectID]);
             };
 
+            // Return the category
             return category;
           }).then((category: Category) => {
             // Send success response with deleted category
