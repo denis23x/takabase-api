@@ -128,11 +128,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Define the arguments for create user
             const userCreateArgs: Prisma.UserCreateArgs = {
-              select: request.server.prismaPlugin.getUserSelect(),
+              select: {
+                ...request.server.prismaPlugin.getUserSelect(),
+                description: true
+              },
               data: {
                 name: request.body.name,
+                firebaseUid: userFirebaseUid,
                 terms: true,
-                firebaseUid: userFirebaseUid
               }
             };
 
@@ -141,14 +144,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Create new object in Algolia user index
             const userIndexObject: SaveObjectResponse = await userIndex.saveObject({
-              objectID: user.id,
-              id: user.id,
-              name: user.name,
-              description: null,
-              avatar: null,
-              firebaseUid: userFirebaseUid,
-              updatedAt: user.updatedAt,
-              createdAt: user.createdAt,
+              ...request.server.helperPlugin.mapObjectValuesToNull(user),
+              objectID: String(user.id),
               updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(user.updatedAt),
               createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(user.createdAt),
             });
@@ -158,6 +155,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               await userIndex.deleteObjects([userIndexObject.objectID]);
             };
 
+            // Return the user
             return user;
           }).then((user: User) => {
             // Send success response with created user

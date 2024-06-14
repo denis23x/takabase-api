@@ -162,27 +162,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               const updatedUserAvatar: null = await setUserAvatar(null);
             }
 
-            // Check if there are results in the fetched user index objects
-            if (userIndexObjects.results.length) {
-              // Update object in Algolia user index
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const userIndexObject: SaveObjectResponse = await userIndex.partialUpdateObjects([{
-                objectID: userId,
-                name: request.body.name,
-                description: request.body.description || null,
-                avatar: request.body.avatar || null,
-                // TODO: Should sync with DB?
-                updatedAt: new Date().toISOString(),
-                updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(new Date()),
-              }]);
-
-              //! Define rollback action for Algolia update user object
-              requestRollback.userIndexObjects = async (): Promise<void> => {
-                await userIndex.partialUpdateObjects([...userIndexObjects.results]);
-              };
-            }
-
             // Define the arguments for updating user
             const userUpdateArgs: Prisma.UserUpdateArgs = {
               select: {
@@ -197,7 +176,28 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             };
 
             // Update the user
-            return prismaClient.user.update(userUpdateArgs);
+            const user: User = await prismaClient.user.update(userUpdateArgs);
+
+            // Check if there are results in the fetched user index objects
+            if (userIndexObjects.results.length) {
+              //! Define rollback action for Algolia update user object
+              requestRollback.userIndexObjects = async (): Promise<void> => {
+                await userIndex.partialUpdateObjects([...userIndexObjects.results]);
+              };
+
+              // Update object in Algolia user index
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const userIndexObject: SaveObjectResponse = await userIndex.partialUpdateObjects([{
+                ...request.server.helperPlugin.mapObjectValuesToNull(user),
+                objectID: user.id,
+                updatedAt: user.updatedAt,
+                updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(user.updatedAt),
+              }]);
+            }
+
+            // Return the user
+            return user;
           }).then((user: User) => {
             // Send success response with updated user
             return reply.status(200).send({
