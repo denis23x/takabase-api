@@ -92,26 +92,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Re-initialize requestRollback object
             requestRollback = {};
 
-            // Check if there are results in the fetched category index objects
-            if (categoryIndexObjects.results.length) {
-              // Update object in Algolia category index
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const categoryIndexObject: SaveObjectResponse = await categoryIndex.partialUpdateObjects([{
-                objectID: String(categoryId),
-                name: request.body.name,
-                description: request.body.description || null,
-                // TODO: Should sync with DB?
-                updatedAt: new Date().toISOString(),
-                updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(new Date()),
-              }]);
-
-              //! Define rollback action for Algolia update category object
-              requestRollback.categoryIndexObjects = async (): Promise<void> => {
-                await categoryIndex.partialUpdateObjects([...categoryIndexObjects.results]);
-              };
-            }
-
             // Define the arguments for updating category
             const categoryUpdateArgs: Prisma.CategoryUpdateArgs = {
               select: request.server.prismaPlugin.getCategorySelect(),
@@ -122,8 +102,29 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               data: request.body
             };
 
-            // Update category
-            return prismaClient.category.update(categoryUpdateArgs)
+            // Update the category
+            const category: Category = await prismaClient.category.update(categoryUpdateArgs);
+
+            // Check if there are results in the fetched category index objects
+            if (categoryIndexObjects.results.length) {
+              //! Define rollback action for Algolia update category object
+              requestRollback.categoryIndexObjects = async (): Promise<void> => {
+                await categoryIndex.partialUpdateObjects([...categoryIndexObjects.results]);
+              };
+
+              // Update object in Algolia category index object
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const categoryIndexObject: SaveObjectResponse = await categoryIndex.partialUpdateObjects([{
+                ...request.server.helperPlugin.mapObjectValuesToNull(category),
+                objectID: String(category.id),
+                updatedAt: category.updatedAt,
+                updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.updatedAt),
+              }]);
+            }
+
+            // Return the category
+            return category;
           }).then((category: Category) => {
             // Send success response with deleted category
             return reply.status(200).send({

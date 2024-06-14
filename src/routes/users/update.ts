@@ -190,7 +190,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const userIndexObject: SaveObjectResponse = await userIndex.partialUpdateObjects([{
                 ...request.server.helperPlugin.mapObjectValuesToNull(user),
-                objectID: user.id,
+                objectID: String(user.id),
                 updatedAt: user.updatedAt,
                 updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(user.updatedAt),
               }]);

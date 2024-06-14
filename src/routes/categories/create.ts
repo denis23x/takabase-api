@@ -89,8 +89,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 ...request.server.prismaPlugin.getCategorySelect(),
                 user: {
                   select: {
-                    name: true,
-                    avatar: true
+                    id: true
                   }
                 }
               },
@@ -109,20 +108,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Create new object in Algolia category index
             const categoryIndexObject: SaveObjectResponse = await categoryIndex.saveObject({
-              objectID: category.id,
-              id: category.id,
-              name: category.name,
-              description: category.description || null,
-              updatedAt: category.updatedAt,
-              createdAt: category.createdAt,
+              ...request.server.helperPlugin.mapObjectValuesToNull(category),
+              objectID: String(category.id),
               updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.updatedAt),
-              createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.createdAt),
-              user: {
-                id: category.user.id,
-                name: category.user.name,
-                avatar: category.user.avatar || null,
-                firebaseUid: category.user.firebaseUid,
-              }
+              createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.createdAt)
             });
 
             //! Define rollback action for Algolia delete category object
