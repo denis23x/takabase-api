@@ -233,7 +233,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 // Map the results from the post index objects to create a new array of posts
                 const postIndexObjectsNext: Partial<Post>[] = postIndexObjects.results.map((post: Partial<Post>) => ({
                   ...post,
-                  categoryId: categoryPostListMoveTo
+                  category: {
+                    id: categoryPostListMoveTo
+                  }
                 }));
 
                 // @ts-ignore

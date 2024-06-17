@@ -5,5 +5,5 @@ export const partsPageSizeSchema: Record<string, any> = {
   type: 'number',
   default: 10,
   minimum: 10,
-  maximum: 50
+  maximum: 100
 };
