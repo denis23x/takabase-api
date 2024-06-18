@@ -21,9 +21,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           query: {
             $ref: 'partsPageQuerySchema#'
           },
-          orderBy: {
-            $ref: 'partsPageOrderBySchema#'
-          },
           page: {
             $ref: 'partsPageSchema#'
           },
@@ -65,7 +62,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<QuerystringSearch>, reply: FastifyReply): Promise<any> {
-      const { userName, query, orderBy, scope, size, page }: Record<string, any> = request.query;
+      const { userName, query, scope, size, page }: Record<string, any> = request.query;
 
       const categoryFindManyArgs: Prisma.CategoryFindManyArgs = {
         select: request.server.prismaPlugin.getCategorySelect(),
@@ -96,12 +93,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             contains: query
           }
         };
-      }
-
-      /** Order */
-
-      if (orderBy) {
-        categoryFindManyArgs.orderBy = request.server.prismaPlugin.setOrderBy(categoryFindManyArgs, orderBy);
       }
 
       /** Scope */

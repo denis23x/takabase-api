@@ -13,7 +13,6 @@ declare module 'fastify' {
       getPostSelect: () => Prisma.PostSelect;
       getUserSelect: () => Prisma.UserSelect;
       setScope: (anyManyArgs: any, scope: string[]) => any;
-      setOrderBy: (anyManyArgs: any, orderBy: string) => any;
       getError: (error: Prisma.PrismaClientKnownRequestError) => ResponseError | null;
       getErrorTransaction: (error: any, retriesLimitReached: boolean) => ResponseError | null;
       setErrorTransaction: (error: any, retriesLimitReached: boolean, requestRollback: any) => Promise<ResponseError | null>;

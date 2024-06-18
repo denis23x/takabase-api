@@ -6,7 +6,6 @@ export interface QuerystringSearch {
     query?: string;
     userName?: string;
     categoryId?: number;
-    orderBy?: string;
     scope?: string[];
     page: number;
     size: number;

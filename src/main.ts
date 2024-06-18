@@ -58,7 +58,6 @@ import { partsPostDescriptionSchema } from './schema/parts/post/parts-post-descr
 import { partsPostMarkdownSchema } from './schema/parts/post/parts-post-markdown.schema';
 import { partsPostNameSchema } from './schema/parts/post/parts-post-name.schema';
 import { partsPageSchema } from './schema/parts/page/parts-page.schema';
-import { partsPageOrderBySchema } from './schema/parts/page/parts-page-order-by.schema';
 import { partsPageQuerySchema } from './schema/parts/page/parts-page-query.schema';
 import { partsPageSizeSchema } from './schema/parts/page/parts-page-size.schema';
 import { partsScopeSchema } from './schema/parts/parts-scope.schema';
@@ -125,7 +124,6 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsFirebaseUrlStorageSchema);
   fastifyInstance.addSchema(partsIdSchema);
   fastifyInstance.addSchema(partsPageSchema);
-  fastifyInstance.addSchema(partsPageOrderBySchema);
   fastifyInstance.addSchema(partsPageQuerySchema);
   fastifyInstance.addSchema(partsPageSizeSchema);
   fastifyInstance.addSchema(partsPostDescriptionSchema);

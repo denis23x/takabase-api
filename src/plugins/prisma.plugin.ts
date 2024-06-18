@@ -98,32 +98,6 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
 
       return anyManyArgsSelect;
     },
-    setOrderBy: (anyManyArgs: any, orderBy: string): any => {
-      const getOrderBy = (): any => {
-        switch (orderBy) {
-          case 'newest': {
-            return {
-              id: 'desc'
-            };
-          }
-          case 'oldest': {
-            return {
-              id: 'asc'
-            };
-          }
-          default: {
-            return undefined;
-          }
-        }
-      };
-
-      const anyManyArgsEntries: any[] = Object.entries({ ...anyManyArgs.orderBy, ...getOrderBy() });
-      const anyManyArgsOrderBy: any = anyManyArgsEntries.map(([key, value]: any[]) => ({
-        [key]: value
-      }));
-
-      return anyManyArgsOrderBy;
-    },
     getError: (error: Prisma.PrismaClientKnownRequestError): ResponseError | null => {
       const prismaErrorReference: string = 'https://prisma.io/docs/reference/api-reference/error-reference';
       const prismaErrorMessage: string = [prismaErrorReference, error.code?.toLowerCase()].join('#');
