@@ -111,6 +111,50 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               await postDocumentReference.delete();
             };
 
+            // Define the arguments for create post
+            const postCreateArgs: Prisma.PostCreateArgs = {
+              select: {
+                ...request.server.prismaPlugin.getPostSelect(),
+                category: {
+                  select: request.server.prismaPlugin.getCategorySelect()
+                },
+                user: {
+                  select: request.server.prismaPlugin.getUserSelect()
+                }
+              },
+              data: {
+                ...request.body,
+                firebaseUid: postDocumentReference.id,
+                user: {
+                  connect: {
+                    firebaseUid: userFirebaseUid
+                  }
+                },
+                category: {
+                  connect: {
+                    id: postCategoryId
+                  }
+                }
+              }
+            };
+
+            // Create the post
+            const post: Post & Record<string, any> = await prismaClient.post.create(postCreateArgs);
+
+            //! Define rollback action for delete post row
+            requestRollback.post = async (): Promise<void> => {
+              // Define arguments to delete post
+              const postDeleteArgs: Prisma.PostDeleteArgs = {
+                where: {
+                  id: post.id,
+                  userFirebaseUid
+                }
+              };
+
+              // Delete post
+              await prismaClient.post.delete(postDeleteArgs);
+            }
+
             // If there is an image associated with the post
             if (postImage) {
               // Prepare the post image temporary URL
@@ -159,6 +203,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
               // Prepare the DTO for updating the Firestore document
               const postDocumentUpdateDto: any = {
+                postId: post.id,
                 markdown: postMarkdownList.map((imageUrl: string) => decodeURIComponent(imageUrl))
               };
 
@@ -169,36 +214,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 .update(postDocumentUpdateDto)
                 .catch((error: any) => request.server.helperPlugin.throwError('firestore/update-document-failed', error, request));
             }
-
-            // Define the arguments for create post
-            const postCreateArgs: Prisma.PostCreateArgs = {
-              select: {
-                ...request.server.prismaPlugin.getPostSelect(),
-                category: {
-                  select: request.server.prismaPlugin.getCategorySelect()
-                },
-                user: {
-                  select: request.server.prismaPlugin.getUserSelect()
-                }
-              },
-              data: {
-                ...request.body,
-                firebaseUid: postDocumentReference.id,
-                user: {
-                  connect: {
-                    firebaseUid: userFirebaseUid
-                  }
-                },
-                category: {
-                  connect: {
-                    id: postCategoryId
-                  }
-                }
-              }
-            };
-
-            // Create the post
-            const post: Post & Record<string, any> = await prismaClient.post.create(postCreateArgs);
 
             // Create new object in Algolia post index
             const postIndexObject: SaveObjectResponse = await postIndex.saveObject({

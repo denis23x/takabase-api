@@ -60,11 +60,31 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Extract the firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
       const userPath: string = ['users', userFirebaseUid].join('/');
+      const userName: string | undefined = request.body?.name;
       const userIndex: SearchIndex = request.server.algolia.initIndex('user');
 
-      // Make unique name before start transaction (if not provided in body)
-      if (!request.body?.name) {
-        // Generate a unique UID with 8 alphanumeric characters and convert it to lowercase
+      // Check if name already exists
+      if (userName) {
+        // Define the arguments for find user
+        const userFindUniqueArgs: Prisma.UserFindUniqueArgs = {
+          where: {
+            name: userName
+          }
+        };
+
+        // Find the user
+        const user: User = await request.server.prisma.user.findUnique(userFindUniqueArgs);
+
+        if (user) {
+          // Send error response with existing user
+          return reply.status(400).send({
+            message: 'The name "' + userName + '" is already in use by an existing user',
+            error: 'Bad request',
+            statusCode: 400
+          });
+        }
+      } else {
+        // Make unique name before start transaction
         const userNameUid: string = customAlphabet(alphanumeric, 8)().toLowerCase();
         const userNameSeparator: string = '-';
 
@@ -95,11 +115,42 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Re-initialize requestRollback object
             requestRollback = {};
 
+            // Define the arguments for create user
+            const userCreateArgs: Prisma.UserCreateArgs = {
+              select: {
+                ...request.server.prismaPlugin.getUserSelect(),
+                description: true
+              },
+              data: {
+                name: request.body.name,
+                firebaseUid: userFirebaseUid,
+                terms: true,
+              }
+            };
+
+            // Create the user
+            const user: User = await prismaClient.user.create(userCreateArgs);
+
+            //! Define rollback action for delete user row
+            requestRollback.user = async (): Promise<void> => {
+              // Define arguments to delete user
+              const userDeleteArgs: Prisma.UserDeleteArgs = {
+                where: {
+                  id: user.id,
+                  firebaseUid: userFirebaseUid
+                }
+              };
+
+              // Delete user
+              await prismaClient.user.delete(userDeleteArgs);
+            };
+
             // Get the reference to the user document
             const userDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(userPath);
 
             // Firestore user document data
             const userDocumentCreateData: any = {
+              userId: user.id,
               appearance: {
                 dropdownBackdrop: false,
                 language: 'en-US',
@@ -125,22 +176,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             requestRollback.userDocument = async (): Promise<void> => {
               await userDocumentReference.delete();
             };
-
-            // Define the arguments for create user
-            const userCreateArgs: Prisma.UserCreateArgs = {
-              select: {
-                ...request.server.prismaPlugin.getUserSelect(),
-                description: true
-              },
-              data: {
-                name: request.body.name,
-                firebaseUid: userFirebaseUid,
-                terms: true,
-              }
-            };
-
-            // Create the user
-            const user: User = await prismaClient.user.create(userCreateArgs);
 
             // Create new object in Algolia user index
             const userIndexObject: SaveObjectResponse = await userIndex.saveObject({
