@@ -78,7 +78,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         if (user) {
           // Send error response with existing user
           return reply.status(400).send({
-            message: 'The name "' + userName + '" is already in use by an existing user',
+            message: 'The name "' + userName + '" is already in use',
             error: 'Bad request',
             statusCode: 400
           });

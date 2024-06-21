@@ -5,5 +5,5 @@ export const partsUserNameSchema: Record<string, any> = {
   type: 'string',
   minLength: 4,
   maxLength: 32,
-  pattern: '^(?!@)\\S{4,32}$'
+  pattern: '(?![0-9]+$).*'
 };

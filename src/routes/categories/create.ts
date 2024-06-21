@@ -88,9 +88,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               select: {
                 ...request.server.prismaPlugin.getCategorySelect(),
                 user: {
-                  select: {
-                    id: true
-                  }
+                  select: request.server.prismaPlugin.getUserSelect()
                 }
               },
               data: {
@@ -127,7 +125,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.updatedAt),
               createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.createdAt),
               user: {
-                id: category.user.id
+                id: category.user.id,
+                name: category.user.name
               },
             });
 

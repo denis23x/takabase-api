@@ -50,7 +50,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           ...request.server.prismaPlugin.getPostSelect(),
           user: {
             select: {
-              id: true
+              id: true,
+              name: true
             }
           },
           category: {
