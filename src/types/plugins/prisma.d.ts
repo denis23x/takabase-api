@@ -3,6 +3,7 @@
 import { PrismaClient } from '@prisma/client';
 import { Prisma } from '../database/client';
 import { ResponseError } from '../crud/response/response-error.schema';
+import { DatabaseError } from '@tidbcloud/serverless';
 
 // prettier-ignore
 declare module 'fastify' {
@@ -13,8 +14,8 @@ declare module 'fastify' {
       getPostSelect: () => Prisma.PostSelect;
       getUserSelect: () => Prisma.UserSelect;
       setScope: (anyManyArgs: any, scope: string[]) => any;
-      getError: (error: Prisma.PrismaClientKnownRequestError) => ResponseError | null;
-      getErrorTransaction: (error: any, retriesLimitReached: boolean) => ResponseError | null;
+      getErrorPrisma: (error: Prisma.PrismaClientKnownRequestError) => ResponseError | null;
+      getErrorDatabase: (error: DatabaseError) => ResponseError;
       setErrorTransaction: (error: any, retriesLimitReached: boolean, requestRollback: any) => Promise<ResponseError | null>;
     };
   }

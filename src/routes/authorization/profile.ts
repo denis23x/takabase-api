@@ -67,7 +67,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           return reply.status(307).redirect('/api/v1/users/');
         })
         .catch((error: Error) => {
-          const responseError: ResponseError = reply.server.prismaPlugin.getError(error) as ResponseError;
+          const responseError: ResponseError = reply.server.prismaPlugin.getErrorPrisma(error) as ResponseError;
 
           return reply.status(responseError.statusCode).send(responseError);
         });

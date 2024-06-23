@@ -89,7 +89,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const userIndexObjects: GetObjectsResponse<any> = await userIndex.getObjects([String(userId)]);
 
       // Define the arguments for find a user
-      const userFindUniqueArgs: Prisma.UserFindUniqueArgs = {
+      const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {
         select: {
           avatar: true,
           name: true
@@ -101,7 +101,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       };
 
       // User previous state
-      const user: User = await request.server.prisma.user.findUnique(userFindUniqueArgs);
+      const user: User = await request.server.prisma.user.findUniqueOrThrow(userFindUniqueOrThrowArgs);
       const userAlgoliaHandler: any = {};
       const userStorageHandler: any = {};
 

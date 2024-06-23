@@ -5,6 +5,7 @@ import { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { Prisma, PrismaClient } from '../database/client';
 import { prismaConfig } from '../config/prisma.config';
 import { ResponseError } from '../types/crud/response/response-error.schema';
+import { DatabaseError } from '@tidbcloud/serverless';
 
 const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('prisma', new PrismaClient(prismaConfig));
@@ -98,7 +99,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
 
       return anyManyArgsSelect;
     },
-    getError: (error: Prisma.PrismaClientKnownRequestError): ResponseError | null => {
+    getErrorPrisma: (error: Prisma.PrismaClientKnownRequestError): ResponseError | null => {
       const prismaErrorReference: string = 'https://prisma.io/docs/reference/api-reference/error-reference';
       const prismaErrorMessage: string = [prismaErrorReference, error.code?.toLowerCase()].join('#');
 
@@ -130,24 +131,86 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
         default: {
           return {
             error: 'Internal Server Error',
-            message: prismaErrorMessage,
+            message: 'Prisma Error',
             statusCode: 500
           };
         }
       }
     },
-    getErrorTransaction: (error: any, retriesLimitReached: boolean): ResponseError | null => {
+    getErrorDatabase: (error: DatabaseError): ResponseError => {
+      const message: string = error.details.message.toLowerCase();
+
+      switch (true) {
+        case message.includes('duplicate'): {
+          switch (true) {
+            case message.includes('user.user'): {
+              return {
+                code: error.details.code,
+                message: 'User name is already in use',
+                error: 'Bad request',
+                statusCode: 400
+              };
+            }
+            case message.includes('category.category'): {
+              return {
+                code: error.details.code,
+                message: 'Category name is already in use',
+                error: 'Bad request',
+                statusCode: 400
+              };
+            }
+            case message.includes('post.post'): {
+              return {
+                code: error.details.code,
+                message: 'Post name is already in use',
+                error: 'Bad request',
+                statusCode: 400
+              };
+            }
+            default: {
+              return {
+                error: 'Internal Server Error',
+                message: 'Database Error',
+                statusCode: 500
+              };
+            }
+          }
+        }
+        default: {
+          return {
+            error: 'Internal Server Error',
+            message: 'Database Error',
+            statusCode: 500
+          };
+        }
+      }
+    },
+    setErrorTransaction: async (error: any, retriesLimit: boolean, rollback: any): Promise<ResponseError | null> => {
+      const rollbackList: Promise<any>[] = Object.values(rollback).map(async (cb: any): Promise<any> => cb());
+
+      // TODO: Handle rejected ..
+      // @ts-ignore
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const rollbackResult: PromiseSettledResult<any>[] = await Promise.allSettled(rollbackList);
+
+      /** ERRORS */
+
+      if (retriesLimit) {
+        return {
+          message: 'Something unexpected occurred. Please try again later',
+          error: 'Internal Server Error',
+          statusCode: 500
+        };
+      }
+
+      /** ERRORS DETAILS */
+
       switch (true) {
         case error instanceof Prisma.PrismaClientKnownRequestError: {
-          if (retriesLimitReached) {
-            return {
-              message: 'Something unexpected occurred. Please try again later',
-              error: 'Internal Server Error',
-              statusCode: 500
-            };
-          }
-
-          return fastifyInstance.prismaPlugin.getError(error);
+          return fastifyInstance.prismaPlugin.getErrorPrisma(error);
+        }
+        case error instanceof DatabaseError: {
+          return fastifyInstance.prismaPlugin.getErrorDatabase(error);
         }
         default: {
           return {
@@ -158,17 +221,6 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
           };
         }
       }
-    },
-    // prettier-ignore
-    setErrorTransaction: async (error: any, retriesLimitReached: boolean, requestRollback: any): Promise<ResponseError | null> => {
-      const rollbackList: Promise<any>[] = Object.values(requestRollback).map(async (rollback: any): Promise<any> => rollback());
-
-      // TODO: Handle rejected ..
-      // @ts-ignore
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const rollback: PromiseSettledResult<any>[] = await Promise.allSettled(rollbackList);
-
-      return fastifyInstance.prismaPlugin.getErrorTransaction(error, retriesLimitReached);
     }
   });
 

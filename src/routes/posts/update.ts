@@ -91,7 +91,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const postId: number = Number(request.params.id);
       const postFirebaseUid: string = String(request.body.firebaseUid);
       const postPath: string = ['users', userFirebaseUid, 'posts', postFirebaseUid].join('/');
-      const postImage: string | null | undefined = request.body.image as any;
+      const postImage: string = String(request.body.image || '');
       const postMarkdown: string = String(request.body.markdown || '');
       const postMarkdownListDestination: string = [postPath, 'markdown'].join('/');
       const postIndex: SearchIndex = request.server.algolia.initIndex('post');
@@ -106,14 +106,56 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         .get()
         .catch((error: any) => request.server.helperPlugin.throwError('firestore/get-document-failed', error, request));
 
-      // Create the destination path for the post image
-      const postImageStorageListDestination: string = [postDocumentReference.path, 'image'].join('/');
+      // Define the arguments for find a post
+      const postFindUniqueOrThrowArgs: Prisma.PostFindUniqueOrThrowArgs = {
+        select: {
+          image: true
+        },
+        where: {
+          id: postId,
+          userFirebaseUid
+        }
+      };
 
-      // Retrieve the list of post image from the storage
-      // prettier-ignore
-      const postImageStorageList: string[] = await request.server.storagePlugin
-        .getImageList(postImageStorageListDestination)
-        .catch((error: any) => request.server.helperPlugin.throwError('storage/get-filelist-failed', error, request));
+      // User previous state
+      const post: Post = await request.server.prisma.post.findUniqueOrThrow(postFindUniqueOrThrowArgs);
+      const postStorageHandler: any = {};
+
+      // Fill the postStorageHandler if is changed an image
+      if (post.image !== postImage) {
+        // Create the destination path for the post image
+        const postImageStorageListDestination: string = [postDocumentReference.path, 'image'].join('/');
+
+        // Retrieve the list of post image from the storage
+        // prettier-ignore
+        const postImageStorageList: string[] = await request.server.storagePlugin
+          .getImageList(postImageStorageListDestination)
+          .catch((error: any) => request.server.helperPlugin.throwError('storage/get-filelist-failed', error, request));
+
+        // Define a function to set the post image and move unused image to temporary storage
+        const postImageStorage = async (postImageNext: string | null): Promise<string | null> => {
+          // Filter out the unused post image URL
+          const postImageListUnused: string[] = postImageStorageList.filter(
+            (postImageStorage: string) => postImageStorage !== postImageNext
+          );
+
+          // Move the unused image to temporary storage
+          const tempImageList: string[] = await request.server.storagePlugin
+            .setImageListMove(postImageListUnused, 'temp')
+            .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+
+          //! Define rollback action for post image moved to temporary storage
+          requestRollback.tempImageList = async (): Promise<void> => {
+            await request.server.storagePlugin.setImageListMove(tempImageList, postPath);
+          };
+
+          return postImageNext;
+        };
+
+        postStorageHandler.postImageStorageListDestination = postImageStorageListDestination;
+        postStorageHandler.postImageStorageList = postImageStorageList;
+        postStorageHandler.postImageStorage = postImageStorage;
+      }
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -129,56 +171,41 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Re-initialize requestRollback object
             requestRollback = {};
 
-            // Define a function to set the post image and move unused image to temporary storage
-            const setPostImage = async (postImageNext: string | null): Promise<string | null> => {
-              // Filter out the unused post image URL
-              const postImageListUnused: string[] = postImageStorageList.filter((postImageStorage: string) => postImageStorage !== postImageNext);
+            // Check if the postStorageHandler is filled
+            if (Object.keys(postStorageHandler).length) {
+              // If there is a post image
+              if (postImage) {
+                const postImageStorage: boolean = postStorageHandler.postImageStorageList.some((postImageStorage: string) => {
+                  return decodeURIComponent(postImage).includes(postImageStorage);
+                });
 
-              // Move the unused image to temporary storage
-              const tempImageList: string[] = await request.server.storagePlugin
-                .setImageListMove(postImageListUnused, 'temp')
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+                // Check if the post image is stored in any of the specified locations
+                if (!postImageStorage) {
+                  // Extract the new image URL with the appropriate destination
+                  const updatedTempImageList: string[] = request.server.markdownPlugin.getImageListRelativeUrl([postImage]);
 
-              //! Define rollback action for post image moved to temporary storage
-              requestRollback.tempImageList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(tempImageList, postPath);
-              };
+                  // Move the updated image to the post image destination
+                  const updatedPostImageList: string[] = await request.server.storagePlugin
+                    .setImageListMove(updatedTempImageList, postStorageHandler.postImageStorageListDestination)
+                    .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
-              return postImageNext;
-            };
+                  //! Define rollback action for moving post image to destination
+                  requestRollback.updatedPostImageList = async (): Promise<void> => {
+                    await request.server.storagePlugin.setImageListMove(updatedPostImageList, 'temp');
+                  };
 
-            // If there is a post image
-            if (postImage) {
-              const postImageStorage: boolean = postImageStorageList.some((postImageStorage: string) => {
-                return decodeURIComponent(postImage).includes(postImageStorage);
-              });
+                  // Set the request body image with the updated post image
+                  request.body.image = request.server.markdownPlugin.getImageListRewrite(postImage, updatedTempImageList, updatedPostImageList);
 
-              // Check if the post image is stored in any of the specified locations
-              if (!postImageStorage) {
-                // Extract the new image URL with the appropriate destination
-                const updatedTempImageList: string[] = request.server.markdownPlugin.getImageListRelativeUrl([postImage]);
-
-                // Move the updated image to the post image destination
-                const updatedPostImageList: string[] = await request.server.storagePlugin
-                  .setImageListMove(updatedTempImageList, postImageStorageListDestination)
-                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-                //! Define rollback action for moving post image to destination
-                requestRollback.updatedPostImageList = async (): Promise<void> => {
-                  await request.server.storagePlugin.setImageListMove(updatedPostImageList, 'temp');
-                };
-
-                // Set the request body image with the updated post image
-                request.body.image = request.server.markdownPlugin.getImageListRewrite(postImage, updatedTempImageList, updatedPostImageList);
-
+                  // @ts-ignore
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                  const updatedPostImage: string = await postStorageHandler.postImageStorage(decodeURIComponent([...updatedPostImageList].shift()));
+                }
+              } else {
                 // @ts-ignore
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const updatedPostImage: string = await setPostImage(decodeURIComponent([...updatedPostImageList].shift()));
+                const updatedPostImage: null = await postStorageHandler.postImageStorage(null);
               }
-            } else {
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const updatedPostImage: null = await setPostImage(null);
             }
 
             // Get the list of images in the post markdown body
