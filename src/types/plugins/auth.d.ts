@@ -8,6 +8,7 @@ declare module 'fastify' {
     auth: Auth;
     verifyIdToken: any;
     verifyAdmin: any;
+    verifyUsername: any;
   }
 }
 

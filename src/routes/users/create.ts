@@ -16,6 +16,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     method: 'POST',
     url: '',
     onRequest: fastify.verifyIdToken,
+    preValidation: fastify.verifyUsername,
     schema: {
       tags: ['Users'],
       description: 'Creates a new User',
@@ -151,18 +152,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Firestore user document data
             const userDocumentCreateData: any = {
               userId: user.id,
-              appearance: {
-                dropdownBackdrop: false,
-                language: 'en-US',
-                markdownMonospace: true,
-                pageRedirectHome: false,
-                pageScrollToTop: false,
-                pageScrollInfinite: false,
-                theme: 'auto',
-                themeBackground: 'cosy-creatures',
-                themePrism: 'auto',
-                windowButtonPosition: 'left'
-              }
+              appearance: await request.server.remoteConfigPlugin.getAppearance()
             }
 
             // Create Firestore user document

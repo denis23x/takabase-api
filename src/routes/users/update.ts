@@ -12,6 +12,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     method: 'PUT',
     url: ':id',
     onRequest: fastify.verifyIdToken,
+    preValidation: fastify.verifyUsername,
     schema: {
       tags: ['Users'],
       description: 'Updates a User',

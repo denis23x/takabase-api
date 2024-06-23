@@ -146,7 +146,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
             case message.includes('user.user'): {
               return {
                 code: error.details.code,
-                message: 'User name is already in use',
+                message: 'Username is already in use',
                 error: 'Bad request',
                 statusCode: 400
               };

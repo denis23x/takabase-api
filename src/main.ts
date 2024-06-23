@@ -31,6 +31,7 @@ import helperPlugin from './plugins/helper.plugin';
 import markdownPlugin from './plugins/markdown.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
 import storagePlugin from './plugins/storage.plugin';
+import remoteConfigPlugin from './plugins/remote-config.plugin';
 
 // ROUTES
 
@@ -101,6 +102,7 @@ export const main = async (): Promise<FastifyInstance> => {
     await fastifyInstance.register(authPlugin);
     await fastifyInstance.register(firestorePlugin);
     await fastifyInstance.register(storagePlugin);
+    await fastifyInstance.register(remoteConfigPlugin);
   });
 
   // PLUGINS HANDMADE

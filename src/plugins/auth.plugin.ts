@@ -44,6 +44,21 @@ const authPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fasti
       });
     }
   });
+
+  // prettier-ignore
+  fastifyInstance.decorate('verifyUsername', async function (request: FastifyRequest, reply: FastifyReply): Promise<void> {
+    // @ts-ignore
+    const userName: string = String(request.body.name || '');
+    const userNameForbidden: string[] = await request.server.remoteConfigPlugin.getForbiddenUsername();
+
+    if (userNameForbidden.indexOf(userName.trim().toLowerCase()) !== -1) {
+      reply.status(400).send({
+        message: 'Username "' + userName + '" is not allowed',
+        error: 'Bad request',
+        statusCode: 400
+      });
+    }
+  });
 });
 
 export default authPlugin;
