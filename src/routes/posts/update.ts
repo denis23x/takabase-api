@@ -262,6 +262,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Prepare the DTO for updating the Firestore document
             const postDocumentUpdateDto: any = {
+              postId,
               markdown: updatedPostMarkdownList.map((imageUrl: string) => decodeURIComponent(imageUrl))
             };
 

@@ -106,54 +106,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               .addDocument(postPath, {})
               .catch((error: any) => request.server.helperPlugin.throwError('firestore/add-document-failed', error, request));
 
+            // Prepare the DTO for updating the Firestore document
+            const postDocumentUpdateDto: any = {};
+
             //! Define the rollback action for deleting the newly created post document in Firestore
             requestRollback.postDocument = async (): Promise<void> => {
               await postDocumentReference.delete();
             };
-
-            // Define the arguments for create post
-            const postCreateArgs: Prisma.PostCreateArgs = {
-              select: {
-                ...request.server.prismaPlugin.getPostSelect(),
-                category: {
-                  select: request.server.prismaPlugin.getCategorySelect()
-                },
-                user: {
-                  select: request.server.prismaPlugin.getUserSelect()
-                }
-              },
-              data: {
-                ...request.body,
-                firebaseUid: postDocumentReference.id,
-                user: {
-                  connect: {
-                    firebaseUid: userFirebaseUid
-                  }
-                },
-                category: {
-                  connect: {
-                    id: postCategoryId
-                  }
-                }
-              }
-            };
-
-            // Create the post
-            const post: Post & Record<string, any> = await prismaClient.post.create(postCreateArgs);
-
-            //! Define rollback action for delete post row
-            requestRollback.post = async (): Promise<void> => {
-              // Define arguments to delete post
-              const postDeleteArgs: Prisma.PostDeleteArgs = {
-                where: {
-                  id: post.id,
-                  userFirebaseUid
-                }
-              };
-
-              // Delete post
-              await prismaClient.post.delete(postDeleteArgs);
-            }
 
             // If there is an image associated with the post
             if (postImage) {
@@ -201,19 +160,63 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Rewrite the markdown body with the updated markdown image list
               request.body.markdown = request.server.markdownPlugin.getImageListRewrite(postMarkdown, tempMarkdownList, postMarkdownList);
 
-              // Prepare the DTO for updating the Firestore document
-              const postDocumentUpdateDto: any = {
-                postId: post.id,
-                markdown: postMarkdownList.map((imageUrl: string) => decodeURIComponent(imageUrl))
+              // Update the DTO for updating the Firestore document
+              postDocumentUpdateDto.markdown = postMarkdownList.map((imageUrl: string) => decodeURIComponent(imageUrl));
+            }
+
+            // Define the arguments for create post
+            const postCreateArgs: Prisma.PostCreateArgs = {
+              select: {
+                ...request.server.prismaPlugin.getPostSelect(),
+                category: {
+                  select: request.server.prismaPlugin.getCategorySelect()
+                },
+                user: {
+                  select: request.server.prismaPlugin.getUserSelect()
+                }
+              },
+              data: {
+                ...request.body,
+                firebaseUid: postDocumentReference.id,
+                user: {
+                  connect: {
+                    firebaseUid: userFirebaseUid
+                  }
+                },
+                category: {
+                  connect: {
+                    id: postCategoryId
+                  }
+                }
+              }
+            };
+
+            // Create the post
+            const post: Post & Record<string, any> = await prismaClient.post.create(postCreateArgs);
+
+            //! Define rollback action for delete post row
+            requestRollback.post = async (): Promise<void> => {
+              // Define arguments to delete post
+              const postDeleteArgs: Prisma.PostDeleteArgs = {
+                where: {
+                  id: post.id,
+                  userFirebaseUid
+                }
               };
 
-              // Perform the update operation on the Firestore document
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const postDocumentUpdate: WriteResult = await postDocumentReference
-                .update(postDocumentUpdateDto)
-                .catch((error: any) => request.server.helperPlugin.throwError('firestore/update-document-failed', error, request));
+              // Delete post
+              await prismaClient.post.delete(postDeleteArgs);
             }
+
+            // Update the DTO for updating the Firestore document
+            postDocumentUpdateDto.postId = post.id;
+
+            // Perform the update operation on the Firestore document
+            // @ts-ignore
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const postDocumentUpdate: WriteResult = await postDocumentReference
+              .update(postDocumentUpdateDto)
+              .catch((error: any) => request.server.helperPlugin.throwError('firestore/update-document-failed', error, request));
 
             // Create new object in Algolia post index
             const postIndexObject: SaveObjectResponse = await postIndex.saveObject({
