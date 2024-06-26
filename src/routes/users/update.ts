@@ -33,7 +33,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         type: 'object',
         properties: {
           name: {
-            $ref: 'partsUserNameSchema#'
+            $ref: 'partsUsernameSchema#'
           },
           description: {
             oneOf: [
@@ -84,7 +84,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Extract the firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
       const userId: number = Number(request.params.id);
-      const userName: string = String(request.body.name || '');
+      const username: string = String(request.body.name || '');
       const userAvatar: string = String(request.body.avatar || '');
       const userIndex: SearchIndex = request.server.algolia.initIndex('user');
       const userIndexObjects: GetObjectsResponse<any> = await userIndex.getObjects([String(userId)]);
@@ -106,8 +106,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const userAlgoliaHandler: any = {};
       const userStorageHandler: any = {};
 
-      // Fill the userAlgoliaHandler if is changed a userName
-      if (user.name !== userName) {
+      // Fill the userAlgoliaHandler if is changed a username
+      if (user.name !== username) {
         // Define the arguments for finding categories
         const categoryFindManyArgs: Prisma.CategoryFindManyArgs = {
           select: {

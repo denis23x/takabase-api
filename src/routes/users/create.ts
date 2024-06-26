@@ -29,7 +29,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         type: 'object',
         properties: {
           name: {
-            $ref: 'partsUserNameSchema#'
+            $ref: 'partsUsernameSchema#'
           }
         },
         nullable: true
@@ -61,15 +61,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Extract the firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
       const userPath: string = ['users', userFirebaseUid].join('/');
-      const userName: string | undefined = request.body?.name;
+      const username: string | undefined = request.body?.name;
       const userIndex: SearchIndex = request.server.algolia.initIndex('user');
 
       // Check if name already exists
-      if (userName) {
+      if (username) {
         // Define the arguments for find user
         const userFindUniqueArgs: Prisma.UserFindUniqueArgs = {
           where: {
-            name: userName
+            name: username
           }
         };
 
@@ -79,26 +79,26 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         if (user) {
           // Send error response with existing user
           return reply.status(400).send({
-            message: 'The name "' + userName + '" is already in use',
+            message: 'The name "' + username + '" is already in use',
             error: 'Bad request',
             statusCode: 400
           });
         }
       } else {
         // Make unique name before start transaction
-        const userNameUid: string = customAlphabet(alphanumeric, 8)().toLowerCase();
-        const userNameSeparator: string = '-';
+        const usernameUid: string = customAlphabet(alphanumeric, 8)().toLowerCase();
+        const usernameSeparator: string = '-';
 
         // Generate a name by combining words from the 'colors' and 'animals' dictionaries
-        const userNameGenerated: string = uniqueNamesGenerator({
+        const usernameGenerated: string = uniqueNamesGenerator({
           dictionaries: [colors, animals],
-          separator: userNameSeparator,
+          separator: usernameSeparator,
           length: 2
         });
 
         request.body = {
           ...request.body,
-          name: [userNameGenerated, userNameUid].join(userNameSeparator)
+          name: [usernameGenerated, usernameUid].join(usernameSeparator)
         };
       }
 

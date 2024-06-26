@@ -64,7 +64,7 @@ import { partsPageSizeSchema } from './schema/parts/page/parts-page-size.schema'
 import { partsScopeSchema } from './schema/parts/parts-scope.schema';
 import { partsUserDescriptionSchema } from './schema/parts/user/parts-user-description.schema';
 import { partsUserEmailSchema } from './schema/parts/user/parts-user-email.schema';
-import { partsUserNameSchema } from './schema/parts/user/parts-user-name.schema';
+import { partsUsernameSchema } from './schema/parts/user/parts-user-name.schema';
 import { partsUserPasswordSchema } from './schema/parts/user/parts-user-password.schema';
 import { partsUserTermsSchema } from './schema/parts/user/parts-user-terms.schema';
 
@@ -134,7 +134,7 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsScopeSchema);
   fastifyInstance.addSchema(partsUserDescriptionSchema);
   fastifyInstance.addSchema(partsUserEmailSchema);
-  fastifyInstance.addSchema(partsUserNameSchema);
+  fastifyInstance.addSchema(partsUsernameSchema);
   fastifyInstance.addSchema(partsUserPasswordSchema);
   fastifyInstance.addSchema(partsUserTermsSchema);
 

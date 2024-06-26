@@ -11,7 +11,7 @@ export const userSchema: Record<string, any> = {
       $ref: 'partsFirebaseUidSchema#'
     },
     name: {
-      $ref: 'partsUserNameSchema#'
+      $ref: 'partsUsernameSchema#'
     },
     description: {
       allOf: [
