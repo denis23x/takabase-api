@@ -17,7 +17,11 @@
     "strictPropertyInitialization": false,
     "noUnusedLocals": true
   },
-  "exclude": ["node_modules", "dist", "src/database"],
+  "exclude": [
+    "node_modules",
+    "dist", "src/database",
+    "deploy.ts"
+  ],
   "ts-node": {
     "files": true
   }

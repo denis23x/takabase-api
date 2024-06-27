@@ -18,7 +18,7 @@
   },
   "scripts": {
     "start:dev": "dotenv -e .env.takabase-local -- npm run build:prisma && npm-watch start:functions",
-    "start:deploy": "node firebase-deploy.js",
+    "start:deploy": "npx tsx deploy.ts",
     "start:functions": "tsc -p tsconfig.json && npx @google-cloud/functions-framework --target=api --port=8080",
     "build:prod": "tsc -p tsconfig.json && npm run build:prisma && cp src/index.html dist",
     "build:prisma": "npx prisma generate && mkdir -p dist/database/client && cp -R src/database/client dist/database"
@@ -59,6 +59,7 @@
     "@faker-js/faker": "^8.4.1",
     "@types/nanoid-dictionary": "^4.2.3",
     "@types/node": "^20.12.12",
+    "@types/prompts": "^2.4.9",
     "@typescript-eslint/eslint-plugin": "^7.9.0",
     "@typescript-eslint/parser": "^7.9.0",
     "eslint": "^9.3.0",
