@@ -48,7 +48,7 @@ const authPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fasti
   // prettier-ignore
   fastifyInstance.decorate('verifyUsername', async function (request: FastifyRequest, reply: FastifyReply): Promise<void> {
     // @ts-ignore
-    const username: string = String(request.body.name || '');
+    const username: string = String(request.body?.name || '');
     const usernameForbidden: string[] = await request.server.remoteConfigPlugin.getForbiddenUsername();
 
     if (usernameForbidden.indexOf(username.trim().toLowerCase()) !== -1) {

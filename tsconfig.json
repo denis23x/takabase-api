@@ -18,8 +18,9 @@
     "noUnusedLocals": true
   },
   "exclude": [
+    "src/database",
     "node_modules",
-    "dist", "src/database",
+    "dist",
     "deploy.ts"
   ],
   "ts-node": {

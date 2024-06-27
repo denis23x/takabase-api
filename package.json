@@ -20,7 +20,7 @@
     "start:dev": "dotenv -e .env.takabase-local -- npm run build:prisma && npm-watch start:functions",
     "start:deploy": "npx tsx deploy.ts",
     "start:functions": "tsc -p tsconfig.json && npx @google-cloud/functions-framework --target=api --port=8080",
-    "build:prod": "tsc -p tsconfig.json && npm run build:prisma && cp src/index.html dist",
+    "build:prod": "tsc -p tsconfig.json && npm run build:prisma && cp src/index.html dist && cp src/robots.txt dist",
     "build:prisma": "npx prisma generate && mkdir -p dist/database/client && cp -R src/database/client dist/database"
   },
   "keywords": [

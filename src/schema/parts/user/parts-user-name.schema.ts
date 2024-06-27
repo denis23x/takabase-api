@@ -5,5 +5,5 @@ export const partsUsernameSchema: Record<string, any> = {
   type: 'string',
   minLength: 4,
   maxLength: 32,
-  pattern: '^\\w[\\w\\d]*$'
+  pattern: '^\\w[\\w\\d\\-]*$'
 };
