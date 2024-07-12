@@ -50,6 +50,7 @@ import { userSchema } from './schema/models/user.schema';
 import { responseErrorSchema } from './schema/crud/response/response-error.schema';
 import { partsAlgoliaAddRecordsSchema } from './schema/parts/algolia/parts-algolia-add-records.schema';
 import { partsAlgoliaResponseSchema } from './schema/parts/algolia/parts-algolia-response.schema';
+import { partsAppCheckResponseSchema } from './schema/parts/authorization/parts-app-check-response.schema';
 import { partsCategoryDescriptionSchema } from './schema/parts/category/parts-category-description.schema';
 import { partsCategoryNameSchema } from './schema/parts/category/parts-category-name.schema';
 import { partsFirebaseUidSchema } from './schema/parts/parts-firebase-uid.schema';
@@ -120,6 +121,7 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(responseErrorSchema);
   fastifyInstance.addSchema(partsAlgoliaAddRecordsSchema);
   fastifyInstance.addSchema(partsAlgoliaResponseSchema);
+  fastifyInstance.addSchema(partsAppCheckResponseSchema);
   fastifyInstance.addSchema(partsCategoryDescriptionSchema);
   fastifyInstance.addSchema(partsCategoryNameSchema);
   fastifyInstance.addSchema(partsFirebaseUidSchema);
