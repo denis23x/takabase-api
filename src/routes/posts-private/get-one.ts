@@ -60,12 +60,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       const postPrivateFindUniqueOrThrowArgs: Prisma.PostPrivateFindUniqueOrThrowArgs = {
         select: {
-          ...request.server.prismaPlugin.getPostSelect(),
+          ...request.server.prismaPlugin.getPostPrivateSelect(),
           firebaseUid: true,
           markdown: true
         },
         where: {
-          id: Number(request.params.id)
+          id: Number(request.params.id),
+          userFirebaseUid: request.user.uid
         }
       };
 

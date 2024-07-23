@@ -21,9 +21,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       querystring: {
         type: 'object',
         properties: {
-          username: {
-            $ref: 'partsUsernameSchema#'
-          },
           query: {
             $ref: 'partsPageQuerySchema#'
           },
@@ -68,27 +65,19 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<QuerystringSearch>, reply: FastifyReply): Promise<any> {
-      const { username, query, scope, size, page }: Record<string, any> = request.query;
+      const { query, scope, size, page }: Record<string, any> = request.query;
 
       const postPrivateFindManyArgs: Prisma.PostPrivateFindManyArgs = {
-        select: request.server.prismaPlugin.getPostSelect(),
+        select: request.server.prismaPlugin.getPostPrivateSelect(),
+        where: {
+          userFirebaseUid: request.user.uid
+        },
         orderBy: {
           id: 'desc'
         },
         skip: (page - 1) * size,
         take: size
       };
-
-      /** Filter */
-
-      if (username) {
-        postPrivateFindManyArgs.where = {
-          ...postPrivateFindManyArgs.where,
-          user: {
-            name: username
-          }
-        };
-      }
 
       /** Search */
 

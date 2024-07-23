@@ -145,7 +145,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Define arguments to delete post
             const postPasswordDeleteArgs: Prisma.PostPasswordDeleteArgs = {
-              select: request.server.prismaPlugin.getPostSelect(),
+              select: request.server.prismaPlugin.getPostPasswordSelect(),
               where: {
                 id: postPasswordId,
                 userFirebaseUid

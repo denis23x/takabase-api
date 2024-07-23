@@ -12,6 +12,8 @@ declare module 'fastify' {
     prismaPlugin: {
       getCategorySelect: () => Prisma.CategorySelect;
       getPostSelect: () => Prisma.PostSelect;
+      getPostPasswordSelect: () => Prisma.PostPasswordSelect;
+      getPostPrivateSelect: () => Prisma.PostPrivateSelect;
       getUserSelect: () => Prisma.UserSelect;
       setScope: (anyManyArgs: any, scope: string[]) => any;
       getErrorPrisma: (error: Prisma.PrismaClientKnownRequestError) => ResponseError | null;

@@ -33,6 +33,31 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
       updatedAt: true,
       deletedAt: false
     }),
+    getPostPasswordSelect: (): Prisma.PostPasswordSelect => ({
+      id: true,
+      name: true,
+      firebaseUid: false,
+      userFirebaseUid: false,
+      description: true,
+      markdown: false,
+      image: true,
+      password: true,
+      createdAt: true,
+      updatedAt: true,
+      deletedAt: false
+    }),
+    getPostPrivateSelect: (): Prisma.PostPrivateSelect => ({
+      id: true,
+      name: true,
+      firebaseUid: false,
+      userFirebaseUid: false,
+      description: true,
+      markdown: false,
+      image: true,
+      createdAt: true,
+      updatedAt: true,
+      deletedAt: false
+    }),
     getUserSelect: (): Prisma.UserSelect => ({
       id: true,
       firebaseUid: false,
