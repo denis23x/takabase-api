@@ -49,6 +49,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               }
             ]
           },
+          password: {
+            $ref: 'partsPasswordSchema#'
+          },
           firebaseUid: {
             $ref: 'partsFirebaseUidSchema#'
           }

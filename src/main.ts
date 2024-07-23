@@ -57,9 +57,9 @@ import { partsAlgoliaResponseSchema } from './schema/parts/algolia/parts-algolia
 import { partsAppCheckResponseSchema } from './schema/parts/authorization/parts-app-check-response.schema';
 import { partsCategoryDescriptionSchema } from './schema/parts/category/parts-category-description.schema';
 import { partsCategoryNameSchema } from './schema/parts/category/parts-category-name.schema';
-import { partsFirebaseUidSchema } from './schema/parts/parts-firebase-uid.schema';
-import { partsFirebaseUrlStorageSchema } from './schema/parts/parts-firebase-url-storage.schema';
-import { partsIdSchema } from './schema/parts/parts-id.schema';
+import { partsPageSchema } from './schema/parts/page/parts-page.schema';
+import { partsPageQuerySchema } from './schema/parts/page/parts-page-query.schema';
+import { partsPageSizeSchema } from './schema/parts/page/parts-page-size.schema';
 import { partsPostDescriptionSchema } from './schema/parts/post/parts-post-description.schema';
 import { partsPostMarkdownSchema } from './schema/parts/post/parts-post-markdown.schema';
 import { partsPostNameSchema } from './schema/parts/post/parts-post-name.schema';
@@ -69,15 +69,15 @@ import { partsPostPasswordNameSchema } from './schema/parts/post-password/parts-
 import { partsPostPrivateDescriptionSchema } from './schema/parts/post-private/parts-post-private-description.schema';
 import { partsPostPrivateMarkdownSchema } from './schema/parts/post-private/parts-post-private-markdown.schema';
 import { partsPostPrivateNameSchema } from './schema/parts/post-private/parts-post-private-name.schema';
-import { partsPageSchema } from './schema/parts/page/parts-page.schema';
-import { partsPageQuerySchema } from './schema/parts/page/parts-page-query.schema';
-import { partsPageSizeSchema } from './schema/parts/page/parts-page-size.schema';
-import { partsScopeSchema } from './schema/parts/parts-scope.schema';
 import { partsUserDescriptionSchema } from './schema/parts/user/parts-user-description.schema';
 import { partsUserEmailSchema } from './schema/parts/user/parts-user-email.schema';
 import { partsUsernameSchema } from './schema/parts/user/parts-user-name.schema';
-import { partsUserPasswordSchema } from './schema/parts/user/parts-user-password.schema';
 import { partsUserTermsSchema } from './schema/parts/user/parts-user-terms.schema';
+import { partsFirebaseUidSchema } from './schema/parts/parts-firebase-uid.schema';
+import { partsFirebaseUrlStorageSchema } from './schema/parts/parts-firebase-url-storage.schema';
+import { partsIdSchema } from './schema/parts/parts-id.schema';
+import { partsPasswordSchema } from './schema/parts/parts-password.schema';
+import { partsScopeSchema } from './schema/parts/parts-scope.schema';
 
 export const main = async (): Promise<FastifyInstance> => {
   const fastifyInstance: FastifyInstance = fastify({
@@ -136,9 +136,6 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsAppCheckResponseSchema);
   fastifyInstance.addSchema(partsCategoryDescriptionSchema);
   fastifyInstance.addSchema(partsCategoryNameSchema);
-  fastifyInstance.addSchema(partsFirebaseUidSchema);
-  fastifyInstance.addSchema(partsFirebaseUrlStorageSchema);
-  fastifyInstance.addSchema(partsIdSchema);
   fastifyInstance.addSchema(partsPageSchema);
   fastifyInstance.addSchema(partsPageQuerySchema);
   fastifyInstance.addSchema(partsPageSizeSchema);
@@ -151,12 +148,15 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsPostPrivateDescriptionSchema);
   fastifyInstance.addSchema(partsPostPrivateMarkdownSchema);
   fastifyInstance.addSchema(partsPostPrivateNameSchema);
-  fastifyInstance.addSchema(partsScopeSchema);
   fastifyInstance.addSchema(partsUserDescriptionSchema);
   fastifyInstance.addSchema(partsUserEmailSchema);
   fastifyInstance.addSchema(partsUsernameSchema);
-  fastifyInstance.addSchema(partsUserPasswordSchema);
   fastifyInstance.addSchema(partsUserTermsSchema);
+  fastifyInstance.addSchema(partsFirebaseUidSchema);
+  fastifyInstance.addSchema(partsFirebaseUrlStorageSchema);
+  fastifyInstance.addSchema(partsIdSchema);
+  fastifyInstance.addSchema(partsPasswordSchema);
+  fastifyInstance.addSchema(partsScopeSchema);
 
   // LOCALHOST
 

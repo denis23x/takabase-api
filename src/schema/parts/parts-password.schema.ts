@@ -1,7 +1,7 @@
 /** @format */
 
-export const partsUserPasswordSchema: Record<string, any> = {
-  $id: 'partsUserPasswordSchema',
+export const partsPasswordSchema: Record<string, any> = {
+  $id: 'partsPasswordSchema',
   type: 'string',
   example: 'password123',
   minLength: 6,
