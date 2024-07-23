@@ -51,6 +51,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           user: {
             select: {
               id: true,
+              avatar: true,
               name: true
             }
           },

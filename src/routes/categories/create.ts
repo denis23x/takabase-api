@@ -126,6 +126,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.createdAt),
               user: {
                 id: category.user.id,
+                avatar: category.user.avatar,
                 name: category.user.name
               },
             });

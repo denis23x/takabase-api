@@ -106,8 +106,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const userAlgoliaHandler: any = {};
       const userStorageHandler: any = {};
 
-      // Fill the userAlgoliaHandler if is changed a username
-      if (user.name !== username) {
+      // Fill the userAlgoliaHandler if is changed a username or avatar
+      if (user.avatar !== userAvatar || user.name !== username) {
         // Define the arguments for finding categories
         const categoryFindManyArgs: Prisma.CategoryFindManyArgs = {
           select: {
@@ -284,6 +284,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                   ...category,
                   user: {
                     ...category.user,
+                    avatar: user.avatar,
                     name: user.name
                   }
                 }));
@@ -305,6 +306,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                   ...post,
                   user: {
                     ...post.user,
+                    avatar: user.avatar,
                     name: user.name
                   }
                 }));
