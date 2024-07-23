@@ -39,6 +39,7 @@ import algoliaRoutes from './routes/algolia';
 import authorizationRoutes from './routes/authorization';
 import categoriesRoutes from './routes/categories';
 import postsRoutes from './routes/posts';
+import postsPasswordRoutes from './routes/posts-password';
 import postsPrivateRoutes from './routes/posts-private';
 import usersRoutes from './routes/users';
 import testsRoutes from './routes/tests';
@@ -47,6 +48,7 @@ import testsRoutes from './routes/tests';
 
 import { categorySchema } from './schema/models/category.schema';
 import { postSchema } from './schema/models/post.schema';
+import { postPasswordSchema } from './schema/models/post-password.schema';
 import { postPrivateSchema } from './schema/models/post-private.schema';
 import { userSchema } from './schema/models/user.schema';
 import { responseErrorSchema } from './schema/crud/response/response-error.schema';
@@ -61,6 +63,9 @@ import { partsIdSchema } from './schema/parts/parts-id.schema';
 import { partsPostDescriptionSchema } from './schema/parts/post/parts-post-description.schema';
 import { partsPostMarkdownSchema } from './schema/parts/post/parts-post-markdown.schema';
 import { partsPostNameSchema } from './schema/parts/post/parts-post-name.schema';
+import { partsPostPasswordDescriptionSchema } from './schema/parts/post-password/parts-post-password-description.schema';
+import { partsPostPasswordMarkdownSchema } from './schema/parts/post-password/parts-post-password-markdown.schema';
+import { partsPostPasswordNameSchema } from './schema/parts/post-password/parts-post-password-name.schema';
 import { partsPostPrivateDescriptionSchema } from './schema/parts/post-private/parts-post-private-description.schema';
 import { partsPostPrivateMarkdownSchema } from './schema/parts/post-private/parts-post-private-markdown.schema';
 import { partsPostPrivateNameSchema } from './schema/parts/post-private/parts-post-private-name.schema';
@@ -122,6 +127,7 @@ export const main = async (): Promise<FastifyInstance> => {
 
   fastifyInstance.addSchema(categorySchema);
   fastifyInstance.addSchema(postSchema);
+  fastifyInstance.addSchema(postPasswordSchema);
   fastifyInstance.addSchema(postPrivateSchema);
   fastifyInstance.addSchema(userSchema);
   fastifyInstance.addSchema(responseErrorSchema);
@@ -139,6 +145,9 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsPostDescriptionSchema);
   fastifyInstance.addSchema(partsPostMarkdownSchema);
   fastifyInstance.addSchema(partsPostNameSchema);
+  fastifyInstance.addSchema(partsPostPasswordDescriptionSchema);
+  fastifyInstance.addSchema(partsPostPasswordMarkdownSchema);
+  fastifyInstance.addSchema(partsPostPasswordNameSchema);
   fastifyInstance.addSchema(partsPostPrivateDescriptionSchema);
   fastifyInstance.addSchema(partsPostPrivateMarkdownSchema);
   fastifyInstance.addSchema(partsPostPrivateNameSchema);
@@ -182,6 +191,9 @@ export const main = async (): Promise<FastifyInstance> => {
       });
       api.register(postsRoutes, {
         prefix: '/posts/'
+      });
+      api.register(postsPasswordRoutes, {
+        prefix: '/posts-password/'
       });
       api.register(postsPrivateRoutes, {
         prefix: '/posts-private/'
