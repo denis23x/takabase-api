@@ -32,6 +32,10 @@ export const swaggerConfig: SwaggerOptions = {
         description: 'Post related end-points'
       },
       {
+        name: 'Posts-Private',
+        description: 'Post-private related end-points'
+      },
+      {
         name: 'Users',
         description: 'User related end-points'
       },

@@ -39,6 +39,7 @@ import algoliaRoutes from './routes/algolia';
 import authorizationRoutes from './routes/authorization';
 import categoriesRoutes from './routes/categories';
 import postsRoutes from './routes/posts';
+import postsPrivateRoutes from './routes/posts-private';
 import usersRoutes from './routes/users';
 import testsRoutes from './routes/tests';
 
@@ -46,6 +47,7 @@ import testsRoutes from './routes/tests';
 
 import { categorySchema } from './schema/models/category.schema';
 import { postSchema } from './schema/models/post.schema';
+import { postPrivateSchema } from './schema/models/post-private.schema';
 import { userSchema } from './schema/models/user.schema';
 import { responseErrorSchema } from './schema/crud/response/response-error.schema';
 import { partsAlgoliaAddRecordsSchema } from './schema/parts/algolia/parts-algolia-add-records.schema';
@@ -59,6 +61,9 @@ import { partsIdSchema } from './schema/parts/parts-id.schema';
 import { partsPostDescriptionSchema } from './schema/parts/post/parts-post-description.schema';
 import { partsPostMarkdownSchema } from './schema/parts/post/parts-post-markdown.schema';
 import { partsPostNameSchema } from './schema/parts/post/parts-post-name.schema';
+import { partsPostPrivateDescriptionSchema } from './schema/parts/post-private/parts-post-private-description.schema';
+import { partsPostPrivateMarkdownSchema } from './schema/parts/post-private/parts-post-private-markdown.schema';
+import { partsPostPrivateNameSchema } from './schema/parts/post-private/parts-post-private-name.schema';
 import { partsPageSchema } from './schema/parts/page/parts-page.schema';
 import { partsPageQuerySchema } from './schema/parts/page/parts-page-query.schema';
 import { partsPageSizeSchema } from './schema/parts/page/parts-page-size.schema';
@@ -117,6 +122,7 @@ export const main = async (): Promise<FastifyInstance> => {
 
   fastifyInstance.addSchema(categorySchema);
   fastifyInstance.addSchema(postSchema);
+  fastifyInstance.addSchema(postPrivateSchema);
   fastifyInstance.addSchema(userSchema);
   fastifyInstance.addSchema(responseErrorSchema);
   fastifyInstance.addSchema(partsAlgoliaAddRecordsSchema);
@@ -133,6 +139,9 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsPostDescriptionSchema);
   fastifyInstance.addSchema(partsPostMarkdownSchema);
   fastifyInstance.addSchema(partsPostNameSchema);
+  fastifyInstance.addSchema(partsPostPrivateDescriptionSchema);
+  fastifyInstance.addSchema(partsPostPrivateMarkdownSchema);
+  fastifyInstance.addSchema(partsPostPrivateNameSchema);
   fastifyInstance.addSchema(partsScopeSchema);
   fastifyInstance.addSchema(partsUserDescriptionSchema);
   fastifyInstance.addSchema(partsUserEmailSchema);
@@ -173,6 +182,9 @@ export const main = async (): Promise<FastifyInstance> => {
       });
       api.register(postsRoutes, {
         prefix: '/posts/'
+      });
+      api.register(postsPrivateRoutes, {
+        prefix: '/posts-private/'
       });
       api.register(usersRoutes, {
         prefix: '/users/'
