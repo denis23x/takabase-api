@@ -42,14 +42,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             $ref: 'partsPostMarkdownSchema#'
           },
           image: {
-            oneOf: [
-              {
-                type: 'null'
-              },
-              {
-                $ref: 'partsFirebaseUrlStorageSchema#'
-              }
-            ]
+            $ref: 'partsFirebaseUrlStorageSchema#'
           },
           categoryId: {
             $ref: 'partsIdSchema#'

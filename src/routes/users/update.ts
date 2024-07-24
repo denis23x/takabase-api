@@ -36,24 +36,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             $ref: 'partsUsernameSchema#'
           },
           description: {
-            oneOf: [
-              {
-                type: 'null'
-              },
-              {
-                $ref: 'partsUserDescriptionSchema#'
-              }
-            ]
+            $ref: 'partsUserDescriptionSchema#'
           },
           avatar: {
-            oneOf: [
-              {
-                type: 'null'
-              },
-              {
-                $ref: 'partsFirebaseUrlStorageSchema#'
-              }
-            ]
+            $ref: 'partsFirebaseUrlStorageSchema#'
           }
         }
       },

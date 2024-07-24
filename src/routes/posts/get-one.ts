@@ -24,6 +24,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       querystring: {
         type: 'object',
         properties: {
+          userFirebaseUid: {
+            $ref: 'partsFirebaseUidSchema#'
+          },
           scope: {
             $ref: 'partsScopeSchema#'
           }
@@ -50,7 +53,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<ParamsId & QuerystringScope>, reply: FastifyReply): Promise<any> {
-      const { scope }: Record<string, any> = request.query;
+      const { userFirebaseUid, scope }: Record<string, any> = request.query;
 
       const postFindUniqueOrThrowArgs: Prisma.PostFindUniqueOrThrowArgs = {
         select: {
@@ -59,7 +62,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           markdown: true
         },
         where: {
-          id: Number(request.params.id)
+          id: Number(request.params.id),
+          userFirebaseUid
         }
       };
 

@@ -24,14 +24,7 @@ export const userSchema: Record<string, any> = {
       ]
     },
     avatar: {
-      allOf: [
-        {
-          $ref: 'partsFirebaseUrlStorageSchema#'
-        },
-        {
-          nullable: true
-        }
-      ]
+      $ref: 'partsFirebaseUrlStorageSchema#'
     },
     terms: {
       $ref: 'partsUserTermsSchema#'
