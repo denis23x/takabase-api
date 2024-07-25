@@ -1,6 +1,6 @@
 /** @format */
 
-import { Bucket } from '@google-cloud/storage';
+import type { Bucket } from '@google-cloud/storage';
 
 declare module 'fastify' {
   interface FastifyInstance {

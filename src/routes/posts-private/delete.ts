@@ -1,10 +1,10 @@
 /** @format */
 
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { PostPrivate, Prisma, PrismaClient } from '../../database/client';
-import { PostPrivateDeleteDto } from '../../types/dto/post-private/post-private-delete';
-import { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
-import { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { PostPrivate, Prisma, PrismaClient } from '../../database/client';
+import type { PostPrivateDeleteDto } from '../../types/dto/post-private/post-private-delete';
+import type { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
+import type { ResponseError } from '../../types/crud/response/response-error.schema';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({

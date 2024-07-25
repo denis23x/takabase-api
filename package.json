@@ -44,6 +44,7 @@
     "@tidbcloud/prisma-adapter": "^5.11.1",
     "@tidbcloud/serverless": "^0.1.1",
     "algoliasearch": "^4.23.3",
+    "dayjs": "^1.11.12",
     "dotenv": "^16.4.5",
     "dotenv-cli": "^7.4.2",
     "fastify": "^4.27.0",

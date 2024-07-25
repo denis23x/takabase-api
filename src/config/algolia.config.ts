@@ -1,7 +1,7 @@
 /** @format */
 
-import { SearchClientOptions } from '@algolia/client-search';
 import { config } from 'dotenv';
+import type { SearchClientOptions } from '@algolia/client-search';
 
 config({
   path: '.env.takabase-local',

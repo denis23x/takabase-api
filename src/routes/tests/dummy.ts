@@ -1,6 +1,6 @@
 /** @format */
 
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({

@@ -1,9 +1,9 @@
 /** @format */
 
 import fp from 'fastify-plugin';
-import { FastifyInstance, FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 import { getAuth } from 'firebase-admin/auth';
-import { DecodedIdToken } from 'firebase-admin/lib/auth';
+import type { FastifyInstance, FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
+import type { DecodedIdToken } from 'firebase-admin/lib/auth';
 
 const authPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('auth', getAuth(fastifyInstance.firebase()));

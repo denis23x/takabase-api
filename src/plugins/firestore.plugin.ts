@@ -1,8 +1,9 @@
 /** @format */
 
 import fp from 'fastify-plugin';
-import { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { getFirestore, DocumentReference } from 'firebase-admin/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
+import type { DocumentReference } from 'firebase-admin/firestore';
+import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 
 const firestorePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('firestore', getFirestore(fastifyInstance.firebase()));

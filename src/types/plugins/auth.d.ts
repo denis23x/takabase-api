@@ -1,7 +1,7 @@
 /** @format */
 
-import { Auth } from 'firebase-admin/auth';
-import { DecodedIdToken } from 'firebase-admin/lib/auth';
+import type { Auth } from 'firebase-admin/auth';
+import type { DecodedIdToken } from 'firebase-admin/lib/auth';
 
 declare module 'fastify' {
   interface FastifyInstance {

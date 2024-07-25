@@ -1,14 +1,14 @@
 /** @format */
 
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Category, Post, Prisma, PrismaClient } from '../../database/client';
-import { CategoryDeleteDto } from '../../types/dto/category/category-delete';
-import { DocumentReference, DocumentSnapshot } from 'firebase-admin/firestore';
-import { DocumentData, WriteResult } from 'firebase-admin/lib/firestore';
 import { parse } from 'path';
-import { ResponseError } from '../../types/crud/response/response-error.schema';
-import { SearchIndex } from 'algoliasearch';
-import { ChunkedBatchResponse, GetObjectsResponse } from '@algolia/client-search';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { Category, Post, Prisma, PrismaClient } from '../../database/client';
+import type { CategoryDeleteDto } from '../../types/dto/category/category-delete';
+import type { DocumentReference, DocumentSnapshot } from 'firebase-admin/firestore';
+import type { DocumentData, WriteResult } from 'firebase-admin/lib/firestore';
+import type { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { SearchIndex } from 'algoliasearch';
+import type { ChunkedBatchResponse, GetObjectsResponse } from '@algolia/client-search';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({

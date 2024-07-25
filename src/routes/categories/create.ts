@@ -1,11 +1,11 @@
 /** @format */
 
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Prisma, Category, PrismaClient } from '../../database/client';
-import { CategoryCreateDto } from '../../types/dto/category/category-create';
-import { ResponseError } from '../../types/crud/response/response-error.schema';
-import { SaveObjectResponse } from '@algolia/client-search';
-import { SearchIndex } from 'algoliasearch';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { Prisma, Category, PrismaClient } from '../../database/client';
+import type { CategoryCreateDto } from '../../types/dto/category/category-create';
+import type { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { SaveObjectResponse } from '@algolia/client-search';
+import type { SearchIndex } from 'algoliasearch';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({

@@ -1,11 +1,11 @@
 /** @format */
 
 import fp from 'fastify-plugin';
-import { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { MoveResponse, File, GetFilesResponse, GetFilesOptions } from '@google-cloud/storage';
 import { storageConfig } from '../config/storage.config';
 import { getStorage } from 'firebase-admin/storage';
 import { parse, ParsedPath } from 'path';
+import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
+import type { MoveResponse, File, GetFilesResponse, GetFilesOptions } from '@google-cloud/storage';
 
 // prettier-ignore
 const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {

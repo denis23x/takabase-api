@@ -1,15 +1,15 @@
 /** @format */
 
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Prisma, PrismaClient, User } from '../../database/client';
-import { UserCreateDto } from '../../types/dto/user/user-create';
-import { ResponseError } from '../../types/crud/response/response-error.schema';
-import { DocumentReference, WriteResult } from 'firebase-admin/lib/firestore';
 import { customAlphabet } from 'nanoid';
 import { alphanumeric } from 'nanoid-dictionary';
 import { animals, colors, uniqueNamesGenerator } from 'unique-names-generator';
-import { SaveObjectResponse } from '@algolia/client-search';
-import { SearchIndex } from 'algoliasearch';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { Prisma, PrismaClient, User } from '../../database/client';
+import type { UserCreateDto } from '../../types/dto/user/user-create';
+import type { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { DocumentReference, WriteResult } from 'firebase-admin/lib/firestore';
+import type { SaveObjectResponse } from '@algolia/client-search';
+import type { SearchIndex } from 'algoliasearch';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({

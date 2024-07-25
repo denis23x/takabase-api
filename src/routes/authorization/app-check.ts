@@ -1,9 +1,10 @@
 /** @format */
 
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { AppCheckToken, getAppCheck } from 'firebase-admin/app-check';
-import { AppCheckDto } from '../../types/dto/authorization/app-check';
-import { ResponseError } from '../../types/crud/response/response-error.schema';
+import { getAppCheck } from 'firebase-admin/app-check';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { AppCheckToken } from 'firebase-admin/app-check';
+import type { AppCheckDto } from '../../types/dto/authorization/app-check';
+import type { ResponseError } from '../../types/crud/response/response-error.schema';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({

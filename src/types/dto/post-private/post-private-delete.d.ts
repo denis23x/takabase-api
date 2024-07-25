@@ -1,6 +1,6 @@
 /** @format */
 
-import { ParamsId } from '../../crud/params/params-id';
+import type { ParamsId } from '../../crud/params/params-id';
 
 export interface PostPrivateDeleteDto extends ParamsId {
   Querystring: {

@@ -1,11 +1,11 @@
 /** @format */
 
 import fp from 'fastify-plugin';
-import { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { Prisma, PrismaClient } from '../database/client';
 import { prismaConfig } from '../config/prisma.config';
-import { ResponseError } from '../types/crud/response/response-error.schema';
+import { Prisma, PrismaClient } from '../database/client';
 import { DatabaseError } from '@tidbcloud/serverless';
+import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
+import type { ResponseError } from '../types/crud/response/response-error.schema';
 
 const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('prisma', new PrismaClient(prismaConfig));

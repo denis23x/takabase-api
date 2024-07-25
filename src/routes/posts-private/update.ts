@@ -1,10 +1,10 @@
 /** @format */
 
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Prisma, PostPrivate, PrismaClient } from '../../database/client';
-import { DocumentReference, DocumentSnapshot, DocumentData, WriteResult } from 'firebase-admin/firestore';
-import { ResponseError } from '../../types/crud/response/response-error.schema';
-import { PostPrivateUpdateDto } from '../../types/dto/post-private/post-private-update';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { Prisma, PostPrivate, PrismaClient } from '../../database/client';
+import type { DocumentReference, DocumentSnapshot, DocumentData, WriteResult } from 'firebase-admin/firestore';
+import type { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { PostPrivateUpdateDto } from '../../types/dto/post-private/post-private-update';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({

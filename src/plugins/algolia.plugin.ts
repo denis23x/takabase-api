@@ -1,10 +1,11 @@
 /** @format */
 
 import fp from 'fastify-plugin';
-import { FastifyInstance, FastifyPluginAsync, FastifyReply } from 'fastify';
+import algoliasearch from 'algoliasearch';
 import { algoliaConfig } from '../config/algolia.config';
-import { ChunkedBatchResponse } from '@algolia/client-search';
-import algoliasearch, { SearchIndex } from 'algoliasearch';
+import type { FastifyInstance, FastifyPluginAsync, FastifyReply } from 'fastify';
+import type { ChunkedBatchResponse } from '@algolia/client-search';
+import type { SearchIndex } from 'algoliasearch';
 
 const AlgoliaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('algolia', algoliasearch(algoliaConfig.appId, algoliaConfig.apiKey));

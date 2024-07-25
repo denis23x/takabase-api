@@ -1,10 +1,10 @@
 /** @format */
 
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Prisma, PostPrivate } from '../../database/client';
-import { QuerystringScope } from '../../types/crud/querystring/querystring-scope';
-import { ResponseError } from '../../types/crud/response/response-error.schema';
-import { ParamsId } from '../../types/crud/params/params-id';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { Prisma, PostPrivate } from '../../database/client';
+import type { QuerystringScope } from '../../types/crud/querystring/querystring-scope';
+import type { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { ParamsId } from '../../types/crud/params/params-id';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({

@@ -1,12 +1,12 @@
 /** @format */
 
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Post, Prisma, PrismaClient } from '../../database/client';
-import { PostDeleteDto } from '../../types/dto/post/post-delete';
-import { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
-import { ResponseError } from '../../types/crud/response/response-error.schema';
-import { SearchIndex } from 'algoliasearch';
-import { ChunkedBatchResponse, GetObjectsResponse } from '@algolia/client-search';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { Post, Prisma, PrismaClient } from '../../database/client';
+import type { PostDeleteDto } from '../../types/dto/post/post-delete';
+import type { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
+import type { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { SearchIndex } from 'algoliasearch';
+import type { ChunkedBatchResponse, GetObjectsResponse } from '@algolia/client-search';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({

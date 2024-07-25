@@ -1,6 +1,6 @@
 /** @format */
 
-import { FastifyRequest } from 'fastify';
+import type { FastifyRequest } from 'fastify';
 
 declare module 'fastify' {
   interface FastifyInstance {

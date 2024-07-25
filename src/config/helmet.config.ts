@@ -1,6 +1,6 @@
 /** @format */
 
-import { FastifyHelmetOptions } from '@fastify/helmet';
+import type { FastifyHelmetOptions } from '@fastify/helmet';
 
 // https://github.com/fastify/fastify-helmet
 

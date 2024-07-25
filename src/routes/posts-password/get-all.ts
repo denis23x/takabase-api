@@ -1,9 +1,9 @@
 /** @format */
 
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Prisma, PostPassword } from '../../database/client';
-import { ResponseError } from '../../types/crud/response/response-error.schema';
-import { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { Prisma, PostPassword } from '../../database/client';
+import type { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({

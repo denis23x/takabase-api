@@ -1,11 +1,11 @@
 /** @format */
 
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Category, Post, Prisma, PrismaClient, User } from '../../database/client';
-import { UserUpdateDto } from '../../types/dto/user/user-update';
-import { ResponseError } from '../../types/crud/response/response-error.schema';
-import { ChunkedBatchResponse, GetObjectsResponse, SaveObjectResponse } from '@algolia/client-search';
-import { SearchIndex } from 'algoliasearch';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { Category, Post, Prisma, PrismaClient, User } from '../../database/client';
+import type { UserUpdateDto } from '../../types/dto/user/user-update';
+import type { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { ChunkedBatchResponse, GetObjectsResponse, SaveObjectResponse } from '@algolia/client-search';
+import type { SearchIndex } from 'algoliasearch';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({

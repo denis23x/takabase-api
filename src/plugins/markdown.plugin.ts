@@ -1,8 +1,8 @@
 /** @format */
 
 import fp from 'fastify-plugin';
-import { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { storageConfig } from '../config/storage.config';
+import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 
 const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('markdownPlugin', {

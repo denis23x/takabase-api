@@ -1,10 +1,10 @@
 /** @format */
 
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { PostPassword, Prisma, PrismaClient } from '../../database/client';
-import { PostPasswordDeleteDto } from '../../types/dto/post-password/post-password-delete';
-import { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
-import { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { PostPassword, Prisma, PrismaClient } from '../../database/client';
+import type { PostPasswordDeleteDto } from '../../types/dto/post-password/post-password-delete';
+import type { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
+import type { ResponseError } from '../../types/crud/response/response-error.schema';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({

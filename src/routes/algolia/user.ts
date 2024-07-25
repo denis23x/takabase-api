@@ -1,8 +1,8 @@
 /** @format */
 
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { User } from '../../database/client';
-import { AlgoliaPostDto } from '../../types/dto/algolia/algolia-post';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { User } from '../../database/client';
+import type { AlgoliaPostDto } from '../../types/dto/algolia/algolia-post';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({

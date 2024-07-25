@@ -1,12 +1,12 @@
 /** @format */
 
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { Prisma, Post, PrismaClient } from '../../database/client';
-import { PostUpdateDto } from '../../types/dto/post/post-update';
-import { DocumentReference, DocumentSnapshot, DocumentData, WriteResult } from 'firebase-admin/firestore';
-import { ResponseError } from '../../types/crud/response/response-error.schema';
-import { SearchIndex } from 'algoliasearch';
-import { GetObjectsResponse, SaveObjectResponse } from '@algolia/client-search';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { Prisma, Post, PrismaClient } from '../../database/client';
+import type { PostUpdateDto } from '../../types/dto/post/post-update';
+import type { DocumentReference, DocumentSnapshot, DocumentData, WriteResult } from 'firebase-admin/firestore';
+import type { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { SearchIndex } from 'algoliasearch';
+import type { GetObjectsResponse, SaveObjectResponse } from '@algolia/client-search';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({

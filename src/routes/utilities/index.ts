@@ -1,8 +1,8 @@
 /** @format */
 
-import dummyMethod from './dummy';
+import insightsMethod from './insights';
 import type { FastifyInstance } from 'fastify';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
-  fastify.register(dummyMethod);
+  fastify.register(insightsMethod);
 }

@@ -1,7 +1,6 @@
 /** @format */
 
-import fastify, { FastifyReply, FastifyRequest, FastifyInstance } from 'fastify';
-import { ContentTypeParserDoneFunction } from 'fastify/types/content-type-parser';
+import fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
 import fastifyCompress from '@fastify/compress';
 import fastifyHelmet from '@fastify/helmet';
@@ -10,6 +9,8 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
 import fastifyEtag from '@fastify/etag';
+import type { ContentTypeParserDoneFunction } from 'fastify/types/content-type-parser';
+import type { FastifyReply, FastifyRequest, FastifyInstance } from 'fastify';
 
 // CONFIGURATIONS
 
@@ -41,8 +42,9 @@ import categoriesRoutes from './routes/categories';
 import postsRoutes from './routes/posts';
 import postsPasswordRoutes from './routes/posts-password';
 import postsPrivateRoutes from './routes/posts-private';
-import usersRoutes from './routes/users';
 import testsRoutes from './routes/tests';
+import usersRoutes from './routes/users';
+import utilitiesRoutes from './routes/utilities';
 
 // SCHEMAS
 
@@ -198,11 +200,14 @@ export const main = async (): Promise<FastifyInstance> => {
       api.register(postsPrivateRoutes, {
         prefix: '/posts-private/'
       });
+      api.register(testsRoutes, {
+        prefix: '/tests/'
+      });
       api.register(usersRoutes, {
         prefix: '/users/'
       });
-      api.register(testsRoutes, {
-        prefix: '/tests/'
+      api.register(utilitiesRoutes, {
+        prefix: '/utilities/'
       });
     },
     {

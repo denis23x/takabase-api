@@ -1,9 +1,9 @@
 /** @format */
 
-import { PrismaClient } from '@prisma/client';
-import { Prisma } from '../database/client';
-import { ResponseError } from '../crud/response/response-error.schema';
-import { DatabaseError } from '@tidbcloud/serverless';
+import type { PrismaClient } from '@prisma/client';
+import type { Prisma } from '../database/client';
+import type { ResponseError } from '../crud/response/response-error.schema';
+import type { DatabaseError } from '@tidbcloud/serverless';
 
 // prettier-ignore
 declare module 'fastify' {

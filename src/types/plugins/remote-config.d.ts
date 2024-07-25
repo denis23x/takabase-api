@@ -1,6 +1,6 @@
 /** @format */
 
-import { RemoteConfig } from 'firebase-admin/remote-config';
+import type { RemoteConfig } from 'firebase-admin/remote-config';
 
 declare module 'fastify' {
   interface FastifyInstance {
