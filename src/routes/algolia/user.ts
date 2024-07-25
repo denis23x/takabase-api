@@ -27,14 +27,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       },
       response: {
         '200': {
-          oneOf: [
-            {
-              type: 'array'
-            },
-            {
-              $ref: 'partsAlgoliaResponseSchema#'
-            }
-          ]
+          $ref: 'partsAlgoliaResponseSchema#'
         },
         '4xx': {
           $ref: 'responseErrorSchema#'

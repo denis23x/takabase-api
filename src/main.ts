@@ -26,6 +26,7 @@ import { staticConfig } from './config/static.config';
 
 import algoliaPlugin from './plugins/algolia.plugin';
 import authPlugin from './plugins/auth.plugin';
+import dayjsPlugin from './plugins/dayjs.plugin';
 import firebasePlugin from './plugins/firebase.plugin';
 import firestorePlugin from './plugins/firestore.plugin';
 import helperPlugin from './plugins/helper.plugin';
@@ -60,6 +61,7 @@ import { partsAlgoliaResponseSchema } from './schema/parts/algolia/parts-algolia
 import { partsAppCheckResponseSchema } from './schema/parts/authorization/parts-app-check-response.schema';
 import { partsCategoryDescriptionSchema } from './schema/parts/category/parts-category-description.schema';
 import { partsCategoryNameSchema } from './schema/parts/category/parts-category-name.schema';
+import { partsInsightResponseSchema } from './schema/parts/insight/parts-insight-response.schema';
 import { partsPageSchema } from './schema/parts/page/parts-page.schema';
 import { partsPageQuerySchema } from './schema/parts/page/parts-page-query.schema';
 import { partsPageSizeSchema } from './schema/parts/page/parts-page-size.schema';
@@ -122,6 +124,7 @@ export const main = async (): Promise<FastifyInstance> => {
   // PLUGINS HANDMADE
 
   await fastifyInstance.register(algoliaPlugin);
+  await fastifyInstance.register(dayjsPlugin);
   await fastifyInstance.register(helperPlugin);
   await fastifyInstance.register(markdownPlugin);
   await fastifyInstance.register(prismaPlugin);
@@ -140,6 +143,7 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsAppCheckResponseSchema);
   fastifyInstance.addSchema(partsCategoryDescriptionSchema);
   fastifyInstance.addSchema(partsCategoryNameSchema);
+  fastifyInstance.addSchema(partsInsightResponseSchema);
   fastifyInstance.addSchema(partsPageSchema);
   fastifyInstance.addSchema(partsPageQuerySchema);
   fastifyInstance.addSchema(partsPageSizeSchema);

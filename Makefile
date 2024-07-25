@@ -1,5 +1,7 @@
-.PHONY: reset migrate seed
+.PHONY: reset migrate seed generate studio
 
+studio:
+	dotenv -e .env.takabase-local -- npx prisma studio
 reset:
 	dotenv -e .env.takabase-local -- npx prisma migrate reset
 migrate:
