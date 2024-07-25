@@ -18,7 +18,6 @@ const DayjsPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fast
 
       while (!dateCurrent.isAfter(dateEnd)) {
         dateRange.push(dateCurrent);
-
         dateCurrent = dateCurrent.add(1, unit);
       }
 
