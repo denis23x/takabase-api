@@ -7,9 +7,9 @@ import type { InsightGetDto } from '../../types/dto/insight/insight-get';
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'GET',
-    url: 'insights',
+    url: '',
     schema: {
-      tags: ['Utilities'],
+      tags: ['Insights'],
       description: 'Get insights',
       querystring: {
         type: 'object',

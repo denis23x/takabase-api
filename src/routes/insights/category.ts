@@ -2,17 +2,17 @@
 
 import { Prisma } from '../../database/client';
 import type { Dayjs } from 'dayjs';
-import type { Post } from '../../database/client';
+import type { Category } from '../../database/client';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'GET',
-    url: 'post',
+    url: 'category',
     // onRequest: [fastify.verifyIdToken, fastify.verifyAdmin],
     schema: {
-      tags: ['Utilities'],
-      description: 'Seed database with Post insights',
+      tags: ['Insights'],
+      description: 'Seed database with Category insights',
       // security: [
       //   {
       //     swaggerBearerAuth: []
@@ -39,21 +39,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<any>, reply: FastifyReply): Promise<void> {
-      const postFindManyArgs: Prisma.PostFindManyArgs = {
+      const categoryFindManyArgs: Prisma.CategoryFindManyArgs = {
         select: {
           createdAt: true
         }
       };
 
-      const postList: Partial<Post>[] = await request.server.prisma.post.findMany(postFindManyArgs);
-      const postListCreateAt: Date[] = postList.map((post: Partial<Post>) => post.createdAt);
-      const postListTimestamp: number[] = [...new Set(postListCreateAt.map((date: Date) => date.getTime()))];
-      const postListMinimum: number = Math.min(...postListTimestamp);
+      const categoryList: Partial<Category>[] = await request.server.prisma.category.findMany(categoryFindManyArgs);
+      const categoryListCreatedAt: Dayjs[] = categoryList.map((category: Partial<Category>) => {
+        return request.server.dayjs(category.createdAt).utc();
+      });
 
-      // prettier-ignore
-      const postListRange: Dayjs[] = request.server.dayjsPlugin.getRange(request.server.dayjs(postListMinimum), request.server.dayjs(), 'day');
-      const postListPromise: Promise<number>[] = postListRange.map((date: Dayjs) => {
-        return request.server.prisma.post.count({
+      const categoryListMinimum: Dayjs = request.server.dayjsPlugin.getMin(categoryListCreatedAt);
+      const categoryListStart: Dayjs = request.server.dayjs(categoryListMinimum).utc().endOf('day');
+      const categoryListEnd: Dayjs = request.server.dayjs().utc().endOf('day');
+      const categoryListRange: Dayjs[] = request.server.dayjsPlugin.getRange(categoryListStart, categoryListEnd, 'day');
+      const categoryListPromise: Promise<number>[] = categoryListRange.map((date: Dayjs) => {
+        return request.server.prisma.category.count({
           where: {
             createdAt: {
               lte: request.server.dayjsPlugin.getEndOf(date)
@@ -62,16 +64,16 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         });
       });
 
-      const postListCount: number[] = await Promise.all(postListPromise);
-      const postListInsight: any[] = postListRange.map((date: Dayjs, i: number) => {
+      const categoryListCount: number[] = await Promise.all(categoryListPromise);
+      const categoryListInsight: any[] = categoryListRange.map((date: Dayjs, i: number) => {
         return {
           date: request.server.dayjsPlugin.getEndOf(date),
-          count: postListCount[i]
+          count: categoryListCount[i]
         };
       });
 
       return reply.status(200).send({
-        data: postListInsight,
+        data: categoryListInsight,
         statusCode: 200
       });
     }

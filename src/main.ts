@@ -40,12 +40,12 @@ import remoteConfigPlugin from './plugins/remote-config.plugin';
 import algoliaRoutes from './routes/algolia';
 import authorizationRoutes from './routes/authorization';
 import categoriesRoutes from './routes/categories';
+import insightsRoutes from './routes/insights';
 import postsRoutes from './routes/posts';
 import postsPasswordRoutes from './routes/posts-password';
 import postsPrivateRoutes from './routes/posts-private';
 import testsRoutes from './routes/tests';
 import usersRoutes from './routes/users';
-import utilitiesRoutes from './routes/utilities';
 
 // SCHEMAS
 
@@ -197,6 +197,9 @@ export const main = async (): Promise<FastifyInstance> => {
       api.register(categoriesRoutes, {
         prefix: '/categories/'
       });
+      api.register(insightsRoutes, {
+        prefix: '/insights/'
+      });
       api.register(postsRoutes, {
         prefix: '/posts/'
       });
@@ -211,9 +214,6 @@ export const main = async (): Promise<FastifyInstance> => {
       });
       api.register(usersRoutes, {
         prefix: '/users/'
-      });
-      api.register(utilitiesRoutes, {
-        prefix: '/utilities/'
       });
     },
     {

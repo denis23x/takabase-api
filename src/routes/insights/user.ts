@@ -11,7 +11,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     url: 'user',
     // onRequest: [fastify.verifyIdToken, fastify.verifyAdmin],
     schema: {
-      tags: ['Utilities'],
+      tags: ['Insights'],
       description: 'Seed database with User insights',
       // security: [
       //   {
@@ -46,12 +46,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       };
 
       const userList: Partial<User>[] = await request.server.prisma.user.findMany(userFindManyArgs);
-      const userListCreatedAt: Date[] = userList.map((user: Partial<User>) => user.createdAt);
-      const userListTimestamp: number[] = [...new Set(userListCreatedAt.map((date: Date) => date.getTime()))];
-      const userListMinimum: number = Math.min(...userListTimestamp);
+      const userListCreatedAt: Dayjs[] = userList.map((user: Partial<User>) => {
+        return request.server.dayjs(user.createdAt).utc();
+      });
 
-      // prettier-ignore
-      const userListRange: Dayjs[] = request.server.dayjsPlugin.getRange(request.server.dayjs(userListMinimum), request.server.dayjs(), 'day');
+      const userListMinimum: Dayjs = request.server.dayjsPlugin.getMin(userListCreatedAt);
+      const userListStart: Dayjs = request.server.dayjs(userListMinimum).utc().endOf('day');
+      const userListEnd: Dayjs = request.server.dayjs().utc().endOf('day');
+      const userListRange: Dayjs[] = request.server.dayjsPlugin.getRange(userListStart, userListEnd, 'day');
       const userListPromise: Promise<number>[] = userListRange.map((date: Dayjs) => {
         return request.server.prisma.user.count({
           where: {

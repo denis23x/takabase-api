@@ -28,6 +28,10 @@ export const swaggerConfig: SwaggerOptions = {
         description: 'Category related end-points'
       },
       {
+        name: 'Insights',
+        description: 'Insight seed end-points'
+      },
+      {
         name: 'Posts',
         description: 'Post related end-points'
       },

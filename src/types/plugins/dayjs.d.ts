@@ -8,6 +8,7 @@ declare module 'fastify' {
     dayjs: (...args) => Dayjs;
     dayjsPlugin: {
       getEndOf: (date: Dayjs) => Dayjs;
+      getMin: (dateList: Dayjs[]) => Dayjs;
       getRange: (dateStart: Dayjs, dateEnd: Dayjs, unit: ManipulateType) => Dayjs[];
     };
   }
