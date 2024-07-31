@@ -68,12 +68,6 @@ import { partsPageSizeSchema } from './schema/parts/page/parts-page-size.schema'
 import { partsPostDescriptionSchema } from './schema/parts/post/parts-post-description.schema';
 import { partsPostMarkdownSchema } from './schema/parts/post/parts-post-markdown.schema';
 import { partsPostNameSchema } from './schema/parts/post/parts-post-name.schema';
-import { partsPostPasswordDescriptionSchema } from './schema/parts/post-password/parts-post-password-description.schema';
-import { partsPostPasswordMarkdownSchema } from './schema/parts/post-password/parts-post-password-markdown.schema';
-import { partsPostPasswordNameSchema } from './schema/parts/post-password/parts-post-password-name.schema';
-import { partsPostPrivateDescriptionSchema } from './schema/parts/post-private/parts-post-private-description.schema';
-import { partsPostPrivateMarkdownSchema } from './schema/parts/post-private/parts-post-private-markdown.schema';
-import { partsPostPrivateNameSchema } from './schema/parts/post-private/parts-post-private-name.schema';
 import { partsUserDescriptionSchema } from './schema/parts/user/parts-user-description.schema';
 import { partsUserEmailSchema } from './schema/parts/user/parts-user-email.schema';
 import { partsUsernameSchema } from './schema/parts/user/parts-user-name.schema';
@@ -150,12 +144,6 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsPostDescriptionSchema);
   fastifyInstance.addSchema(partsPostMarkdownSchema);
   fastifyInstance.addSchema(partsPostNameSchema);
-  fastifyInstance.addSchema(partsPostPasswordDescriptionSchema);
-  fastifyInstance.addSchema(partsPostPasswordMarkdownSchema);
-  fastifyInstance.addSchema(partsPostPasswordNameSchema);
-  fastifyInstance.addSchema(partsPostPrivateDescriptionSchema);
-  fastifyInstance.addSchema(partsPostPrivateMarkdownSchema);
-  fastifyInstance.addSchema(partsPostPrivateNameSchema);
   fastifyInstance.addSchema(partsUserDescriptionSchema);
   fastifyInstance.addSchema(partsUserEmailSchema);
   fastifyInstance.addSchema(partsUsernameSchema);

@@ -1,11 +1,11 @@
 /** @format */
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { PostPrivateCreateDto } from '../../types/dto/post-private/post-private-create';
 import type { DocumentReference } from 'firebase-admin/firestore';
 import type { PostPrivate, Prisma, PrismaClient } from '../../database/client';
 import type { WriteResult } from 'firebase-admin/lib/firestore';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { PostCreateDto } from '../../types/dto/post/post-create';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -24,13 +24,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         type: 'object',
         properties: {
           name: {
-            $ref: 'partsPostPrivateNameSchema#'
+            $ref: 'partsPostNameSchema#'
           },
           description: {
-            $ref: 'partsPostPrivateDescriptionSchema#'
+            $ref: 'partsPostDescriptionSchema#'
           },
           markdown: {
-            $ref: 'partsPostPrivateMarkdownSchema#'
+            $ref: 'partsPostMarkdownSchema#'
           },
           image: {
             $ref: 'partsFirebaseUrlStorageSchema#'
@@ -58,7 +58,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<PostPrivateCreateDto>, reply: FastifyReply): Promise<void> {
+    handler: async function (request: FastifyRequest<PostCreateDto>, reply: FastifyReply): Promise<void> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 

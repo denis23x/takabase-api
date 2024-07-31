@@ -1,11 +1,11 @@
 /** @format */
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { PostPasswordCreateDto } from '../../types/dto/post-password/post-password-create';
 import type { DocumentReference } from 'firebase-admin/firestore';
 import type { PostPassword, Prisma, PrismaClient } from '../../database/client';
 import type { WriteResult } from 'firebase-admin/lib/firestore';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { PostCreateDto } from '../../types/dto/post/post-create';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -24,13 +24,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         type: 'object',
         properties: {
           name: {
-            $ref: 'partsPostPasswordNameSchema#'
+            $ref: 'partsPostNameSchema#'
           },
           description: {
-            $ref: 'partsPostPasswordDescriptionSchema#'
+            $ref: 'partsPostDescriptionSchema#'
           },
           markdown: {
-            $ref: 'partsPostPasswordMarkdownSchema#'
+            $ref: 'partsPostMarkdownSchema#'
           },
           image: {
             $ref: 'partsFirebaseUrlStorageSchema#'
@@ -39,7 +39,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             $ref: 'partsPasswordSchema#'
           }
         },
-        required: ['name', 'description', 'markdown']
+        required: ['name', 'description', 'markdown', 'password']
       },
       response: {
         '201': {
@@ -61,7 +61,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<PostPasswordCreateDto>, reply: FastifyReply): Promise<void> {
+    handler: async function (request: FastifyRequest<PostCreateDto>, reply: FastifyReply): Promise<void> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 

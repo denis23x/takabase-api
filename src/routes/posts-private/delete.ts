@@ -2,9 +2,9 @@
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { PostPrivate, Prisma, PrismaClient } from '../../database/client';
-import type { PostPrivateDeleteDto } from '../../types/dto/post-private/post-private-delete';
 import type { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { PostDeleteDto } from '../../types/dto/post/post-delete';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -59,7 +59,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<PostPrivateDeleteDto>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<PostDeleteDto>, reply: FastifyReply): Promise<any> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 

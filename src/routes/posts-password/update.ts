@@ -4,7 +4,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, PostPassword, PrismaClient } from '../../database/client';
 import type { DocumentReference, DocumentSnapshot, DocumentData, WriteResult } from 'firebase-admin/firestore';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
-import type { PostPasswordUpdateDto } from '../../types/dto/post-password/post-password-update';
+import type { PostUpdateDto } from '../../types/dto/post/post-update';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -31,13 +31,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         type: 'object',
         properties: {
           name: {
-            $ref: 'partsPostPasswordNameSchema#'
+            $ref: 'partsPostNameSchema#'
           },
           description: {
-            $ref: 'partsPostPasswordDescriptionSchema#'
+            $ref: 'partsPostDescriptionSchema#'
           },
           markdown: {
-            $ref: 'partsPostPasswordMarkdownSchema#'
+            $ref: 'partsPostMarkdownSchema#'
           },
           image: {
             $ref: 'partsFirebaseUrlStorageSchema#'
@@ -71,7 +71,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<PostPasswordUpdateDto>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<PostUpdateDto>, reply: FastifyReply): Promise<any> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 

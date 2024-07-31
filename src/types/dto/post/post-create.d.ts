@@ -3,5 +3,6 @@
 import type { Prisma } from '../../../database/client';
 
 export interface PostCreateDto {
-  Body: Prisma.PostCreateInput & Record<string, number>;
+  // prettier-ignore
+  Body: Prisma.PostCreateInput & Prisma.PostPasswordCreateInput & Prisma.PostPrivateCreateInput & Record<string, number | string>;
 }
