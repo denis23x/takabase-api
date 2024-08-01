@@ -10,15 +10,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'GET',
     url: ':id',
-    onRequest: fastify.verifyIdToken,
+    onRequest: fastify.verifyIdTokenOptional,
     schema: {
       tags: ['Posts-Password'],
       description: 'Get a single private',
-      security: [
-        {
-          swaggerBearerAuth: []
-        }
-      ],
       params: {
         type: 'object',
         properties: {
@@ -30,6 +25,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       querystring: {
         type: 'object',
         properties: {
+          password: {
+            $ref: 'partsPasswordSchema#'
+          },
           scope: {
             $ref: 'partsScopeSchema#'
           }
@@ -56,7 +54,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<ParamsId & QuerystringScope>, reply: FastifyReply): Promise<any> {
-      const { scope }: Record<string, any> = request.query;
+      const { password, scope }: Record<string, any> = request.query;
 
       const postPasswordFindUniqueOrThrowArgs: Prisma.PostPasswordFindUniqueOrThrowArgs = {
         select: {
@@ -65,10 +63,28 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           markdown: true
         },
         where: {
-          id: Number(request.params.id),
-          userFirebaseUid: request.user.uid
+          id: Number(request.params.id)
         }
       };
+
+      // Check if a password is provided
+      if (password) {
+        postPasswordFindUniqueOrThrowArgs.where.password = password;
+        postPasswordFindUniqueOrThrowArgs.select.password = false;
+      } else {
+        // If no password is provided, check if the request has a user
+        if (request.user) {
+          postPasswordFindUniqueOrThrowArgs.where.userFirebaseUid = request.user.uid;
+          postPasswordFindUniqueOrThrowArgs.select.password = true;
+        } else {
+          // If there is no user and no password, return a 403 Forbidden error
+          return reply.status(403).send({
+            message: 'Request failed due to insufficient permissions',
+            error: 'Forbidden',
+            statusCode: 403
+          });
+        }
+      }
 
       /** Scope */
 

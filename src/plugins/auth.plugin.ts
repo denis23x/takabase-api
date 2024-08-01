@@ -30,6 +30,19 @@ const authPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fasti
   });
 
   // prettier-ignore
+  fastifyInstance.decorate('verifyIdTokenOptional', async function (request: FastifyRequest): Promise<DecodedIdToken | void> {
+    const authorization: string | undefined = request.headers.authorization;
+
+    if (authorization && authorization.includes('Bearer')) {
+      const token: string = authorization.replace('Bearer', '').trim();
+
+      return request.server.auth
+        .verifyIdToken(token, true)
+        .then((decodedIdToken: DecodedIdToken) => (request.user = decodedIdToken));
+    }
+  });
+
+  // prettier-ignore
   fastifyInstance.decorate('verifyAdmin', async function (request: FastifyRequest, reply: FastifyReply): Promise<void> {
     const email: string = request.user.email;
     const emailAdminList: string[] = [

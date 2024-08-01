@@ -7,6 +7,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     auth: Auth;
     verifyIdToken: any;
+    verifyIdTokenOptional: any;
     verifyAdmin: any;
     verifyUsername: any;
   }

@@ -41,7 +41,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
       description: true,
       markdown: false,
       image: true,
-      password: true,
+      password: false,
       createdAt: true,
       updatedAt: true,
       deletedAt: false
