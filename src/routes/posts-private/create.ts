@@ -1,5 +1,6 @@
 /** @format */
 
+import { parse } from 'path';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { DocumentReference } from 'firebase-admin/firestore';
 import type { PostPrivate, Prisma, PrismaClient } from '../../database/client';
@@ -110,9 +111,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 .setImageListMove(tempImageList, postPrivateImageListDestination)
                 .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
+              // Get the temporary image original destination for rollback
+              const tempImageListDestination: string[] = tempImageList.map((tempImag: string) => {
+                return encodeURIComponent(parse(decodeURIComponent(tempImag)).dir);
+              });
+
               //! Define rollback action for post image moved to the post image destination
               requestRollback.postPrivateImageList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(postPrivateImageList, 'temp');
+                await request.server.storagePlugin.setImageListMove(postPrivateImageList, tempImageListDestination.shift());
               };
 
               // Rewrite the image URL in the request body with the new post image URL
@@ -135,9 +141,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 .setImageListMove(tempMarkdownList, postPrivateMarkdownListDestination)
                 .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
+              // Get the temporary markdown images original destination for rollback
+              const tempMarkdownListDestination: string[] = tempMarkdownList.map((tempImag: string) => {
+                return encodeURIComponent(parse(decodeURIComponent(tempImag)).dir);
+              });
+
               //! Define rollback action for moving markdown images to post markdown destination
               requestRollback.postPrivateMarkdownList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(postPrivateMarkdownList, 'temp');
+                await request.server.storagePlugin.setImageListMove(postPrivateMarkdownList, tempMarkdownListDestination.shift());
               };
 
               // Rewrite the markdown body with the updated markdown image list

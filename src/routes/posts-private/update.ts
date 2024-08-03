@@ -199,7 +199,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const bodyMarkdownList: string[] = request.server.markdownPlugin.getImageListFromBody(postPrivateMarkdown);
 
             // Get the list of temporary images from the post markdown body
-            const tempMarkdownList: string[] = request.server.markdownPlugin.getImageListFromBucket(bodyMarkdownList);
+            const tempMarkdownList: string[] = request.server.markdownPlugin.getImageListFromBucket(bodyMarkdownList).filter((bodyMarkdown: string) => bodyMarkdown.startsWith('temp'));
 
             // If there are temporary markdown images
             if (tempMarkdownList.length) {
