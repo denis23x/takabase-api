@@ -209,7 +209,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                   };
 
                   // Set the request body avatar with the updated user avatar
-                  request.body.avatar = request.server.markdownPlugin.getImageListRewrite(userAvatar, updatedTempAvatarList, updatedUserAvatarList);
+                  request.body.avatar = request.server.markdownPlugin.getImageListReplace(userAvatar, updatedTempAvatarList, updatedUserAvatarList);
 
                   // @ts-ignore
                   // eslint-disable-next-line @typescript-eslint/no-unused-vars

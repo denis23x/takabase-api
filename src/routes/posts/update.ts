@@ -188,7 +188,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                   };
 
                   // Set the request body image with the updated post image
-                  request.body.image = request.server.markdownPlugin.getImageListRewrite(postImage, updatedTempImageList, updatedPostImageList);
+                  request.body.image = request.server.markdownPlugin.getImageListReplace(postImage, updatedTempImageList, updatedPostImageList);
 
                   // @ts-ignore
                   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -202,10 +202,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
 
             // Get the list of images in the post markdown body
-            const bodyMarkdownList: string[] = request.server.markdownPlugin.getImageList(postMarkdown);
+            const bodyMarkdownList: string[] = request.server.markdownPlugin.getImageListFromBody(postMarkdown);
 
             // Get the list of temporary images from the post markdown body
-            const tempMarkdownList: string[] = request.server.markdownPlugin.getImageListTemp(bodyMarkdownList);
+            const tempMarkdownList: string[] = request.server.markdownPlugin.getImageListFromBucket(bodyMarkdownList);
 
             // If there are temporary markdown images
             if (tempMarkdownList.length) {
@@ -220,14 +220,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
 
               // Rewrite the markdown body with the updated markdown image list
-              request.body.markdown = request.server.markdownPlugin.getImageListRewrite(postMarkdown, tempMarkdownList, postMarkdownList);
+              request.body.markdown = request.server.markdownPlugin.getImageListReplace(postMarkdown, tempMarkdownList, postMarkdownList);
             }
 
             // Get the updated list of markdown images from the request body
-            const updatedPostMarkdown: string[] = request.server.markdownPlugin.getImageList(String(request.body.markdown || ''));
+            const updatedPostMarkdown: string[] = request.server.markdownPlugin.getImageListFromBody(String(request.body.markdown || ''));
 
             // Extract the list of post markdown images
-            const updatedPostMarkdownList: string[] = request.server.markdownPlugin.getImageListPost(updatedPostMarkdown);
+            const updatedPostMarkdownList: string[] = request.server.markdownPlugin.getImageListSettled(updatedPostMarkdown);
 
             // Filter out the post markdown images that are no longer used
             const updatedPostMarkdownListUnused: string[] = await request.server.storagePlugin

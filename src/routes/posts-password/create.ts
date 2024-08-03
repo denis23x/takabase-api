@@ -119,14 +119,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
 
               // Rewrite the image URL in the request body with the new post image URL
-              request.body.image = request.server.markdownPlugin.getImageListRewrite(postPasswordImage, tempImageList, postPasswordImageList);
+              request.body.image = request.server.markdownPlugin.getImageListReplace(postPasswordImage, tempImageList, postPasswordImageList);
             }
 
             // Get the list of images in the post markdown body
-            const bodyMarkdownList: string[] = request.server.markdownPlugin.getImageList(postPasswordMarkdown);
+            const bodyMarkdownList: string[] = request.server.markdownPlugin.getImageListFromBody(postPasswordMarkdown);
 
             // Get the list of temporary images from the post markdown body
-            const tempMarkdownList: string[] = request.server.markdownPlugin.getImageListTemp(bodyMarkdownList);
+            const tempMarkdownList: string[] = request.server.markdownPlugin.getImageListFromBucket(bodyMarkdownList);
 
             // If there are temporary markdown images
             if (tempMarkdownList.length) {
@@ -144,7 +144,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
 
               // Rewrite the markdown body with the updated markdown image list
-              request.body.markdown = request.server.markdownPlugin.getImageListRewrite(postPasswordMarkdown, tempMarkdownList, postPasswordMarkdownList);
+              request.body.markdown = request.server.markdownPlugin.getImageListReplace(postPasswordMarkdown, tempMarkdownList, postPasswordMarkdownList);
 
               // Update the DTO for updating the Firestore document
               postPasswordDocumentUpdateDto.markdown = postPasswordMarkdownList.map((imageUrl: string) => decodeURIComponent(imageUrl));

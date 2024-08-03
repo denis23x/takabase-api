@@ -6,7 +6,7 @@ import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 
 const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   fastifyInstance.decorate('markdownPlugin', {
-    getImageList: (markdown: string): string[] => {
+    getImageListFromBody: (markdown: string): string[] => {
       const markdownImageRegExp: RegExp = /!\[(.*?)]\((.*?)\)/g;
       const markdownImageList: RegExpMatchArray | null = markdown.match(markdownImageRegExp);
 
@@ -27,37 +27,37 @@ const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: F
 
       return [];
     },
-    getImageListFirebaseBucket: (imageListUrl: string[]): string[] => {
-      return imageListUrl
-        .filter((imageUrl: string) => imageUrl.startsWith('https://firebasestorage.googleapis.com'))
-        .filter((imageUrl: string) => imageUrl.includes(storageConfig.bucket));
+    getImageListFromBucket: (imageListUrl: string[]): string[] => {
+      // prettier-ignore
+      return fastifyInstance.markdownPlugin.getImageListRelativeUrl(fastifyInstance.markdownPlugin.getImageListFirebaseUrl(imageListUrl));
     },
-    getImageListTemp: (imageListUrl: string[]): string[] => {
-      const imageListTemp: string[] = fastifyInstance.markdownPlugin
-        .getImageListFirebaseBucket(imageListUrl)
-        .filter((imageUrl: string) => imageUrl.includes('temp'));
-
-      return fastifyInstance.markdownPlugin.getImageListRelativeUrl(imageListTemp);
-    },
-    getImageListPost: (imageListUrl: string[]): string[] => {
+    getImageListSettled: (imageListUrl: string[]): string[] => {
       const imageListPost: string[] = fastifyInstance.markdownPlugin
-        .getImageListFirebaseBucket(imageListUrl)
-        .filter((imageUrl: string) => imageUrl.includes('users'))
-        .filter((imageUrl: string) => imageUrl.includes('posts'));
+        .getImageListFirebaseUrl(imageListUrl)
+        .filter((imageUrl: string) => {
+          return ['users', 'posts', 'posts-password', 'posts-private'].some((imageUrlDestination: string) => {
+            return imageUrl.includes(imageUrlDestination);
+          });
+        });
 
       return fastifyInstance.markdownPlugin.getImageListRelativeUrl(imageListPost);
     },
-    getImageListRewrite: (markdown: string, tempList: string[], postList: string[]): string => {
-      let markdownNew: string = markdown;
+    getImageListReplace: (markdown: string, previousList: string[], nextList: string[]): string => {
+      let markdownNext: string = markdown;
 
-      for (let i: number = 0; i < tempList.length; i++) {
-        const tempPath: string = tempList[i];
-        const postPath: string = postList[i];
+      for (let i: number = 0; i < previousList.length; i++) {
+        const previousPath: string = previousList[i];
+        const nextPath: string = nextList[i];
 
-        markdownNew = markdownNew.replace(tempPath, postPath);
+        markdownNext = markdownNext.replace(previousPath, nextPath);
       }
 
-      return markdownNew;
+      return markdownNext;
+    },
+    getImageListFirebaseUrl: (imageListUrl: string[]): string[] => {
+      return imageListUrl
+        .filter((imageUrl: string) => imageUrl.startsWith('https://firebasestorage.googleapis.com'))
+        .filter((imageUrl: string) => imageUrl.includes(storageConfig.bucket));
     },
     getImageListRelativeUrl: (imageListUrl: string[]): string[] => {
       return imageListUrl.map((imageUrl: string) => {

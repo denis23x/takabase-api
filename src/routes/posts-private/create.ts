@@ -116,14 +116,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
 
               // Rewrite the image URL in the request body with the new post image URL
-              request.body.image = request.server.markdownPlugin.getImageListRewrite(postPrivateImage, tempImageList, postPrivateImageList);
+              request.body.image = request.server.markdownPlugin.getImageListReplace(postPrivateImage, tempImageList, postPrivateImageList);
             }
 
             // Get the list of images in the post markdown body
-            const bodyMarkdownList: string[] = request.server.markdownPlugin.getImageList(postPrivateMarkdown);
+            const bodyMarkdownList: string[] = request.server.markdownPlugin.getImageListFromBody(postPrivateMarkdown);
 
             // Get the list of temporary images from the post markdown body
-            const tempMarkdownList: string[] = request.server.markdownPlugin.getImageListTemp(bodyMarkdownList);
+            const tempMarkdownList: string[] = request.server.markdownPlugin.getImageListFromBucket(bodyMarkdownList);
 
             // If there are temporary markdown images
             if (tempMarkdownList.length) {
@@ -141,7 +141,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
 
               // Rewrite the markdown body with the updated markdown image list
-              request.body.markdown = request.server.markdownPlugin.getImageListRewrite(postPrivateMarkdown, tempMarkdownList, postPrivateMarkdownList);
+              request.body.markdown = request.server.markdownPlugin.getImageListReplace(postPrivateMarkdown, tempMarkdownList, postPrivateMarkdownList);
 
               // Update the DTO for updating the Firestore document
               postPrivateDocumentUpdateDto.markdown = postPrivateMarkdownList.map((imageUrl: string) => decodeURIComponent(imageUrl));
