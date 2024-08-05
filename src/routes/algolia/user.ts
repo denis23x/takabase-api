@@ -2,7 +2,7 @@
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { User } from '../../database/client';
-import type { AlgoliaPostDto } from '../../types/dto/algolia/algolia-post';
+import type { AlgoliaGetDto } from '../../types/dto/algolia/algolia-get';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -37,7 +37,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<AlgoliaPostDto>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<AlgoliaGetDto>, reply: FastifyReply): Promise<any> {
       const user: User[] = await request.server.prisma.user.findMany({
         select: {
           ...request.server.prismaPlugin.getUserSelect(),

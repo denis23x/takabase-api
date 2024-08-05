@@ -32,8 +32,9 @@ import firestorePlugin from './plugins/firestore.plugin';
 import helperPlugin from './plugins/helper.plugin';
 import markdownPlugin from './plugins/markdown.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
-import storagePlugin from './plugins/storage.plugin';
 import remoteConfigPlugin from './plugins/remote-config.plugin';
+import sitemapPlugin from './plugins/sitemap.plugin';
+import storagePlugin from './plugins/storage.plugin';
 
 // ROUTES
 
@@ -44,6 +45,7 @@ import insightsRoutes from './routes/insights';
 import postsRoutes from './routes/posts';
 import postsPasswordRoutes from './routes/posts-password';
 import postsPrivateRoutes from './routes/posts-private';
+import sitemapRoutes from './routes/sitemap';
 import testsRoutes from './routes/tests';
 import usersRoutes from './routes/users';
 
@@ -77,6 +79,7 @@ import { partsFirebaseUrlStorageSchema } from './schema/parts/parts-firebase-url
 import { partsIdSchema } from './schema/parts/parts-id.schema';
 import { partsPasswordSchema } from './schema/parts/parts-password.schema';
 import { partsScopeSchema } from './schema/parts/parts-scope.schema';
+import { partsSitemapSchema } from './schema/parts/sitemap/parts-sitemap.schema';
 
 export const main = async (): Promise<FastifyInstance> => {
   const fastifyInstance: FastifyInstance = fastify({
@@ -122,6 +125,7 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(helperPlugin);
   await fastifyInstance.register(markdownPlugin);
   await fastifyInstance.register(prismaPlugin);
+  await fastifyInstance.register(sitemapPlugin);
 
   // JSON SCHEMA CRUD
 
@@ -153,6 +157,7 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsIdSchema);
   fastifyInstance.addSchema(partsPasswordSchema);
   fastifyInstance.addSchema(partsScopeSchema);
+  fastifyInstance.addSchema(partsSitemapSchema);
 
   // LOCALHOST
 
@@ -196,6 +201,9 @@ export const main = async (): Promise<FastifyInstance> => {
       });
       api.register(postsPrivateRoutes, {
         prefix: '/posts-private/'
+      });
+      api.register(sitemapRoutes, {
+        prefix: '/sitemap/'
       });
       api.register(testsRoutes, {
         prefix: '/tests/'

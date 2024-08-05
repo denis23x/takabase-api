@@ -2,7 +2,7 @@
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Category } from '../../database/client';
-import type { AlgoliaPostDto } from '../../types/dto/algolia/algolia-post';
+import type { AlgoliaGetDto } from '../../types/dto/algolia/algolia-get';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -37,7 +37,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<AlgoliaPostDto>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<AlgoliaGetDto>, reply: FastifyReply): Promise<any> {
       const category: Category[] = await request.server.prisma.category.findMany({
         select: {
           ...request.server.prismaPlugin.getCategorySelect(),

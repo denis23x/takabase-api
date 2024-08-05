@@ -48,6 +48,10 @@ export const swaggerConfig: SwaggerOptions = {
         description: 'User related end-points'
       },
       {
+        name: 'Sitemap',
+        description: 'Sitemap related end-points'
+      },
+      {
         name: 'Tests',
         description: 'Testing end-points'
       }

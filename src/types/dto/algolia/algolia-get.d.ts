@@ -1,6 +1,6 @@
 /** @format */
 
-export interface AlgoliaPostDto {
+export interface AlgoliaGetDto {
   Querystring: {
     addRecords: string;
   };
