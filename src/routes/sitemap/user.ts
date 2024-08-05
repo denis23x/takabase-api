@@ -5,7 +5,6 @@ import { sitemapConfig } from '../../config/sitemap.config';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { User } from '../../database/client';
 import type { XMLElement } from 'xmlbuilder';
-import type { SitemapGetDto } from '../../types/dto/sitemap/sitemap-get';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -20,14 +19,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           swaggerBearerAuth: []
         }
       ],
-      querystring: {
-        type: 'object',
-        properties: {
-          environment: {
-            $ref: 'partsSitemapSchema#'
-          }
-        }
-      },
       response: {
         '200': {
           type: 'array'
@@ -40,7 +31,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<SitemapGetDto>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<any>, reply: FastifyReply): Promise<any> {
       const userList: Partial<User>[] = await request.server.prisma.user.findMany({
         select: {
           name: true,

@@ -79,7 +79,6 @@ import { partsFirebaseUrlStorageSchema } from './schema/parts/parts-firebase-url
 import { partsIdSchema } from './schema/parts/parts-id.schema';
 import { partsPasswordSchema } from './schema/parts/parts-password.schema';
 import { partsScopeSchema } from './schema/parts/parts-scope.schema';
-import { partsSitemapSchema } from './schema/parts/sitemap/parts-sitemap.schema';
 
 export const main = async (): Promise<FastifyInstance> => {
   const fastifyInstance: FastifyInstance = fastify({
@@ -157,7 +156,6 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsIdSchema);
   fastifyInstance.addSchema(partsPasswordSchema);
   fastifyInstance.addSchema(partsScopeSchema);
-  fastifyInstance.addSchema(partsSitemapSchema);
 
   // LOCALHOST
 
