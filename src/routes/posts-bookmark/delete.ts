@@ -1,24 +1,24 @@
 /** @format */
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { PostBookmarkCreateDto } from '../../types/dto/post-bookmark/post-bookmark-create';
-import type { Prisma, PostBookmark, PrismaClient } from '../../database/client';
+import type { PostBookmarkDeleteDto } from '../../types/dto/post-bookmark/post-bookmark-delete';
+import type { PostBookmark, Prisma, PrismaClient } from '../../database/client';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
-    method: 'POST',
+    method: 'DELETE',
     url: '',
     onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Posts-Bookmark'],
-      description: 'Creates a new Private',
+      description: 'Removes specific Private from the database',
       security: [
         {
           swaggerBearerAuth: []
         }
       ],
-      body: {
+      querystring: {
         type: 'object',
         properties: {
           firebaseUid: {
@@ -28,7 +28,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         required: ['firebaseUid']
       },
       response: {
-        '201': {
+        '200': {
           type: 'object',
           properties: {
             data: {
@@ -47,7 +47,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<PostBookmarkCreateDto>, reply: FastifyReply): Promise<void> {
+    handler: async function (request: FastifyRequest<PostBookmarkDeleteDto>, reply: FastifyReply): Promise<any> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
@@ -55,7 +55,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const userFirebaseUid: string = request.user.uid;
 
       // Extract post information from the request object
-      const postFirebaseUid: string = request.body.firebaseUid;
+      const postFirebaseUid: string = request.query.firebaseUid;
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -65,29 +65,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         try {
           // Start transaction using Prisma's $transaction method https://www.prisma.io/docs/orm/prisma-client/queries/transactions
           await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<PostBookmark> => {
-            // Define the arguments for creating a post bookmark
-            const postBookmarkCreateArgs: Prisma.PostBookmarkCreateArgs = {
-              data: {
-                user: {
-                  connect: {
-                    firebaseUid: userFirebaseUid
-                  }
-                },
-                post: {
-                  connect: {
-                    firebaseUid: postFirebaseUid
-                  }
+            // Define the arguments for deleting a post bookmark
+            const postBookmarkDeleteArgs: Prisma.PostBookmarkDeleteArgs = {
+              where: {
+                postFirebaseUid_userFirebaseUid: {
+                  userFirebaseUid,
+                  postFirebaseUid
                 }
               }
             };
 
             // Return the post bookmark
-            return prismaClient.postBookmark.create(postBookmarkCreateArgs);
+            return prismaClient.postBookmark.delete(postBookmarkDeleteArgs);
           }).then((postBookmark: PostBookmark) => {
-            // Send success response with created post bookmark
-            return reply.status(201).send({
+            // Send success response with deleted post bookmark
+            return reply.status(200).send({
               data: postBookmark,
-              statusCode: 201
+              statusCode: 200
             });
           });
 
