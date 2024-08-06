@@ -55,6 +55,7 @@ import usersRoutes from './routes/users';
 import { categorySchema } from './schema/models/category.schema';
 import { insightSchema } from './schema/models/insight.schema';
 import { postSchema } from './schema/models/post.schema';
+import { postBookmarkSchema } from './schema/models/post-bookmark.schema';
 import { postPasswordSchema } from './schema/models/post-password.schema';
 import { postPrivateSchema } from './schema/models/post-private.schema';
 import { userSchema } from './schema/models/user.schema';
@@ -132,6 +133,7 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(categorySchema);
   fastifyInstance.addSchema(insightSchema);
   fastifyInstance.addSchema(postSchema);
+  fastifyInstance.addSchema(postBookmarkSchema);
   fastifyInstance.addSchema(postPasswordSchema);
   fastifyInstance.addSchema(postPrivateSchema);
   fastifyInstance.addSchema(userSchema);

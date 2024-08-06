@@ -132,7 +132,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Return the category
             return category;
           }).then((category: Category) => {
-            // Send success response with deleted category
+            // Send success response with created category
             return reply.status(201).send({
               data: category,
               statusCode: 201
