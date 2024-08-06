@@ -43,6 +43,7 @@ import authorizationRoutes from './routes/authorization';
 import categoriesRoutes from './routes/categories';
 import insightsRoutes from './routes/insights';
 import postsRoutes from './routes/posts';
+import postsBookmarkRoutes from './routes/posts-bookmark';
 import postsPasswordRoutes from './routes/posts-password';
 import postsPrivateRoutes from './routes/posts-private';
 import sitemapRoutes from './routes/sitemap';
@@ -193,6 +194,9 @@ export const main = async (): Promise<FastifyInstance> => {
       });
       api.register(postsRoutes, {
         prefix: '/posts/'
+      });
+      api.register(postsBookmarkRoutes, {
+        prefix: '/posts-bookmark/'
       });
       api.register(postsPasswordRoutes, {
         prefix: '/posts-password/'

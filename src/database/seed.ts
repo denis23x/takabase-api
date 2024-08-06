@@ -11,11 +11,21 @@ import { postRaw } from './seed/post';
 const prisma = new PrismaClient();
 
 const main = async () => {
+  const deletePostsBookmark = prisma.postBookmark.deleteMany();
+  const deletePostsPassword = prisma.postPassword.deleteMany();
+  const deletePostsPrivate = prisma.postPrivate.deleteMany();
   const deletePosts = prisma.post.deleteMany();
   const deleteCategories = prisma.category.deleteMany();
   const deleteUsers = prisma.user.deleteMany();
 
-  await prisma.$transaction([deletePosts, deleteCategories, deleteUsers]);
+  await prisma.$transaction([
+    deletePostsBookmark,
+    deletePostsPassword,
+    deletePostsPrivate,
+    deletePosts,
+    deleteCategories,
+    deleteUsers
+  ]);
 
   /**
    * INSERT DATABASE

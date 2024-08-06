@@ -35,11 +35,13 @@ export const postRaw = async (): Promise<any> => {
   const raw: any[] = [];
 
   for (let i: number = 0; i < categoriesDB.length * 5; i++) {
+    // prettier-ignore
+    const uid = (): string => (Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2)).slice(0, 28);
     const categoryIndex: number = faker.number.int({ min: 0, max: categoriesDB.length - 1 });
     const category: Category = categoriesDB[categoryIndex];
 
     raw.push({
-      firebaseUid: ['seed', i].join('-'),
+      firebaseUid: uid(),
       name: faker.commerce.productName(),
       description: faker.commerce.productDescription(),
       markdown: faker.lorem.paragraphs(10),

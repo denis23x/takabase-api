@@ -31,8 +31,11 @@ export const userRaw = async (): Promise<any> => {
   const raw: any[] = [];
 
   for (let i: number = 0; i < 5; i++) {
+    // prettier-ignore
+    const uid = (): string => (Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2)).slice(0, 28);
+
     raw.push({
-      firebaseUid: ['seed', i].join('-'),
+      firebaseUid: uid(),
       name: faker.internet.userName(),
       description: faker.datatype.boolean() ? faker.person.bio() : null,
       avatar: faker.datatype.boolean() ? getAvatarPath() : null,

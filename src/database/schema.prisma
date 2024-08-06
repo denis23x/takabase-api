@@ -24,8 +24,9 @@ model User {
   terms            Boolean    @default(true) @db.TinyInt
   categories       Category[]
   posts            Post[]
-  postsPrivate     PostPrivate[]
+  postsBookmark    PostBookmark[]
   postsPassword    PostPassword[]
+  postsPrivate     PostPrivate[]
 
   @@unique([id, firebaseUid])
   @@index([firebaseUid])
@@ -60,6 +61,7 @@ model Post {
   deletedAt         DateTime? @db.DateTime(6)
   category          Category  @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user              User      @relation(fields: [userFirebaseUid], references: [firebaseUid], onDelete: NoAction, onUpdate: NoAction)
+  bookmark          PostBookmark[]
 
   @@unique([name, categoryId])
   @@index([categoryId])
@@ -67,20 +69,18 @@ model Post {
   @@index([userFirebaseUid])
 }
 
-model PostPrivate {
+model PostBookmark {
   id                Int       @id @default(autoincrement()) @db.Int
-  name              String    @unique @db.VarChar(255)
-  firebaseUid       String    @unique @db.VarChar(255)
-  description       String    @db.VarChar(255)
-  markdown          String    @db.Text
-  image             String?   @db.VarChar(255)
+  postFirebaseUid   String    @db.VarChar(255)
   userFirebaseUid   String    @db.VarChar(255)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @default(now()) @updatedAt
   deletedAt         DateTime? @db.DateTime(6)
+  post              Post      @relation(fields: [postFirebaseUid], references: [firebaseUid], onDelete: NoAction, onUpdate: NoAction)
   user              User      @relation(fields: [userFirebaseUid], references: [firebaseUid], onDelete: NoAction, onUpdate: NoAction)
 
-  @@index([firebaseUid])
+  @@unique([postFirebaseUid, userFirebaseUid])
+  @@index([postFirebaseUid])
   @@index([userFirebaseUid])
 }
 
@@ -93,6 +93,23 @@ model PostPassword {
   image             String?   @db.VarChar(255)
   userFirebaseUid   String    @db.VarChar(255)
   password          String    @db.VarChar(255)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
+  deletedAt         DateTime? @db.DateTime(6)
+  user              User      @relation(fields: [userFirebaseUid], references: [firebaseUid], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([firebaseUid])
+  @@index([userFirebaseUid])
+}
+
+model PostPrivate {
+  id                Int       @id @default(autoincrement()) @db.Int
+  name              String    @unique @db.VarChar(255)
+  firebaseUid       String    @unique @db.VarChar(255)
+  description       String    @db.VarChar(255)
+  markdown          String    @db.Text
+  image             String?   @db.VarChar(255)
+  userFirebaseUid   String    @db.VarChar(255)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @default(now()) @updatedAt
   deletedAt         DateTime? @db.DateTime(6)

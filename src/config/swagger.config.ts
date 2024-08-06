@@ -36,6 +36,10 @@ export const swaggerConfig: SwaggerOptions = {
         description: 'Post related end-points'
       },
       {
+        name: 'Posts-Bookmark',
+        description: 'Post-bookmark related end-points'
+      },
+      {
         name: 'Posts-Password',
         description: 'Post-password related end-points'
       },
