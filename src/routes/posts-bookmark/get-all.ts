@@ -1,9 +1,8 @@
 /** @format */
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { QuerystringSearch } from '../../types/crud/querystring/querystring-search';
-import type { Post, PostBookmark, Prisma } from '../../database/client';
-import type { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { PostBookmarkGetAllDto } from '../../types/dto/post-bookmark/post-bookmark-get-all';
+import type { PostBookmark, Prisma } from '../../database/client';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -21,17 +20,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       querystring: {
         type: 'object',
         properties: {
-          query: {
-            $ref: 'partsPageQuerySchema#'
-          },
-          page: {
-            $ref: 'partsPageSchema#'
-          },
-          size: {
-            $ref: 'partsPageSizeSchema#'
+          attachPost: {
+            type: 'boolean',
+            example: 'false'
           }
-        },
-        required: ['page', 'size']
+        }
       },
       response: {
         '200': {
@@ -40,7 +33,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             data: {
               type: 'array',
               items: {
-                $ref: 'postSchema#'
+                $ref: 'postBookmarkSchema#'
               }
             },
             statusCode: {
@@ -48,22 +41,20 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
           }
         },
+        '4xx': {
+          $ref: 'responseErrorSchema#'
+        },
         '5xx': {
           $ref: 'responseErrorSchema#'
         }
       }
     },
-    handler: async function (request: FastifyRequest<QuerystringSearch>, reply: FastifyReply): Promise<any> {
-      const { query, size, page }: Record<string, any> = request.query;
-
+    handler: async function (request: FastifyRequest<PostBookmarkGetAllDto>, reply: FastifyReply): Promise<any> {
       // Extract the firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
 
       // Define the arguments for finding many post bookmarks based on userFirebaseUid
       const postBookmarkFindManyArgs: Prisma.PostBookmarkFindManyArgs = {
-        select: {
-          postFirebaseUid: true
-        },
         orderBy: {
           id: 'desc'
         },
@@ -75,48 +66,28 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // prettier-ignore
       const postBookmarkList: PostBookmark[] = await reply.server.prisma.postBookmark.findMany(postBookmarkFindManyArgs);
 
-      // Extract the postFirebaseUid from the list of post bookmarks
-      const postBookmarkFirebaseUidList: string[] = postBookmarkList.map((postBookmark: PostBookmark) => {
-        return postBookmark.postFirebaseUid;
-      });
+      // Check if postBookmarkList exists and attachPost query parameter is present
+      if (postBookmarkList.length) {
+        if (request.query.attachPost) {
+          // Create a queryParams object
+          const query: Record<string, any> = request.query;
+          const queryParams: URLSearchParams = new URLSearchParams(query);
 
-      // Define the arguments for finding many posts based on the list of postFirebaseUids
-      const postFindManyArgs: Prisma.PostFindManyArgs = {
-        select: request.server.prismaPlugin.getPostSelect(),
-        skip: (page - 1) * size,
-        take: size,
-        where: {
-          firebaseUid: {
-            in: postBookmarkFirebaseUidList
-          }
+          // Append the postId from the list of post bookmarks
+          postBookmarkList.forEach((postBookmark: PostBookmark) => {
+            queryParams.append('postIdList', String(postBookmark.postId));
+          });
+
+          // Redirect the request to the specified post URL with a 307 status code
+          return reply.status(307).redirect('/api/v1/posts?' + queryParams.toString());
         }
-      };
-
-      /** Search */
-
-      if (query) {
-        postFindManyArgs.where = {
-          ...postFindManyArgs.where,
-          name: {
-            contains: query
-          }
-        };
       }
 
-      // Execute the query to find many posts based on the specified arguments
-      await reply.server.prisma.post
-        .findMany(postFindManyArgs)
-        .then((postList: Post[]) => {
-          return reply.status(200).send({
-            data: postList,
-            statusCode: 200
-          });
-        })
-        .catch((error: Error) => {
-          const responseError: ResponseError = reply.server.prismaPlugin.getErrorPrisma(error) as ResponseError;
-
-          return reply.status(responseError.statusCode).send(responseError);
-        });
+      // If postBookmarkList not found or attachPost is not present, return a 200 status code with the postBookmarkList data
+      return reply.status(200).send({
+        data: postBookmarkList,
+        statusCode: 200
+      });
     }
   });
 }

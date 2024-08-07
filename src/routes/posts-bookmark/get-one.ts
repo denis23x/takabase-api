@@ -1,14 +1,14 @@
 /** @format */
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { ParamsFirebaseUid } from '../../types/crud/params/params-firebase-uid';
-import type { Post, PostBookmark, Prisma } from '../../database/client';
-import type { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { ParamsId } from '../../types/crud/params/params-id';
+import type { Prisma, PostBookmark } from '../../database/client';
+import type { PostBookmarkGetOneDto } from '../../types/dto/post-bookmark/post-bookmark-get-one';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'GET',
-    url: ':firebaseUid',
+    url: ':id',
     onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Posts-Bookmark'],
@@ -21,8 +21,17 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       params: {
         type: 'object',
         properties: {
-          firebaseUid: {
-            $ref: 'partsFirebaseUidSchema#'
+          id: {
+            $ref: 'partsIdSchema#'
+          }
+        }
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          attachPost: {
+            type: 'boolean',
+            example: 'false'
           }
         }
       },
@@ -31,7 +40,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           type: 'object',
           properties: {
             data: {
-              $ref: 'postSchema#'
+              $ref: 'postBookmarkSchema#'
             },
             statusCode: {
               type: 'number'
@@ -46,55 +55,40 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<ParamsFirebaseUid>, reply: FastifyReply): Promise<any> {
+    // prettier-ignore
+    handler: async function (request: FastifyRequest<ParamsId & PostBookmarkGetOneDto>, reply: FastifyReply): Promise<any> {
       // Extract the firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
 
       // Extract post information from the request object
-      const postFirebaseUid: string = request.params.firebaseUid;
+      const postId: number = Number(request.params.id);
 
-      // Define the arguments for finding unique post bookmark based on userFirebaseUid and postFirebaseUid
-      const postBookmarkFindUniqueOrThrowArgs: Prisma.PostBookmarkFindUniqueOrThrowArgs = {
-        select: {
-          postFirebaseUid: true
-        },
+      // Define the arguments for finding unique post bookmark based on postId and userFirebaseUid
+      const postBookmarkFindUniqueArgs: Prisma.PostBookmarkFindUniqueArgs = {
         where: {
-          postFirebaseUid_userFirebaseUid: {
-            postFirebaseUid,
+          postId_userFirebaseUid: {
+            postId,
             userFirebaseUid
           }
         }
       };
 
-      // prettier-ignore
-      const postBookmark: PostBookmark = await reply.server.prisma.postBookmark.findUniqueOrThrow(postBookmarkFindUniqueOrThrowArgs);
+      // Execute the query to find many post bookmark based on the specified arguments
+      const postBookmark: PostBookmark | null = await reply.server.prisma.postBookmark.findUnique(postBookmarkFindUniqueArgs);
 
-      // Define the arguments for finding post bookmark based on the list of postFirebaseUid
-      const postFindUniqueOrThrowArgs: Prisma.PostFindUniqueOrThrowArgs = {
-        select: {
-          ...request.server.prismaPlugin.getPostSelect(),
-          firebaseUid: true,
-          markdown: true
-        },
-        where: {
-          firebaseUid: postBookmark.postFirebaseUid
+      // Check if postBookmark exists and attachPost query parameter is present
+      if (postBookmark) {
+        if (request.query.attachPost) {
+          // Redirect the request to the specified post URL with a 307 status code
+          return reply.status(307).redirect('/api/v1/posts/' + postBookmark.postId);
         }
-      };
+      }
 
-      // Execute the query to find post based on the specified arguments
-      await reply.server.prisma.post
-        .findUniqueOrThrow(postFindUniqueOrThrowArgs)
-        .then((post: Post) => {
-          return reply.status(200).send({
-            data: post,
-            statusCode: 200
-          });
-        })
-        .catch((error: Error) => {
-          const responseError: ResponseError = reply.server.prismaPlugin.getErrorPrisma(error) as ResponseError;
-
-          return reply.status(responseError.statusCode).send(responseError);
-        });
+      // If postBookmark not found or attachPost is not present, return a 200 status code with the postBookmark data
+      return reply.status(200).send({
+        data: postBookmark,
+        statusCode: 200
+      });
     }
   });
 }

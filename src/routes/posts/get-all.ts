@@ -15,11 +15,17 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       querystring: {
         type: 'object',
         properties: {
+          username: {
+            $ref: 'partsUsernameSchema#'
+          },
           categoryId: {
             $ref: 'partsIdSchema#'
           },
-          username: {
-            $ref: 'partsUsernameSchema#'
+          postIdList: {
+            type: 'array',
+            items: {
+              type: 'number'
+            }
           },
           query: {
             $ref: 'partsPageQuerySchema#'
@@ -65,7 +71,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<QuerystringSearch>, reply: FastifyReply): Promise<any> {
-      const { username, categoryId, query, scope, size, page }: Record<string, any> = request.query;
+      const { username, categoryId, postIdList, query, scope, size, page }: Record<string, any> = request.query;
 
       const postFindManyArgs: Prisma.PostFindManyArgs = {
         select: request.server.prismaPlugin.getPostSelect(),
@@ -91,6 +97,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         postFindManyArgs.where = {
           ...postFindManyArgs.where,
           categoryId
+        };
+      }
+
+      /** Bookmarks */
+
+      if (postIdList?.length) {
+        postFindManyArgs.orderBy = undefined;
+        postFindManyArgs.where = {
+          ...postFindManyArgs.where,
+          id: {
+            in: postIdList
+          }
         };
       }
 

@@ -6,6 +6,7 @@ export interface QuerystringSearch {
     query?: string;
     username?: string;
     categoryId?: number;
+    postIdList?: number[];
     scope?: string[];
     page: number;
     size: number;

@@ -1,14 +1,14 @@
 /** @format */
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { ParamsFirebaseUid } from '../../types/crud/params/params-firebase-uid';
+import type { ParamsId } from '../../types/crud/params/params-id';
 import type { PostBookmark, Prisma, PrismaClient } from '../../database/client';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'DELETE',
-    url: ':firebaseUid',
+    url: ':id',
     onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Posts-Bookmark'],
@@ -21,8 +21,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       params: {
         type: 'object',
         properties: {
-          firebaseUid: {
-            $ref: 'partsFirebaseUidSchema#'
+          id: {
+            $ref: 'partsIdSchema#'
           }
         }
       },
@@ -46,7 +46,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<ParamsFirebaseUid>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<ParamsId>, reply: FastifyReply): Promise<any> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
@@ -54,7 +54,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const userFirebaseUid: string = request.user.uid;
 
       // Extract post information from the request object
-      const postFirebaseUid: string = request.params.firebaseUid;
+      const postId: number = Number(request.params.id);
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -67,9 +67,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Define the arguments for deleting a post bookmark
             const postBookmarkDeleteArgs: Prisma.PostBookmarkDeleteArgs = {
               where: {
-                postFirebaseUid_userFirebaseUid: {
-                  userFirebaseUid,
-                  postFirebaseUid
+                postId_userFirebaseUid: {
+                  postId,
+                  userFirebaseUid
                 }
               }
             };

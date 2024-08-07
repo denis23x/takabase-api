@@ -21,11 +21,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       body: {
         type: 'object',
         properties: {
-          firebaseUid: {
-            $ref: 'partsFirebaseUidSchema#'
+          postId: {
+            $ref: 'partsIdSchema#'
           }
         },
-        required: ['firebaseUid']
+        required: ['postId']
       },
       response: {
         '201': {
@@ -55,7 +55,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const userFirebaseUid: string = request.user.uid;
 
       // Extract post information from the request object
-      const postFirebaseUid: string = request.body.firebaseUid;
+      const postId: number = Number(request.body.postId);
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -75,7 +75,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 },
                 post: {
                   connect: {
-                    firebaseUid: postFirebaseUid
+                    id: postId
                   }
                 }
               }

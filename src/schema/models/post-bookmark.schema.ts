@@ -3,6 +3,7 @@
 export const postBookmarkSchema: Record<string, any> = {
   $id: 'postBookmarkSchema',
   type: 'object',
+  nullable: true,
   properties: {
     id: {
       $ref: 'partsIdSchema#'

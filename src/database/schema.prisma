@@ -71,16 +71,16 @@ model Post {
 
 model PostBookmark {
   id                Int       @id @default(autoincrement()) @db.Int
-  postFirebaseUid   String    @db.VarChar(255)
+  postId            Int       @db.Int
   userFirebaseUid   String    @db.VarChar(255)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @default(now()) @updatedAt
   deletedAt         DateTime? @db.DateTime(6)
-  post              Post      @relation(fields: [postFirebaseUid], references: [firebaseUid], onDelete: NoAction, onUpdate: NoAction)
+  post              Post      @relation(fields: [postId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user              User      @relation(fields: [userFirebaseUid], references: [firebaseUid], onDelete: NoAction, onUpdate: NoAction)
 
-  @@unique([postFirebaseUid, userFirebaseUid])
-  @@index([postFirebaseUid])
+  @@unique([postId, userFirebaseUid])
+  @@index([postId])
   @@index([userFirebaseUid])
 }
 
