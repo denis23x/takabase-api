@@ -80,6 +80,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Delete for more adjustable Prisma input
       delete request.body.categoryId;
+      delete request.body.categoryName;
 
       // Counter for transaction retries
       let requestRetries: number = 0;

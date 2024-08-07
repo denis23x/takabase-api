@@ -56,6 +56,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
           }
         },
+        '4xx': {
+          $ref: 'responseErrorSchema#'
+        },
         '5xx': {
           $ref: 'responseErrorSchema#'
         }

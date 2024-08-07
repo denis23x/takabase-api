@@ -8,8 +8,8 @@ export const postBookmarkSchema: Record<string, any> = {
     id: {
       $ref: 'partsIdSchema#'
     },
-    postFirebaseUid: {
-      $ref: 'partsFirebaseUidSchema#'
+    postId: {
+      $ref: 'partsIdSchema#'
     },
     userFirebaseUid: {
       $ref: 'partsFirebaseUidSchema#'
