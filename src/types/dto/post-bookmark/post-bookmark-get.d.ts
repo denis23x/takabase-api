@@ -1,6 +1,6 @@
 /** @format */
 
-export interface PostBookmarkGetOneDto {
+export interface PostBookmarkGetDto {
   Querystring: {
     attachPost: boolean;
   };

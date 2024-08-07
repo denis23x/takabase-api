@@ -1,7 +1,7 @@
 /** @format */
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { PostBookmarkGetAllDto } from '../../types/dto/post-bookmark/post-bookmark-get-all';
+import type { PostBookmarkGetDto } from '../../types/dto/post-bookmark/post-bookmark-get';
 import type { PostBookmark, Prisma } from '../../database/client';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
@@ -21,8 +21,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         type: 'object',
         properties: {
           attachPost: {
-            type: 'boolean',
-            example: 'false'
+            $ref: 'partsPostBookmarkAttachSchema#'
           }
         }
       },
@@ -49,7 +48,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<PostBookmarkGetAllDto>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<PostBookmarkGetDto>, reply: FastifyReply): Promise<any> {
       // Extract the firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
 

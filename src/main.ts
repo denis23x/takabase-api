@@ -72,6 +72,7 @@ import { partsPageSizeSchema } from './schema/parts/page/parts-page-size.schema'
 import { partsPostDescriptionSchema } from './schema/parts/post/parts-post-description.schema';
 import { partsPostMarkdownSchema } from './schema/parts/post/parts-post-markdown.schema';
 import { partsPostNameSchema } from './schema/parts/post/parts-post-name.schema';
+import { partsPostBookmarkAttachSchema } from './schema/parts/post-bookmark/parts-post-bookmark-attach.schema';
 import { partsUserDescriptionSchema } from './schema/parts/user/parts-user-description.schema';
 import { partsUserEmailSchema } from './schema/parts/user/parts-user-email.schema';
 import { partsUsernameSchema } from './schema/parts/user/parts-user-name.schema';
@@ -88,7 +89,6 @@ export const main = async (): Promise<FastifyInstance> => {
     ignoreDuplicateSlashes: true,
     ajv: {
       customOptions: {
-        removeAdditional: 'all',
         keywords: ['collectionFormat', 'example']
       }
     },
@@ -150,6 +150,7 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsPostDescriptionSchema);
   fastifyInstance.addSchema(partsPostMarkdownSchema);
   fastifyInstance.addSchema(partsPostNameSchema);
+  fastifyInstance.addSchema(partsPostBookmarkAttachSchema);
   fastifyInstance.addSchema(partsUserDescriptionSchema);
   fastifyInstance.addSchema(partsUserEmailSchema);
   fastifyInstance.addSchema(partsUsernameSchema);
