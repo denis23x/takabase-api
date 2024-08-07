@@ -1,14 +1,14 @@
 /** @format */
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { PostBookmarkDeleteDto } from '../../types/dto/post-bookmark/post-bookmark-delete';
+import type { ParamsFirebaseUid } from '../../types/crud/params/params-firebase-uid';
 import type { PostBookmark, Prisma, PrismaClient } from '../../database/client';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'DELETE',
-    url: '',
+    url: ':firebaseUid',
     onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Posts-Bookmark'],
@@ -18,14 +18,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           swaggerBearerAuth: []
         }
       ],
-      querystring: {
+      params: {
         type: 'object',
         properties: {
           firebaseUid: {
             $ref: 'partsFirebaseUidSchema#'
           }
-        },
-        required: ['firebaseUid']
+        }
       },
       response: {
         '200': {
@@ -47,7 +46,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<PostBookmarkDeleteDto>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<ParamsFirebaseUid>, reply: FastifyReply): Promise<any> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
@@ -55,7 +54,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const userFirebaseUid: string = request.user.uid;
 
       // Extract post information from the request object
-      const postFirebaseUid: string = request.query.firebaseUid;
+      const postFirebaseUid: string = request.params.firebaseUid;
 
       // Counter for transaction retries
       let requestRetries: number = 0;
