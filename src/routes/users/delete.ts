@@ -255,18 +255,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               const postIndexObjectsDelete: ChunkedBatchResponse = await postIndex.deleteObjects([...postIndexIDs]);
             }
 
-            // Define arguments to delete user's post bookmarks
-            const postBookmarkDeleteManyArgs: Prisma.PostBookmarkDeleteManyArgs = {
-              where: {
-                userFirebaseUid
-              }
-            };
-
-            // Delete user's post bookmarks
-            // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const postBookmarkList: Prisma.BatchPayload = await prismaClient.postBookmark.deleteMany(postBookmarkDeleteManyArgs);
-
             // Check if there are results in the fetched category index objects
             if (categoryIndexObjects.results.length) {
               //! Define rollback action for Algolia delete category objects

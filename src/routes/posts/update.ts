@@ -90,6 +90,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const postIndex: SearchIndex = request.server.algolia.initIndex('post');
       const postIndexObjects: GetObjectsResponse<any> = await postIndex.getObjects([String(postId)]);
 
+      // Delete for more adjustable Prisma input
+      delete request.body.categoryName;
+
       // Define an array of DocumentReference objects for the post documents in Firestore
       const postDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(postPath);
 

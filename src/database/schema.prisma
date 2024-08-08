@@ -76,8 +76,8 @@ model PostBookmark {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @default(now()) @updatedAt
   deletedAt         DateTime? @db.DateTime(6)
-  post              Post      @relation(fields: [postId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user              User      @relation(fields: [userFirebaseUid], references: [firebaseUid], onDelete: NoAction, onUpdate: NoAction)
+  post              Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user              User      @relation(fields: [userFirebaseUid], references: [firebaseUid], onDelete: Cascade)
 
   @@unique([postId, userFirebaseUid])
   @@index([postId])
