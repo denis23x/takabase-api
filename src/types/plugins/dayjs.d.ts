@@ -10,6 +10,7 @@ declare module 'fastify' {
       getEndOf: (date: Dayjs) => Dayjs;
       getMin: (dateList: Dayjs[]) => Dayjs;
       getRange: (dateStart: Dayjs, dateEnd: Dayjs, unit: ManipulateType) => Dayjs[];
+      getUnixTimestamp: (date: Date) => number;
     };
   }
 }

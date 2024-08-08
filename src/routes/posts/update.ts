@@ -301,7 +301,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 ...request.server.helperPlugin.mapObjectValuesToNull(post),
                 objectID: String(post.id),
                 updatedAt: post.updatedAt,
-                updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(post.updatedAt),
+                updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(post.updatedAt),
                 category: {
                   id: post.category.id
                 }

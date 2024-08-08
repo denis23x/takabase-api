@@ -10,7 +10,6 @@ declare module 'fastify' {
       getFile: (indexObjects: any, reply: FastifyReply) => FastifyReply;
       setClear: (index: string) => Promise<void>;
       getSync: (index: string, indexObjects: any, reply: FastifyReply) => Promise<FastifyReply>;
-      getUnixTimestamp: (date: Date) => number;
     };
   }
 }

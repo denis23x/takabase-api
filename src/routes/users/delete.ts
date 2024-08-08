@@ -2,7 +2,7 @@
 
 import { parse } from 'path';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { Category, Post, Prisma, PrismaClient, User } from '../../database/client';
+import type { Category, Post, PostPassword, PostPrivate, Prisma, PrismaClient, User } from '../../database/client';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
 import type { UserRecord } from 'firebase-admin/lib/auth/user-record';
@@ -80,8 +80,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // prettier-ignore
       const userDocumentSnapshot: DocumentSnapshot = await userDocumentReference.get();
 
-      // Define arguments to fetch user's posts from Prisma
-      const userPostFindManyArgs: Prisma.PostFindManyArgs = {
+      // Define arguments to fetch user's posts and password and private from Prisma
+      // prettier-ignore
+      const postFindManyArgs: Prisma.PostPasswordFindManyArgs | Prisma.PostPrivateFindManyArgs | Prisma.PostFindManyArgs = {
         select: {
           id: true,
           firebaseUid: true,
@@ -92,22 +93,43 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       };
 
-      // Fetch user's posts from the database
-      const userPostList: Post[] = await request.server.prisma.post.findMany(userPostFindManyArgs);
+      // Fetch user's posts and password and private from the database
+      const postListMap: Record<string, (Post | PostPassword | PostPrivate)[]> = {
+        postPassword: await request.server.prisma.postPassword.findMany(postFindManyArgs),
+        postPrivate: await request.server.prisma.postPrivate.findMany(postFindManyArgs),
+        post: await request.server.prisma.post.findMany(postFindManyArgs)
+      };
+
+      // Construct Firestore document references for user's posts or password or private from the Firestore
+      // prettier-ignore
+      const getReference = (postList: (Post | PostPassword | PostPrivate)[], postPath: string): DocumentReference[] => {
+        return postList
+          .map((post: Post | PostPassword | PostPrivate) => ['users', userFirebaseUid, postPath, post.firebaseUid].join('/'))
+          .map((documentPath: string) => request.server.firestorePlugin.getDocumentReference(documentPath));
+      };
+
+      const postReferenceListMap: Record<string, DocumentReference[]> = {
+        postPassword: getReference(postListMap.postPassword, 'posts-password'),
+        postPrivate: getReference(postListMap.postPrivate, 'posts-private'),
+        post: getReference(postListMap.post, 'posts')
+      };
+
+      // Fetch document snapshots for user's posts or password or private from the Firestore
+      // prettier-ignore
+      const getSnapshot = (postListReference: DocumentReference[]): Promise<DocumentSnapshot[]> => {
+        return Promise.all(postListReference.map(async (documentReference: DocumentReference): Promise<DocumentSnapshot> => documentReference.get()));
+      };
+
+      const postSnapshotListMap: Record<string, DocumentSnapshot[]> = {
+        postPassword: await getSnapshot(postReferenceListMap.postPassword),
+        postPrivate: await getSnapshot(postReferenceListMap.postPrivate),
+        post: await getSnapshot(postReferenceListMap.post)
+      };
 
       // Initialize the Algolia search index for category related posts objects
       const postIndex: SearchIndex = request.server.algolia.initIndex('post');
-      const postIndexIDs: string[] = userPostList.map((post: Post) => String(post.id));
+      const postIndexIDs: string[] = (postListMap.post as Post[]).map((post: Post) => String(post.id));
       const postIndexObjects: GetObjectsResponse<any> = await postIndex.getObjects([...postIndexIDs]);
-
-      // Construct Firestore document references for user's posts
-      const userPostListDocumentReference: DocumentReference[] = userPostList
-        .map((post: Post) => ['users', userFirebaseUid, 'posts', post.firebaseUid].join('/'))
-        .map((documentPath: string) => request.server.firestorePlugin.getDocumentReference(documentPath));
-
-      // Fetch document snapshots for user's posts from Firestore
-      // prettier-ignore
-      const userPostListDocumentSnapshot: DocumentSnapshot[] = await Promise.all(userPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<DocumentSnapshot> => documentReference.get()));
 
       // Define arguments to fetch user's categories from Prisma
       const categoryPostFindManyArgs: Prisma.CategoryFindManyArgs = {
@@ -141,64 +163,84 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Re-initialize requestRollback object
             requestRollback = {};
 
-            //! Define rollback action for user's Firestore post documents
-            requestRollback.postListDocument = async (): Promise<void> => {
-              await Promise.all(userPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<WriteResult> => {
-                const documentSnapshot: DocumentSnapshot | undefined = userPostListDocumentSnapshot.find((snapshot: DocumentSnapshot) => {
-                  return snapshot.id === documentReference.id
-                });
+            // Run for every post entity
+            for (const key of Object.keys(postListMap)) {
+              const postList: (Post | PostPassword | PostPrivate)[] = postListMap[key];
+              const postReferenceList: DocumentReference[] = postReferenceListMap[key];
+              const postSnapshotList: DocumentSnapshot[] = postSnapshotListMap[key];
 
-                return documentReference.set(documentSnapshot?.data() as DocumentData);
-              }));
-            };
+              //! Define rollback action for user's Firestore post documents
+              requestRollback[key + 'Document'] = async (): Promise<void> => {
+                await Promise.all(postReferenceList.map(async (documentReference: DocumentReference): Promise<WriteResult> => {
+                  const documentSnapshot: DocumentSnapshot | undefined = postSnapshotList.find((snapshot: DocumentSnapshot) => {
+                    return snapshot.id === documentReference.id
+                  });
 
-            // Delete user's Firestore post documents
-            // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const postListDocumentDelete: WriteResult[] = await Promise
-              .all(userPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<WriteResult> => documentReference.delete()))
-              .catch((error: any) => request.server.helperPlugin.throwError('firestore/delete-document-failed', error, request));
-
-            // Extract URLs of images associated with user's posts
-            const postListImageList: string[] = userPostList
-              .filter((post: Post) => post.image)
-              .map((post: Post) => post.image);
-
-            // Move images associated with user's posts to temporary storage
-            if (postListImageList.length) {
-              const postListImageListDestination: string[] = request.server.markdownPlugin.getImageListRelativeUrl(postListImageList);
-              const tempListImageList: string[] = await request.server.storagePlugin
-                .setImageListMove(postListImageListDestination, 'temp')
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-              //! Define rollback action for images moved to temporary storage
-              requestRollback.tempListImageList = async (): Promise<void> => {
-                await Promise.all(tempListImageList.map(async (tempImageList: string, i: number): Promise<string[]> => {
-                  return request.server.storagePlugin.setImageListMove([tempImageList], parse(decodeURIComponent(postListImageListDestination[i])).dir);
+                  return documentReference.set(documentSnapshot?.data() as DocumentData);
                 }));
               };
-            }
 
-            // Extract URLs of markdown images associated with user's posts
-            const postListMarkdownList: string[][] = userPostListDocumentSnapshot
-              .map((documentSnapshot: DocumentSnapshot) => documentSnapshot.data())
-              .filter((documentData: DocumentData | undefined) => documentData?.markdown)
-              .map((documentData: DocumentData | undefined) => documentData?.markdown);
+              // Delete user's Firestore post documents
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const postListDocumentDelete: WriteResult[] = await Promise
+                .all(postReferenceList.map(async (documentReference: DocumentReference): Promise<WriteResult> => documentReference.delete()))
+                .catch((error: any) => request.server.helperPlugin.throwError('firestore/delete-document-failed', error, request));
 
-            // Move markdown images associated with user's posts to temporary storage
-            if (postListMarkdownList.some((postMarkdownList: string[]) => postMarkdownList.length)) {
-              const tempListMarkdownList: string[][] = await Promise
-                .all(postListMarkdownList.map(async (postMarkdownList: string[]): Promise<string[]> => {
-                  return request.server.storagePlugin.setImageListMove(postMarkdownList, 'temp');
-                }))
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+              // Extract URLs of images associated with user's posts
+              const postListImageList: string[] = postList
+                .filter((post: Post | PostPassword | PostPrivate) => post.image)
+                .map((post: Post | PostPassword | PostPrivate) => post.image);
 
-              //! Define rollback action for markdown images moved to temporary storage
-              requestRollback.tempListMarkdownList = async (): Promise<void> => {
-                await Promise.all(tempListMarkdownList.map(async (tempMarkdownList: string[], i: number): Promise<string[]> => {
-                  return request.server.storagePlugin.setImageListMove(tempMarkdownList, parse(postListMarkdownList[i][0]).dir);
-                }));
+              // Move images associated with user's posts to temporary storage
+              if (postListImageList.length) {
+                const postListImageListDestination: string[] = request.server.markdownPlugin.getImageListRelativeUrl(postListImageList);
+                const tempListImageList: string[] = await request.server.storagePlugin
+                  .setImageListMove(postListImageListDestination, 'temp')
+                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+
+                //! Define rollback action for images moved to temporary storage
+                requestRollback[key + 'ImageList'] = async (): Promise<void> => {
+                  await Promise.all(tempListImageList.map(async (tempImageList: string, i: number): Promise<string[]> => {
+                    return request.server.storagePlugin.setImageListMove([tempImageList], parse(decodeURIComponent(postListImageListDestination[i])).dir);
+                  }));
+                };
+              }
+
+              // Extract URLs of markdown images associated with user's posts
+              const postListMarkdownList: string[][] = postSnapshotList
+                .map((documentSnapshot: DocumentSnapshot) => documentSnapshot.data())
+                .filter((documentData: DocumentData | undefined) => documentData?.markdown)
+                .map((documentData: DocumentData | undefined) => documentData?.markdown);
+
+              //! Move markdown images associated with user's posts to temporary storage
+              if (postListMarkdownList.some((postMarkdownList: string[]) => postMarkdownList.length)) {
+                const tempListMarkdownList: string[][] = await Promise
+                  .all(postListMarkdownList.map(async (postMarkdownList: string[]): Promise<string[]> => {
+                    return request.server.storagePlugin.setImageListMove(postMarkdownList, 'temp');
+                  }))
+                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+
+                //! Define rollback action for markdown images moved to temporary storage
+                requestRollback[key + 'MarkdownList'] = async (): Promise<void> => {
+                  await Promise.all(tempListMarkdownList.map(async (tempMarkdownList: string[], i: number): Promise<string[]> => {
+                    return request.server.storagePlugin.setImageListMove(tempMarkdownList, parse(postListMarkdownList[i][0]).dir);
+                  }));
+                };
+              }
+
+              // Define arguments to delete user's posts and password and private from Prisma
+              // prettier-ignore
+              const postDeleteManyArgs: Prisma.PostPasswordDeleteManyArgs | Prisma.PostPrivateDeleteManyArgs | Prisma.PostDeleteManyArgs = {
+                where: {
+                  userFirebaseUid
+                }
               };
+
+              //! Delete user's posts
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const postListDelete: Prisma.BatchPayload = await prismaClient[key].deleteMany(postDeleteManyArgs);
             }
 
             // Check if there are results in the fetched post index objects
@@ -213,17 +255,17 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               const postIndexObjectsDelete: ChunkedBatchResponse = await postIndex.deleteObjects([...postIndexIDs]);
             }
 
-            // Define arguments to delete user's posts
-            const postDeleteManyArgs: Prisma.PostDeleteManyArgs = {
+            // Define arguments to delete user's post bookmarks
+            const postBookmarkDeleteManyArgs: Prisma.PostBookmarkDeleteManyArgs = {
               where: {
                 userFirebaseUid
               }
             };
 
-            // Delete user's posts
+            // Delete user's post bookmarks
             // @ts-ignore
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const postList: Prisma.BatchPayload = await prismaClient.post.deleteMany(postDeleteManyArgs);
+            const postBookmarkList: Prisma.BatchPayload = await prismaClient.postBookmark.deleteMany(postBookmarkDeleteManyArgs);
 
             // Check if there are results in the fetched category index objects
             if (categoryIndexObjects.results.length) {

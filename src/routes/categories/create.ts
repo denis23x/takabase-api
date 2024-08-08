@@ -115,8 +115,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const categoryIndexObject: SaveObjectResponse = await categoryIndex.saveObject({
               ...request.server.helperPlugin.mapObjectValuesToNull(category),
               objectID: String(category.id),
-              updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.updatedAt),
-              createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.createdAt),
+              updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(category.updatedAt),
+              createdAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(category.createdAt),
               user: {
                 id: category.user.id,
                 avatar: category.user.avatar,

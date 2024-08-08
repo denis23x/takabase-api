@@ -54,8 +54,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const categoryObjects: (Category & Record<string, any>)[] = category.map((category: Category) => ({
         ...request.server.helperPlugin.mapObjectValuesToNull(category),
         objectID: String(category.id),
-        updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.updatedAt),
-        createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(category.createdAt)
+        updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(category.updatedAt),
+        createdAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(category.createdAt)
       }));
 
       switch (request.query.addRecords) {

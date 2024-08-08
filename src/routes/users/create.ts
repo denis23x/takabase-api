@@ -171,8 +171,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const userIndexObject: SaveObjectResponse = await userIndex.saveObject({
               ...request.server.helperPlugin.mapObjectValuesToNull(user),
               objectID: String(user.id),
-              updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(user.updatedAt),
-              createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(user.createdAt),
+              updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(user.updatedAt),
+              createdAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(user.createdAt),
             });
 
             //! Define rollback action for Algolia delete user object

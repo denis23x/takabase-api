@@ -28,6 +28,9 @@ const DayjsPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fast
       }
 
       return dateRange;
+    },
+    getUnixTimestamp: (date: Date): number => {
+      return Math.floor(date.getTime() / 1000);
     }
   });
 });

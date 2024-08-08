@@ -227,8 +227,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const postIndexObject: SaveObjectResponse = await postIndex.saveObject({
               ...request.server.helperPlugin.mapObjectValuesToNull(post),
               objectID: String(post.id),
-              updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(post.updatedAt),
-              createdAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(post.createdAt),
+              updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(post.updatedAt),
+              createdAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(post.createdAt),
               user: {
                 id: post.user.id,
                 avatar: post.user.avatar,

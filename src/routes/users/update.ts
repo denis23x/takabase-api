@@ -252,7 +252,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 ...request.server.helperPlugin.mapObjectValuesToNull(user),
                 objectID: String(user.id),
                 updatedAt: user.updatedAt,
-                updatedAtUnixTimestamp: request.server.algoliaPlugin.getUnixTimestamp(user.updatedAt),
+                updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(user.updatedAt),
               }]);
             }
 
