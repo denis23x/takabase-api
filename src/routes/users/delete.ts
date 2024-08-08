@@ -228,19 +228,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                   }));
                 };
               }
-
-              // Define arguments to delete user's posts and password and private from Prisma
-              // prettier-ignore
-              const postDeleteManyArgs: Prisma.PostPasswordDeleteManyArgs | Prisma.PostPrivateDeleteManyArgs | Prisma.PostDeleteManyArgs = {
-                where: {
-                  userFirebaseUid
-                }
-              };
-
-              //! Delete user's posts
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const postListDelete: Prisma.BatchPayload = await prismaClient[key].deleteMany(postDeleteManyArgs);
             }
 
             // Check if there are results in the fetched post index objects
@@ -266,18 +253,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const categoryIndexObjectsDelete: ChunkedBatchResponse = await categoryIndex.deleteObjects([...categoryIndexIDs]);
             }
-
-            // Define arguments to delete user's categories
-            const categoryDeleteManyArgs: Prisma.CategoryDeleteManyArgs = {
-              where: {
-                userFirebaseUid
-              }
-            };
-
-            // Delete user's categories
-            // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const categoryList: Prisma.BatchPayload = await prismaClient.category.deleteMany(categoryDeleteManyArgs);
 
             //! Define rollback action for user Firestore document
             requestRollback.userDocument = async (): Promise<void> => {

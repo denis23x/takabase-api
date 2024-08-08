@@ -209,19 +209,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const postIndexObjectsDelete: ChunkedBatchResponse = await postIndex.deleteObjects([...postIndexIDs]);
               }
-
-              // Define arguments to delete category related posts
-              const postDeleteManyArgs: Prisma.PostDeleteManyArgs = {
-                where: {
-                  userFirebaseUid,
-                  categoryId
-                }
-              };
-
-              // Delete category related posts
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const postList: Prisma.BatchPayload = await prismaClient.post.deleteMany(postDeleteManyArgs);
             } else {
               // Check if there are results in the fetched post index objects
               if (postIndexObjects.results.length) {

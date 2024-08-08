@@ -40,7 +40,7 @@ model Category {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @default(now()) @updatedAt
   deletedAt         DateTime? @db.DateTime(6)
-  user              User      @relation(fields: [userFirebaseUid], references: [firebaseUid], onDelete: NoAction, onUpdate: NoAction)
+  user              User      @relation(fields: [userFirebaseUid], references: [firebaseUid], onDelete: Cascade)
   posts             Post[]
 
   @@unique([name, userFirebaseUid])
@@ -59,8 +59,8 @@ model Post {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @default(now()) @updatedAt
   deletedAt         DateTime? @db.DateTime(6)
-  category          Category  @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user              User      @relation(fields: [userFirebaseUid], references: [firebaseUid], onDelete: NoAction, onUpdate: NoAction)
+  category          Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  user              User      @relation(fields: [userFirebaseUid], references: [firebaseUid], onDelete: Cascade)
   bookmark          PostBookmark[]
 
   @@unique([name, categoryId])
@@ -96,7 +96,7 @@ model PostPassword {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @default(now()) @updatedAt
   deletedAt         DateTime? @db.DateTime(6)
-  user              User      @relation(fields: [userFirebaseUid], references: [firebaseUid], onDelete: NoAction, onUpdate: NoAction)
+  user              User      @relation(fields: [userFirebaseUid], references: [firebaseUid], onDelete: Cascade)
 
   @@index([firebaseUid])
   @@index([userFirebaseUid])
@@ -113,7 +113,7 @@ model PostPrivate {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @default(now()) @updatedAt
   deletedAt         DateTime? @db.DateTime(6)
-  user              User      @relation(fields: [userFirebaseUid], references: [firebaseUid], onDelete: NoAction, onUpdate: NoAction)
+  user              User      @relation(fields: [userFirebaseUid], references: [firebaseUid], onDelete: Cascade)
 
   @@index([firebaseUid])
   @@index([userFirebaseUid])
