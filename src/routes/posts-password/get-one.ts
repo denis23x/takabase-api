@@ -56,7 +56,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     handler: async function (request: FastifyRequest<ParamsId & QuerystringScope>, reply: FastifyReply): Promise<any> {
       const { password, scope }: Record<string, any> = request.query;
 
-      const postPasswordFindUniqueOrThrowArgs: Prisma.PostPasswordFindUniqueOrThrowArgs = {
+      const postPasswordFindUniqueArgs: Prisma.PostPasswordFindUniqueArgs = {
         select: {
           ...request.server.prismaPlugin.getPostPasswordSelect(),
           firebaseUid: true,
@@ -69,19 +69,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Check if a password is provided
       if (password) {
-        postPasswordFindUniqueOrThrowArgs.where.password = password;
-        postPasswordFindUniqueOrThrowArgs.select.password = false;
+        postPasswordFindUniqueArgs.where.password = password;
+        postPasswordFindUniqueArgs.select.password = false;
       } else {
         // If no password is provided, check if the request has a user
         if (request.user) {
-          postPasswordFindUniqueOrThrowArgs.where.userFirebaseUid = request.user.uid;
-          postPasswordFindUniqueOrThrowArgs.select.password = true;
+          postPasswordFindUniqueArgs.where.userFirebaseUid = request.user.uid;
+          postPasswordFindUniqueArgs.select.password = true;
         } else {
-          // If there is no user and no password, return a 403 Forbidden error
-          return reply.status(403).send({
-            message: 'Request failed due to insufficient permissions',
-            error: 'Forbidden',
-            statusCode: 403
+          // If there is no user and no password, return null
+          return reply.status(200).send({
+            data: null,
+            statusCode: 200
           });
         }
       }
@@ -89,17 +88,24 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       /** Scope */
 
       if (scope) {
-        // prettier-ignore
-        postPasswordFindUniqueOrThrowArgs.select = request.server.prismaPlugin.setScope(postPasswordFindUniqueOrThrowArgs, scope);
+        postPasswordFindUniqueArgs.select = request.server.prismaPlugin.setScope(postPasswordFindUniqueArgs, scope);
       }
 
       await reply.server.prisma.postPassword
-        .findUniqueOrThrow(postPasswordFindUniqueOrThrowArgs)
-        .then((postPassword: PostPassword) => {
-          return reply.status(200).send({
-            data: postPassword,
-            statusCode: 200
-          });
+        .findUnique(postPasswordFindUniqueArgs)
+        .then((postPassword: PostPassword | null) => {
+          if (!postPassword && password) {
+            return reply.status(403).send({
+              error: 'Forbidden',
+              message: 'Access denied',
+              statusCode: 403
+            });
+          } else {
+            return reply.status(200).send({
+              data: postPassword,
+              statusCode: 200
+            });
+          }
         })
         .catch((error: Error) => {
           const responseError: ResponseError = reply.server.prismaPlugin.getErrorPrisma(error) as ResponseError;

@@ -3,6 +3,7 @@
 export const postPasswordSchema: Record<string, any> = {
   $id: 'postPasswordSchema',
   type: 'object',
+  nullable: true,
   properties: {
     id: {
       $ref: 'partsIdSchema#'
