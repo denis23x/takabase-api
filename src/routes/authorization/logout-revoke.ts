@@ -1,7 +1,7 @@
 /** @format */
 
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { ResponseError } from '../../types/crud/response/response-error.schema';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { ResponseError } from '../../types/crud/response/response-error.schema';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({

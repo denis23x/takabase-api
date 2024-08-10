@@ -1,6 +1,6 @@
 /** @format */
 
-import { Prisma } from '../../database/client';
+import type { Prisma } from '../../database/client';
 import type { Dayjs } from 'dayjs';
 import type { Category } from '../../database/client';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';

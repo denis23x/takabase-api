@@ -1,6 +1,5 @@
 /** @format */
 
-import dayjs from 'dayjs';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { InsightGetDto } from '../../types/dto/insight/insight-get';
 
@@ -57,7 +56,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     handler: async function (request: FastifyRequest<InsightGetDto>, reply: FastifyReply): Promise<any> {
       const { value, unit }: Record<string, any> = request.query;
 
-      const getPreceding = (): string => dayjs().subtract(value, unit).toISOString();
+      const getPreceding = (): string => request.server.dayjs().subtract(value, unit).toISOString();
 
       const getChangeState = (percent: number): string => {
         return percent === 0 ? 'stasis' : percent > 0 ? 'positive' : 'negative';

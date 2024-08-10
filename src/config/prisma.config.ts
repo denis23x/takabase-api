@@ -1,9 +1,9 @@
 /** @format */
 
-import { Prisma } from '../database/client';
 import { config } from 'dotenv';
 import { connect } from '@tidbcloud/serverless';
 import { PrismaTiDBCloud } from '@tidbcloud/prisma-adapter';
+import type { Prisma } from '../database/client';
 
 config({
   path: '.env.takabase-local',
