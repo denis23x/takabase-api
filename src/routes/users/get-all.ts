@@ -107,7 +107,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         userFindManyArgs.select = request.server.prismaPlugin.setScope(userFindManyArgs, scope);
       }
 
-      await reply.server.prisma.user
+      await request.server.prisma.user
         .findMany(userFindManyArgs)
         .then((userList: User[]) => {
           return reply.status(200).send({

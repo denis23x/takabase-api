@@ -63,7 +63,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       };
 
       // prettier-ignore
-      const postBookmarkList: PostBookmark[] = await reply.server.prisma.postBookmark.findMany(postBookmarkFindManyArgs);
+      const postBookmarkList: PostBookmark[] = await request.server.prisma.postBookmark.findMany(postBookmarkFindManyArgs);
 
       // Check if postBookmarkList exists and attachPost query parameter is present
       if (postBookmarkList.length) {

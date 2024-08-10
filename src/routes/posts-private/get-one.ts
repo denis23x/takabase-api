@@ -77,7 +77,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         postPrivateFindUniqueOrThrowArgs.select = request.server.prismaPlugin.setScope(postPrivateFindUniqueOrThrowArgs, scope);
       }
 
-      await reply.server.prisma.postPrivate
+      await request.server.prisma.postPrivate
         .findUniqueOrThrow(postPrivateFindUniqueOrThrowArgs)
         .then((postPrivate: PostPrivate) => {
           return reply.status(200).send({

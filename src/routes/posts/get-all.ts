@@ -132,7 +132,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         postFindManyArgs.select = request.server.prismaPlugin.setScope(postFindManyArgs, scope);
       }
 
-      await reply.server.prisma.post
+      await request.server.prisma.post
         .findMany(postFindManyArgs)
         .then((postList: Post[]) => {
           return reply.status(200).send({

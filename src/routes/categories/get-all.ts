@@ -104,7 +104,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         categoryFindManyArgs.select = request.server.prismaPlugin.setScope(categoryFindManyArgs, scope);
       }
 
-      await reply.server.prisma.category
+      await request.server.prisma.category
         .findMany(categoryFindManyArgs)
         .then((categoryList: Category[]) => {
           return reply.status(200).send({

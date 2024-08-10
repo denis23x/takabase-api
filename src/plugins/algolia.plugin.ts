@@ -6,9 +6,12 @@ import { algoliaConfig } from '../config/algolia.config';
 import type { FastifyInstance, FastifyPluginAsync, FastifyReply } from 'fastify';
 import type { ChunkedBatchResponse, DeleteResponse } from '@algolia/client-search';
 import type { SearchIndex } from 'algoliasearch';
+import type { SearchClient } from 'algoliasearch/dist/algoliasearch';
 
 const AlgoliaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
-  fastifyInstance.decorate('algolia', algoliasearch(algoliaConfig.appId, algoliaConfig.apiKey));
+  const searchClient: SearchClient = algoliasearch(algoliaConfig.appId, algoliaConfig.apiKey);
+
+  fastifyInstance.decorate('algolia', searchClient);
 
   fastifyInstance.decorate('algoliaPlugin', {
     getFile: (indexObjects: any, reply: FastifyReply): FastifyReply => {

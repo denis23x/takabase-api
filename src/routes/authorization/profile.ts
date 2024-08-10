@@ -53,7 +53,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       };
 
       // Use Prisma to find a unique user based on the defined arguments
-      await reply.server.prisma.user
+      await request.server.prisma.user
         .findUnique(userFindUniqueArgs)
         .then((user: User) => {
           if (user) {

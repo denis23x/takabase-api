@@ -73,7 +73,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       };
 
       // Execute the query to find many post bookmark based on the specified arguments
-      const postBookmark: PostBookmark | null = await reply.server.prisma.postBookmark.findUnique(postBookmarkFindUniqueArgs);
+      const postBookmark: PostBookmark | null = await request.server.prisma.postBookmark.findUnique(postBookmarkFindUniqueArgs);
 
       // Check if postBookmark exists and attachPost query parameter is present
       if (postBookmark) {

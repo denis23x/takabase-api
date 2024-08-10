@@ -65,10 +65,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       switch (request.query.addRecords) {
         case 'Download file': {
-          return reply.server.algoliaPlugin.getFile(postObjects, reply);
+          return request.server.algoliaPlugin.getFile(postObjects, reply);
         }
         case 'Use the API': {
-          return reply.server.algoliaPlugin.getSync('post', postObjects, reply);
+          return request.server.algoliaPlugin.getSync('post', postObjects, reply);
         }
         default: {
           return reply.status(400).send({

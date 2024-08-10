@@ -8,7 +8,9 @@ import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import type { ResponseError } from '../types/crud/response/response-error.schema';
 
 const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
-  fastifyInstance.decorate('prisma', new PrismaClient(prismaConfig));
+  const prismaClient: PrismaClient = new PrismaClient(prismaConfig);
+
+  fastifyInstance.decorate('prisma', prismaClient);
 
   fastifyInstance.decorate('prismaPlugin', {
     getCategorySelect: (): Prisma.CategorySelect => ({
@@ -249,8 +251,8 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
     }
   });
 
-  fastifyInstance.addHook('onClose', async (instance: FastifyInstance): Promise<void> => {
-    await instance.prisma.$disconnect();
+  fastifyInstance.addHook('onClose', async (fastifyInstance: FastifyInstance): Promise<void> => {
+    await fastifyInstance.prisma.$disconnect();
   });
 });
 

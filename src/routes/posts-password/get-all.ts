@@ -99,7 +99,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         postPasswordFindManyArgs.select = request.server.prismaPlugin.setScope(postPasswordFindManyArgs, scope);
       }
 
-      await reply.server.prisma.postPassword
+      await request.server.prisma.postPassword
         .findMany(postPasswordFindManyArgs)
         .then((postPasswordList: PostPassword[]) => {
           return reply.status(200).send({

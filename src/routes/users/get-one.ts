@@ -68,7 +68,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         userFindUniqueOrThrowArgs.select = request.server.prismaPlugin.setScope(userFindUniqueOrThrowArgs, scope);
       }
 
-      await reply.server.prisma.user
+      await request.server.prisma.user
         .findUniqueOrThrow(userFindUniqueOrThrowArgs)
         .then((user: User) => {
           return reply.status(200).send({

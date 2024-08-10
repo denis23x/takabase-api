@@ -2,11 +2,14 @@
 
 import fp from 'fastify-plugin';
 import { getRemoteConfig } from 'firebase-admin/remote-config';
+import type { RemoteConfig } from 'firebase-admin/remote-config';
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import type { ExplicitParameterValue, RemoteConfigTemplate } from 'firebase-admin/remote-config';
 
 const remoteConfigPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
-  fastifyInstance.decorate('remoteConfig', getRemoteConfig(fastifyInstance.firebase()));
+  const remoteConfig: RemoteConfig = getRemoteConfig(fastifyInstance.firebase());
+
+  fastifyInstance.decorate('remoteConfig', remoteConfig);
 
   // prettier-ignore
   fastifyInstance.decorate('remoteConfigPlugin', {

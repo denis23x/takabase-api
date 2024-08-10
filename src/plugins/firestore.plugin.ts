@@ -2,11 +2,14 @@
 
 import fp from 'fastify-plugin';
 import { getFirestore } from 'firebase-admin/firestore';
+import type { Firestore } from 'firebase-admin/firestore';
 import type { DocumentReference } from 'firebase-admin/firestore';
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 
 const firestorePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
-  fastifyInstance.decorate('firestore', getFirestore(fastifyInstance.firebase()));
+  const firestore: Firestore = getFirestore(fastifyInstance.firebase());
+
+  fastifyInstance.decorate('firestore', firestore);
 
   fastifyInstance.decorate('firestorePlugin', {
     addDocument: (collectionPath: string, documentData: any): Promise<DocumentReference> => {

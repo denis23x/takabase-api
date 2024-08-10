@@ -25,6 +25,7 @@ import { staticConfig } from './config/static.config';
 // PLUGINS
 
 import algoliaPlugin from './plugins/algolia.plugin';
+import appCheckPlugin from './plugins/app-check.plugin';
 import authPlugin from './plugins/auth.plugin';
 import dayjsPlugin from './plugins/dayjs.plugin';
 import firebasePlugin from './plugins/firebase.plugin';
@@ -32,6 +33,7 @@ import firestorePlugin from './plugins/firestore.plugin';
 import helperPlugin from './plugins/helper.plugin';
 import markdownPlugin from './plugins/markdown.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
+import redisPlugin from './plugins/redis.plugin';
 import remoteConfigPlugin from './plugins/remote-config.plugin';
 import sitemapPlugin from './plugins/sitemap.plugin';
 import storagePlugin from './plugins/storage.plugin';
@@ -122,10 +124,12 @@ export const main = async (): Promise<FastifyInstance> => {
   // PLUGINS HANDMADE
 
   await fastifyInstance.register(algoliaPlugin);
+  await fastifyInstance.register(appCheckPlugin);
   await fastifyInstance.register(dayjsPlugin);
   await fastifyInstance.register(helperPlugin);
   await fastifyInstance.register(markdownPlugin);
   await fastifyInstance.register(prismaPlugin);
+  await fastifyInstance.register(redisPlugin);
   await fastifyInstance.register(sitemapPlugin);
 
   // JSON SCHEMA CRUD

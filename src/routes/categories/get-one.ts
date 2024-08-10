@@ -74,7 +74,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         categoryFindUniqueOrThrowArgs.select = request.server.prismaPlugin.setScope(categoryFindUniqueOrThrowArgs, scope);
       }
 
-      await reply.server.prisma.category
+      await request.server.prisma.category
         .findUniqueOrThrow(categoryFindUniqueOrThrowArgs)
         .then((category: Category) => {
           return reply.status(200).send({

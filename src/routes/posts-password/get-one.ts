@@ -91,7 +91,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         postPasswordFindUniqueArgs.select = request.server.prismaPlugin.setScope(postPasswordFindUniqueArgs, scope);
       }
 
-      await reply.server.prisma.postPassword
+      await request.server.prisma.postPassword
         .findUnique(postPasswordFindUniqueArgs)
         .then((postPassword: PostPassword | null) => {
           if (!postPassword && password) {

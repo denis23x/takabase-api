@@ -99,7 +99,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         postPrivateFindManyArgs.select = request.server.prismaPlugin.setScope(postPrivateFindManyArgs, scope);
       }
 
-      await reply.server.prisma.postPrivate
+      await request.server.prisma.postPrivate
         .findMany(postPrivateFindManyArgs)
         .then((postPrivateList: PostPrivate[]) => {
           return reply.status(200).send({

@@ -1,6 +1,5 @@
 /** @format */
 
-import { getAppCheck } from 'firebase-admin/app-check';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { AppCheckToken } from 'firebase-admin/app-check';
 import type { AppCheckDto } from '../../types/dto/authorization/app-check';
@@ -35,7 +34,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<AppCheckDto>, reply: FastifyReply): Promise<any> {
-      await getAppCheck(request.server.firebase())
+      await request.server.appCheck
         .createToken(request.body.appId)
         .then((appCheckToken: AppCheckToken) => {
           return reply.status(200).send({

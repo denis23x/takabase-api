@@ -3,13 +3,20 @@
 import fp from 'fastify-plugin';
 import { storageConfig } from '../config/storage.config';
 import { getStorage } from 'firebase-admin/storage';
-import { parse, ParsedPath } from 'path';
+import { parse } from 'path';
+import type { ParsedPath } from 'path';
+import type { Storage } from 'firebase-admin/storage';
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import type { MoveResponse, File, GetFilesResponse, GetFilesOptions } from '@google-cloud/storage';
+import type { MoveResponse, File, GetFilesResponse, GetFilesOptions, Bucket } from '@google-cloud/storage';
 
 // prettier-ignore
 const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
-  fastifyInstance.decorate('storage', getStorage().bucket(storageConfig.bucket));
+  const storage: Storage = getStorage();
+  const bucket: Bucket = getStorage().bucket(storageConfig.bucket);
+
+  fastifyInstance.decorate('storage', storage);
+
+  fastifyInstance.decorate('storageBucket', bucket);
 
   fastifyInstance.decorate('storagePlugin', {
     setImageListMove: async (imageList: string[] = [], moveDestination: string): Promise<string[]> => {
@@ -18,7 +25,7 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
         const parsedPath: ParsedPath = parse(source);
         const destination: string = decodeURIComponent([moveDestination, parsedPath.base].join('/'));
 
-        return fastifyInstance.storage
+        return fastifyInstance.bucket
           .file(source)
           .move(destination)
           .then((moveResponse: MoveResponse) => moveResponse.shift() as File)
@@ -40,7 +47,7 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
         prefix: decodeURIComponent(imageListDestination)
       };
 
-      return fastifyInstance.storage
+      return fastifyInstance.bucket
         .getFiles(options)
         .then((getFilesResponse: GetFilesResponse) => getFilesResponse.flat().map((file: any) => file.name));
     }
