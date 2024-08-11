@@ -7,8 +7,16 @@ import { DatabaseError } from '@tidbcloud/serverless';
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import type { ResponseError } from '../types/crud/response/response-error.schema';
 
+//! Singleton
+
+let prismaClient: PrismaClient = null;
+
 const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
-  const prismaClient: PrismaClient = new PrismaClient(prismaConfig);
+  if (!prismaClient) {
+    prismaClient = new PrismaClient(prismaConfig);
+  }
+
+  //!Set instance
 
   fastifyInstance.decorate('prisma', prismaClient);
 
@@ -250,6 +258,8 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
       }
     }
   });
+
+  //! Shutdown
 
   fastifyInstance.addHook('onClose', async (fastifyInstance: FastifyInstance): Promise<void> => {
     await fastifyInstance.prisma.$disconnect();

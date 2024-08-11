@@ -31,6 +31,7 @@ import dayjsPlugin from './plugins/dayjs.plugin';
 import firebasePlugin from './plugins/firebase.plugin';
 import firestorePlugin from './plugins/firestore.plugin';
 import helperPlugin from './plugins/helper.plugin';
+import lavinMQPlugin from './plugins/lavinmq.plugin';
 import markdownPlugin from './plugins/markdown.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
 import redisPlugin from './plugins/redis.plugin';
@@ -127,6 +128,7 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(appCheckPlugin);
   await fastifyInstance.register(dayjsPlugin);
   await fastifyInstance.register(helperPlugin);
+  await fastifyInstance.register(lavinMQPlugin);
   await fastifyInstance.register(markdownPlugin);
   await fastifyInstance.register(prismaPlugin);
   await fastifyInstance.register(redisPlugin);

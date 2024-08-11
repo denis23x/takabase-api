@@ -8,8 +8,16 @@ import type { ChunkedBatchResponse, DeleteResponse } from '@algolia/client-searc
 import type { SearchIndex } from 'algoliasearch';
 import type { SearchClient } from 'algoliasearch/dist/algoliasearch';
 
-const AlgoliaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
-  const searchClient: SearchClient = algoliasearch(algoliaConfig.appId, algoliaConfig.apiKey);
+//! Singleton
+
+let searchClient: SearchClient = null;
+
+const algoliaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
+  if (!searchClient) {
+    searchClient = algoliasearch(algoliaConfig.appId, algoliaConfig.apiKey);
+  }
+
+  //!Set instance
 
   fastifyInstance.decorate('algolia', searchClient);
 
@@ -46,4 +54,4 @@ const AlgoliaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
   });
 });
 
-export default AlgoliaPlugin;
+export default algoliaPlugin;

@@ -7,6 +7,7 @@ import type { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } f
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { SearchIndex } from 'algoliasearch';
 import type { ChunkedBatchResponse, GetObjectsResponse } from '@algolia/client-search';
+// import type { QueueParams } from '@cloudamqp/amqp-client/types/amqp-channel';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -172,6 +173,19 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Delete post
             return prismaClient.post.delete(postDeleteArgs);
           }).then((post: Post) => {
+            // TODO: queue image delete
+            // const queueName: string = 'testQueue';
+            // const queueParams: QueueParams = {
+            //   durable: false
+            // };
+            //
+            // const queueMessage: string = JSON.stringify({
+            //   message: 'Hello, LavinMQ!'
+            // });
+            //
+            // await request.server.lavinMQ.channel.queueDeclare(queueName, queueParams);
+            // await request.server.lavinMQ.channel.basicPublish('', queueName, Buffer.from(queueMessage));
+
             // Send success response with deleted post
             return reply.status(200).send({
               data: post,

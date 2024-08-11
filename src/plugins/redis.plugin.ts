@@ -5,8 +5,16 @@ import { Redis } from '@upstash/redis';
 import { redisConfig } from '../config/redis.config';
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 
+//! Singleton
+
+let redis: Redis = null;
+
 const redisPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
-  const redis: Redis = new Redis(redisConfig);
+  if (!redis) {
+    redis = new Redis(redisConfig);
+  }
+
+  //!Set instance
 
   fastifyInstance.decorate('redis', redis);
 });

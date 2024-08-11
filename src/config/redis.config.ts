@@ -11,6 +11,6 @@ config({
 // https://github.com/redis/ioredis
 
 export const redisConfig: RedisConfigNodejs = {
-  url: 'https://major-kodiak-58739.upstash.io',
-  token: 'AeVzAAIjcDE0ODYxM2FkMzNlZDY0MDBmOTVkYTFhMzc5N2JjZTdlZnAxMA'
+  url: String(process.env.API_REDIS_URL),
+  token: String(process.env.API_REDIS_TOKEN)
 };
