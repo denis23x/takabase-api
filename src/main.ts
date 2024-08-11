@@ -34,7 +34,6 @@ import helperPlugin from './plugins/helper.plugin';
 import lavinMQPlugin from './plugins/lavinmq.plugin';
 import markdownPlugin from './plugins/markdown.plugin';
 import prismaPlugin from './plugins/prisma.plugin';
-import redisPlugin from './plugins/redis.plugin';
 import remoteConfigPlugin from './plugins/remote-config.plugin';
 import sitemapPlugin from './plugins/sitemap.plugin';
 import storagePlugin from './plugins/storage.plugin';
@@ -131,7 +130,6 @@ export const main = async (): Promise<FastifyInstance> => {
   await fastifyInstance.register(lavinMQPlugin);
   await fastifyInstance.register(markdownPlugin);
   await fastifyInstance.register(prismaPlugin);
-  await fastifyInstance.register(redisPlugin);
   await fastifyInstance.register(sitemapPlugin);
 
   // JSON SCHEMA CRUD
