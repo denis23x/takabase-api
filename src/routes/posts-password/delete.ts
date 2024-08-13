@@ -69,7 +69,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Extract post information from the request object
       const postPasswordId: number = Number(request.params.id);
       const postPasswordFirebaseUid: string = request.query.firebaseUid;
-      const postPasswordImage: string | undefined = request.query.image;
+      const postPasswordPath: string = ['users', userFirebaseUid, 'posts-password', postPasswordFirebaseUid].join('/');
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -84,10 +84,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<PostPassword> => {
             // Re-initialize requestRollback object
             requestRollback = {};
-
-            // Prepare the post image URLs
-            const postPasswordPath: string = ['users', userFirebaseUid, 'posts-password', postPasswordFirebaseUid].join('/');
-            const postPasswordMarkdownListDestination: string = [postPasswordPath, 'markdown'].join('/');
 
             // Get the reference to the post document
             const postPasswordDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(postPasswordPath);
@@ -109,43 +105,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               .delete()
               .catch((error: any) => request.server.helperPlugin.throwError('firestore/delete-document-failed', error, request));
 
-            // If post has an image, move it to temp storage
-            if (postPasswordImage) {
-              // Define the destination path of the post image
-              const postPasswordImageListDestination: string[] = request.server.markdownPlugin.getImageListRelativeUrl([postPasswordImage]);
-
-              // Move the post image to temporary storage
-              const tempImageList: string[] = await request.server.storagePlugin
-                .setImageListMove(postPasswordImageListDestination, 'temp')
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-              //! Define rollback action for post image moved to temporary storage
-              requestRollback.tempImageList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(tempImageList, postPasswordPath);
-              };
-            }
-
-            // Get the list of markdown images associated with the post
-            const postPasswordMarkdownList: string[] = await request.server.storagePlugin
-              .getImageList(postPasswordMarkdownListDestination)
-              .catch((error: any) => request.server.helperPlugin.throwError('storage/get-filelist-failed', error, request));
-
-            // If there are markdown images associated with the post
-            if (postPasswordMarkdownList.length) {
-              // Move the post markdown images to temporary storage
-              const tempMarkdownList: string[] = await request.server.storagePlugin
-                .setImageListMove(postPasswordMarkdownList, 'temp')
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-              //! Define rollback action for post markdown images moved to temporary storage
-              requestRollback.tempMarkdownList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(tempMarkdownList, postPasswordMarkdownListDestination);
-              };
-            }
-
             // Define arguments to delete post
             const postPasswordDeleteArgs: Prisma.PostPasswordDeleteArgs = {
-              select: request.server.prismaPlugin.getPostPasswordSelect(),
+              select: {
+                ...request.server.prismaPlugin.getPostPasswordSelect(),
+                firebaseUid: true,
+                userFirebaseUid: true
+              },
               where: {
                 id: postPasswordId,
                 userFirebaseUid
@@ -155,6 +121,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Delete post
             return prismaClient.postPassword.delete(postPasswordDeleteArgs);
           }).then((postPassword: PostPassword) => {
+            //! Queue append
+            request.server.lavinMQPlugin.setImageListMoveToTemp([postPasswordPath, 'image'].join('/'));
+            request.server.lavinMQPlugin.setImageListMoveToTemp([postPasswordPath, 'markdown'].join('/'));
+
             // Send success response with deleted post
             return reply.status(200).send({
               data: postPassword,

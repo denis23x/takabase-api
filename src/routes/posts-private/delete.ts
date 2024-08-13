@@ -69,7 +69,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Extract post information from the request object
       const postPrivateId: number = Number(request.params.id);
       const postPrivateFirebaseUid: string = request.query.firebaseUid;
-      const postPrivateImage: string | undefined = request.query.image;
+      const postPrivatePath: string = ['users', userFirebaseUid, 'posts-private', postPrivateFirebaseUid].join('/');
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -84,10 +84,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<PostPrivate> => {
             // Re-initialize requestRollback object
             requestRollback = {};
-
-            // Prepare the post image URLs
-            const postPrivatePath: string = ['users', userFirebaseUid, 'posts-private', postPrivateFirebaseUid].join('/');
-            const postPrivateMarkdownListDestination: string = [postPrivatePath, 'markdown'].join('/');
 
             // Get the reference to the post document
             const postPrivateDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(postPrivatePath);
@@ -109,43 +105,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               .delete()
               .catch((error: any) => request.server.helperPlugin.throwError('firestore/delete-document-failed', error, request));
 
-            // If post has an image, move it to temp storage
-            if (postPrivateImage) {
-              // Define the destination path of the post image
-              const postPrivateImageListDestination: string[] = request.server.markdownPlugin.getImageListRelativeUrl([postPrivateImage]);
-
-              // Move the post image to temporary storage
-              const tempImageList: string[] = await request.server.storagePlugin
-                .setImageListMove(postPrivateImageListDestination, 'temp')
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-              //! Define rollback action for post image moved to temporary storage
-              requestRollback.tempImageList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(tempImageList, postPrivatePath);
-              };
-            }
-
-            // Get the list of markdown images associated with the post
-            const postPrivateMarkdownList: string[] = await request.server.storagePlugin
-              .getImageList(postPrivateMarkdownListDestination)
-              .catch((error: any) => request.server.helperPlugin.throwError('storage/get-filelist-failed', error, request));
-
-            // If there are markdown images associated with the post
-            if (postPrivateMarkdownList.length) {
-              // Move the post markdown images to temporary storage
-              const tempMarkdownList: string[] = await request.server.storagePlugin
-                .setImageListMove(postPrivateMarkdownList, 'temp')
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-              //! Define rollback action for post markdown images moved to temporary storage
-              requestRollback.tempMarkdownList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(tempMarkdownList, postPrivateMarkdownListDestination);
-              };
-            }
-
             // Define arguments to delete post
             const postPrivateDeleteArgs: Prisma.PostPrivateDeleteArgs = {
-              select: request.server.prismaPlugin.getPostPrivateSelect(),
+              select: {
+                ...request.server.prismaPlugin.getPostPrivateSelect(),
+                firebaseUid: true,
+                userFirebaseUid: true
+              },
               where: {
                 id: postPrivateId,
                 userFirebaseUid
@@ -155,6 +121,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Delete post
             return prismaClient.postPrivate.delete(postPrivateDeleteArgs);
           }).then((postPrivate: PostPrivate) => {
+            //! Queue append
+            request.server.lavinMQPlugin.setImageListMoveToTemp([postPrivatePath, 'image'].join('/'));
+            request.server.lavinMQPlugin.setImageListMoveToTemp([postPrivatePath, 'markdown'].join('/'));
+
             // Send success response with deleted post
             return reply.status(200).send({
               data: postPrivate,

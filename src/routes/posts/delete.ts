@@ -7,7 +7,6 @@ import type { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } f
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { SearchIndex } from 'algoliasearch';
 import type { ChunkedBatchResponse, GetObjectsResponse } from '@algolia/client-search';
-// import type { QueueParams } from '@cloudamqp/amqp-client/types/amqp-channel';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -72,7 +71,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Extract post information from the request object
       const postId: number = Number(request.params.id);
       const postFirebaseUid: string = request.query.firebaseUid;
-      const postImage: string | undefined = request.query.image;
+      const postPath: string = ['users', userFirebaseUid, 'posts', postFirebaseUid].join('/');
       const postIndex: SearchIndex = request.server.algolia.initIndex('post');
       const postIndexObjects: GetObjectsResponse<any> = await postIndex.getObjects([String(postId)]);
 
@@ -89,10 +88,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           await request.server.prisma.$transaction(async (prismaClient: PrismaClient): Promise<Post> => {
             // Re-initialize requestRollback object
             requestRollback = {};
-
-            // Prepare the post image URLs
-            const postPath: string = ['users', userFirebaseUid, 'posts', postFirebaseUid].join('/');
-            const postMarkdownListDestination: string = [postPath, 'markdown'].join('/');
 
             // Get the reference to the post document
             const postDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(postPath);
@@ -114,40 +109,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               .delete()
               .catch((error: any) => request.server.helperPlugin.throwError('firestore/delete-document-failed', error, request));
 
-            // If post has an image, move it to temp storage
-            if (postImage) {
-              // Define the destination path of the post image
-              const postImageListDestination: string[] = request.server.markdownPlugin.getImageListRelativeUrl([postImage]);
-
-              // Move the post image to temporary storage
-              const tempImageList: string[] = await request.server.storagePlugin
-                .setImageListMove(postImageListDestination, 'temp')
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-              //! Define rollback action for post image moved to temporary storage
-              requestRollback.tempImageList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(tempImageList, postPath);
-              };
-            }
-
-            // Get the list of markdown images associated with the post
-            const postMarkdownList: string[] = await request.server.storagePlugin
-              .getImageList(postMarkdownListDestination)
-              .catch((error: any) => request.server.helperPlugin.throwError('storage/get-filelist-failed', error, request));
-
-            // If there are markdown images associated with the post
-            if (postMarkdownList.length) {
-              // Move the post markdown images to temporary storage
-              const tempMarkdownList: string[] = await request.server.storagePlugin
-                .setImageListMove(postMarkdownList, 'temp')
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-              //! Define rollback action for post markdown images moved to temporary storage
-              requestRollback.tempMarkdownList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(tempMarkdownList, postMarkdownListDestination);
-              };
-            }
-
             // Check if there are results in the fetched post index objects
             if (postIndexObjects.results.length) {
               //! Define rollback action for Algolia delete post object
@@ -163,7 +124,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Define arguments to delete post
             const postDeleteArgs: Prisma.PostDeleteArgs = {
-              select: request.server.prismaPlugin.getPostSelect(),
+              select: {
+                ...request.server.prismaPlugin.getPostSelect(),
+                firebaseUid: true,
+                userFirebaseUid: true
+              },
               where: {
                 id: postId,
                 userFirebaseUid
@@ -173,18 +138,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Delete post
             return prismaClient.post.delete(postDeleteArgs);
           }).then((post: Post) => {
-            // TODO: queue image delete
-            // const queueName: string = 'testQueue';
-            // const queueParams: QueueParams = {
-            //   durable: false
-            // };
-            //
-            // const queueMessage: string = JSON.stringify({
-            //   message: 'Hello, LavinMQ!'
-            // });
-            //
-            // await request.server.lavinMQ.channel.queueDeclare(queueName, queueParams);
-            // await request.server.lavinMQ.channel.basicPublish('', queueName, Buffer.from(queueMessage));
+            //! Queue append
+            request.server.lavinMQPlugin.setImageListMoveToTemp([postPath, 'image'].join('/'));
+            request.server.lavinMQPlugin.setImageListMoveToTemp([postPath, 'markdown'].join('/'));
 
             // Send success response with deleted post
             return reply.status(200).send({

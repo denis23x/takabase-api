@@ -17,7 +17,7 @@ const algoliaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
     searchClient = algoliasearch(algoliaConfig.appId, algoliaConfig.apiKey);
   }
 
-  //!Set instance
+  //! Set instance
 
   fastifyInstance.decorate('algolia', searchClient);
 

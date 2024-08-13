@@ -76,6 +76,7 @@ export const apiHttpsOptions: HttpsOptions = {
     'API_DATABASE_DIRECT_URL',
     'API_ALGOLIA_APP_ID',
     'API_ALGOLIA_API_KEY',
+    'API_LAVINMQ_URL'
   ]
 };
 

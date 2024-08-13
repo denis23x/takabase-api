@@ -16,7 +16,7 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
     prismaClient = new PrismaClient(prismaConfig);
   }
 
-  //!Set instance
+  //! Set instance
 
   fastifyInstance.decorate('prisma', prismaClient);
 

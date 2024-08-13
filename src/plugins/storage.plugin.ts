@@ -12,11 +12,11 @@ import type { MoveResponse, File, GetFilesResponse, GetFilesOptions, Bucket } fr
 // prettier-ignore
 const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   const storage: Storage = getStorage();
-  const bucket: Bucket = getStorage().bucket(storageConfig.bucket);
+  const bucket: Bucket = storage.bucket(storageConfig.bucket);
+
+  fastifyInstance.decorate('bucket', bucket);
 
   fastifyInstance.decorate('storage', storage);
-
-  fastifyInstance.decorate('storageBucket', bucket);
 
   fastifyInstance.decorate('storagePlugin', {
     setImageListMove: async (imageList: string[] = [], moveDestination: string): Promise<string[]> => {
