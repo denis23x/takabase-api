@@ -1,6 +1,5 @@
 /** @format */
 
-import { parse } from 'path';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Category, Post, PostPassword, PostPrivate, Prisma, PrismaClient, User } from '../../database/client';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
@@ -85,8 +84,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const postFindManyArgs: Prisma.PostPasswordFindManyArgs | Prisma.PostPrivateFindManyArgs | Prisma.PostFindManyArgs = {
         select: {
           id: true,
-          firebaseUid: true,
-          image: true
+          firebaseUid: true
         },
         where: {
           userFirebaseUid
@@ -165,7 +163,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Run for every post entity
             for (const key of Object.keys(postListMap)) {
-              const postList: (Post | PostPassword | PostPrivate)[] = postListMap[key];
               const postReferenceList: DocumentReference[] = postReferenceListMap[key];
               const postSnapshotList: DocumentSnapshot[] = postSnapshotListMap[key];
 
@@ -186,48 +183,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               const postListDocumentDelete: WriteResult[] = await Promise
                 .all(postReferenceList.map(async (documentReference: DocumentReference): Promise<WriteResult> => documentReference.delete()))
                 .catch((error: any) => request.server.helperPlugin.throwError('firestore/delete-document-failed', error, request));
-
-              // Extract URLs of images associated with user's posts
-              const postListImageList: string[] = postList
-                .filter((post: Post | PostPassword | PostPrivate) => post.image)
-                .map((post: Post | PostPassword | PostPrivate) => post.image);
-
-              // Move images associated with user's posts to temporary storage
-              if (postListImageList.length) {
-                const postListImageListDestination: string[] = request.server.markdownPlugin.getImageListRelativeUrl(postListImageList);
-                const tempListImageList: string[] = await request.server.storagePlugin
-                  .setImageListMove(postListImageListDestination, 'temp')
-                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-                //! Define rollback action for images moved to temporary storage
-                requestRollback[key + 'ImageList'] = async (): Promise<void> => {
-                  await Promise.all(tempListImageList.map(async (tempImageList: string, i: number): Promise<string[]> => {
-                    return request.server.storagePlugin.setImageListMove([tempImageList], parse(decodeURIComponent(postListImageListDestination[i])).dir);
-                  }));
-                };
-              }
-
-              // Extract URLs of markdown images associated with user's posts
-              const postListMarkdownList: string[][] = postSnapshotList
-                .map((documentSnapshot: DocumentSnapshot) => documentSnapshot.data())
-                .filter((documentData: DocumentData | undefined) => documentData?.markdown)
-                .map((documentData: DocumentData | undefined) => documentData?.markdown);
-
-              //! Move markdown images associated with user's posts to temporary storage
-              if (postListMarkdownList.some((postMarkdownList: string[]) => postMarkdownList.length)) {
-                const tempListMarkdownList: string[][] = await Promise
-                  .all(postListMarkdownList.map(async (postMarkdownList: string[]): Promise<string[]> => {
-                    return request.server.storagePlugin.setImageListMove(postMarkdownList, 'temp');
-                  }))
-                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-                //! Define rollback action for markdown images moved to temporary storage
-                requestRollback[key + 'MarkdownList'] = async (): Promise<void> => {
-                  await Promise.all(tempListMarkdownList.map(async (tempMarkdownList: string[], i: number): Promise<string[]> => {
-                    return request.server.storagePlugin.setImageListMove(tempMarkdownList, parse(postListMarkdownList[i][0]).dir);
-                  }));
-                };
-              }
             }
 
             // Check if there are results in the fetched post index objects
@@ -252,6 +207,19 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // @ts-ignore
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const categoryIndexObjectsDelete: ChunkedBatchResponse = await categoryIndex.deleteObjects([...categoryIndexIDs]);
+            }
+
+            // Check if there are results in the fetched user index objects
+            if (userIndexObjects.results.length) {
+              //! Define rollback action for Algolia delete user object
+              requestRollback.userIndexObjects = async (): Promise<void> => {
+                await userIndex.saveObjects([...userIndexObjects.results]);
+              };
+
+              // Delete Algolia user index object
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const userIndexObjectsDelete: ChunkedBatchResponse = await userIndex.deleteObjects([String(userId)]);
             }
 
             //! Define rollback action for user Firestore document
@@ -281,37 +249,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const userAuthRecordDelete: UserRecord = await request.server.auth.deleteUser(userAuthRecord.uid);
 
-            // Fetch the list of user avatars
-            const userAvatarListDestination: string = ['users', userFirebaseUid, 'avatar'].join('/');
-            const userAvatarList: string[] = await request.server.storagePlugin
-              .getImageList(userAvatarListDestination)
-              .catch((error: any) => request.server.helperPlugin.throwError('storage/get-filelist-failed', error, request));
-
-            // Move images associated with user avatar to temporary storage
-            if (userAvatarList.length) {
-              const tempAvatarList: string[] = await request.server.storagePlugin
-                .setImageListMove(userAvatarList, 'temp')
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-              //! Define rollback action for user avatars moved to temporary storage
-              requestRollback.tempAvatarList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(tempAvatarList, userAvatarListDestination);
-              };
-            }
-
-            // Check if there are results in the fetched user index objects
-            if (userIndexObjects.results.length) {
-              //! Define rollback action for Algolia delete user object
-              requestRollback.userIndexObjects = async (): Promise<void> => {
-                await userIndex.saveObjects([...userIndexObjects.results]);
-              };
-
-              // Delete Algolia user index object
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const userIndexObjectsDelete: ChunkedBatchResponse = await userIndex.deleteObjects([String(userId)]);
-            }
-
             // Define arguments to delete user
             const userDeleteArgs: Prisma.UserDeleteArgs = {
               select: request.server.prismaPlugin.getUserSelect(),
@@ -324,6 +261,21 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Delete user
             return prismaClient.user.delete(userDeleteArgs);
           }).then((user: User) => {
+            // Run for every post entity
+            for (const key of Object.keys(postListMap)) {
+              postListMap[key].forEach((post: Post | PostPassword | PostPrivate) => {
+                const postPathEntity: string = request.server.helperPlugin.camelCaseToDashCase(key).replace('post', 'posts');
+                const postPath: string = ['users', userFirebaseUid, postPathEntity, post.firebaseUid].join('/');
+
+                //! Queue append
+                request.server.lavinMQPlugin.setImageListMoveToTemp([postPath, 'image'].join('/'));
+                request.server.lavinMQPlugin.setImageListMoveToTemp([postPath, 'markdown'].join('/'));
+              });
+            }
+
+            //! Queue append
+            request.server.lavinMQPlugin.setImageListMoveToTemp(['users', userFirebaseUid, 'avatar'].join('/'));
+
             // Send success response with deleted user data
             return reply.status(200).send({
               data: user,

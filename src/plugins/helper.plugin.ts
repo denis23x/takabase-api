@@ -14,6 +14,9 @@ const helperPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
       // Throw a new error with the original error and message
       throw new Error(message, error);
     },
+    camelCaseToDashCase: (value: string): string => {
+      return value.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+    },
     mapObjectValuesToNull: (mapObject: any): any => {
       return Object.entries(mapObject).reduce((accumulator: any, [key, value]: any) => {
         accumulator[key] = value === '' ? null : value;

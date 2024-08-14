@@ -1,6 +1,5 @@
 /** @format */
 
-import { parse } from 'path';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Category, Post, Prisma, PrismaClient } from '../../database/client';
 import type { CategoryDeleteDto } from '../../types/dto/category/category-delete';
@@ -79,8 +78,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const postFindManyArgs: Prisma.PostFindManyArgs = {
         select: {
           id: true,
-          firebaseUid: true,
-          image: true
+          firebaseUid: true
         },
         where: {
           userFirebaseUid,
@@ -152,51 +150,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               const postListDocumentDelete: WriteResult[] = await Promise
                 .all(categoryPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<WriteResult> => documentReference.delete()))
                 .catch((error: any) => request.server.helperPlugin.throwError('firestore/delete-document-failed', error, request));
-
-              // Extract URLs of post images associated with category
-              const postListImageList: string[] = categoryPostList
-                .filter((post: Post) => post.image)
-                .map((post: Post) => post.image);
-
-              // Move post images associated with category to temporary storage
-              if (postListImageList.length) {
-                // Define the destination path of the post image
-                const postListImageListDestination: string[] = request.server.markdownPlugin.getImageListRelativeUrl(postListImageList);
-
-                // Move the post image to temporary storage
-                const tempListImageList: string[] = await request.server.storagePlugin
-                  .setImageListMove(postListImageListDestination, 'temp')
-                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-                //! Define rollback action for post images moved to temporary storage
-                requestRollback.tempListImageList = async (): Promise<void> => {
-                  await Promise.all(tempListImageList.map(async (tempImageList: string, i: number): Promise<string[]> => {
-                    return request.server.storagePlugin.setImageListMove([tempImageList], parse(decodeURIComponent(postListImageListDestination[i])).dir);
-                  }));
-                };
-              }
-
-              // Extract URLs of post markdown images associated with category
-              const postListMarkdownList: string[][] = categoryPostListDocumentSnapshot
-                .map((documentSnapshot: DocumentSnapshot) => documentSnapshot.data())
-                .filter((documentData: DocumentData | undefined) => documentData?.markdown)
-                .map((documentData: DocumentData | undefined) => documentData?.markdown);
-
-              // Move post markdown images associated with category to temporary storage
-              if (postListMarkdownList.some((postMarkdownList: string[]) => postMarkdownList.length)) {
-                const tempListMarkdownList: string[][] = await Promise
-                  .all(postListMarkdownList.map(async (postMarkdownList: string[]): Promise<string[]> => {
-                    return request.server.storagePlugin.setImageListMove(postMarkdownList, 'temp');
-                  }))
-                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-                //! Define rollback action for post markdown images moved to temporary storage
-                requestRollback.tempListMarkdownList = async (): Promise<void> => {
-                  await Promise.all(tempListMarkdownList.map(async (tempMarkdownList: string[], i: number): Promise<string[]> => {
-                    return request.server.storagePlugin.setImageListMove(tempMarkdownList, parse(postListMarkdownList[i][0]).dir);
-                  }));
-                };
-              }
 
               // Check if there are results in the fetched post index objects
               if (postIndexObjects.results.length) {
@@ -272,6 +225,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Delete category
             return prismaClient.category.delete(categoryDeleteArgs);
           }).then((category: Category) => {
+            // If there is NOT a move operation
+            if (!categoryPostListMoveTo) {
+              categoryPostList.forEach((post: Post) => {
+                // Extract URLs of posts associated with category
+                const postPath: string = ['users', userFirebaseUid, 'posts', post.firebaseUid].join('/');
+
+                //! Queue append
+                request.server.lavinMQPlugin.setImageListMoveToTemp([postPath, 'image'].join('/'));
+                request.server.lavinMQPlugin.setImageListMoveToTemp([postPath, 'markdown'].join('/'));
+              });
+            }
+
             // Send success response with deleted category
             return reply.status(200).send({
               data: category,
