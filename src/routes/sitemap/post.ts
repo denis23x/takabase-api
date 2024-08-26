@@ -43,7 +43,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       const sitemap: XMLElement = xmlbuilder
         .create('urlset', { encoding: 'UTF-8' })
-        .att('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
+        .att('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9')
+        .att('xmlns:image', 'http://www.google.com/schemas/sitemap-image/1.1');
 
       postList.forEach((post: Partial<Post>) => {
         const urlElement: XMLElement = sitemap.ele('url');
