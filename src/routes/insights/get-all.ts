@@ -1,7 +1,7 @@
 /** @format */
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { InsightGetDto } from '../../types/dto/insight/insight-get';
+import type { InsightsGetDto } from '../../types/dto/insights/insights-get';
 import type { Insights } from '../../database/client';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
@@ -43,7 +43,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<InsightGetDto>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<InsightsGetDto>, reply: FastifyReply): Promise<any> {
       const { value, unit }: Record<string, any> = request.query;
 
       const getChangeState = (percent: number): string => {

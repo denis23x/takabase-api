@@ -83,6 +83,7 @@ import { partsUserTermsSchema } from './schema/parts/user/parts-user-terms.schem
 import { partsFirebaseUidSchema } from './schema/parts/parts-firebase-uid.schema';
 import { partsFirebaseUrlStorageSchema } from './schema/parts/parts-firebase-url-storage.schema';
 import { partsIdSchema } from './schema/parts/parts-id.schema';
+import { partsInsightsSchema } from './schema/parts/parts-insights.schema';
 import { partsPasswordSchema } from './schema/parts/parts-password.schema';
 import { partsScopeSchema } from './schema/parts/parts-scope.schema';
 
@@ -164,6 +165,7 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsFirebaseUidSchema);
   fastifyInstance.addSchema(partsFirebaseUrlStorageSchema);
   fastifyInstance.addSchema(partsIdSchema);
+  fastifyInstance.addSchema(partsInsightsSchema);
   fastifyInstance.addSchema(partsPasswordSchema);
   fastifyInstance.addSchema(partsScopeSchema);
 

@@ -2,8 +2,8 @@
 
 import type { ManipulateType } from 'dayjs/esm';
 
-export interface InsightGetDto {
-  Querystring: {
+export interface InsightsCreateDto {
+  Body: {
     value: number;
     unit: ManipulateType;
   };

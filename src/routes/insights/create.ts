@@ -1,7 +1,7 @@
 /** @format */
 
 import type { Dayjs, ManipulateType } from 'dayjs';
-import type { InsightCreateDto } from '../../types/dto/insight/insight-create';
+import type { InsightsCreateDto } from '../../types/dto/insights/insights-create';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 
@@ -53,7 +53,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<InsightCreateDto>, reply: FastifyReply): Promise<void> {
+    handler: async function (request: FastifyRequest<InsightsCreateDto>, reply: FastifyReply): Promise<void> {
       const { value, unit }: Record<string, ManipulateType | number> = request.body;
 
       // prettier-ignore
