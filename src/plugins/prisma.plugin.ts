@@ -78,6 +78,15 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
       updatedAt: true,
       deletedAt: false
     }),
+    getInsightsSelect: (): Prisma.InsightsSelect => ({
+      id: true,
+      categories: true,
+      posts: true,
+      users: true,
+      createdAt: true,
+      updatedAt: true,
+      deletedAt: false
+    }),
     setScope: (anyManyArgs: any, scope: string[]): any => {
       const getSelect = (value: string): any => {
         switch (value) {

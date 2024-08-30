@@ -1,6 +1,6 @@
 /** @format */
 
-import { Dayjs, ManipulateType } from 'dayjs';
+import type { Dayjs, ManipulateType } from 'dayjs';
 import type { InsightCreateDto } from '../../types/dto/insight/insight-create';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
@@ -17,16 +17,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         type: 'object',
         properties: {
           value: {
-            type: 'number',
-            minimum: 1,
-            example: 1
+            $ref: 'partsInsightsValueSchema#'
           },
           unit: {
-            type: 'string',
-            enum: ['day', 'week', 'month'],
-            example: 'day'
+            $ref: 'partsInsightsUnitSchema#'
           }
-        }
+        },
+        required: ['value', 'unit']
       },
       security: [
         {
@@ -68,7 +65,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         return request.server.prisma.category.count({
           where: {
             createdAt: {
-              lte: request.server.dayjsPlugin.getEndOf(date)
+              lte: date.utc().endOf('day')
             }
           }
         });
@@ -79,7 +76,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         return request.server.prisma.post.count({
           where: {
             createdAt: {
-              lte: request.server.dayjsPlugin.getEndOf(date)
+              lte: date.utc().endOf('day')
             }
           }
         });
@@ -90,7 +87,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         return request.server.prisma.user.count({
           where: {
             createdAt: {
-              lte: request.server.dayjsPlugin.getEndOf(date)
+              lte: date.utc().endOf('day')
             }
           }
         });
@@ -102,7 +99,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           const categories: number = categoryListCount[i];
           const posts: number = postListCount[i];
           const users: number = userListCount[i];
-          const unix: number = request.server.dayjsPlugin.getEndOf(date).unix();
+          const unix: number = date.utc().endOf('day').unix();
 
           return `(${unix}, ${categories}, ${posts}, ${users})`;
         })

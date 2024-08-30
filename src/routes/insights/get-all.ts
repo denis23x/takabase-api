@@ -2,6 +2,7 @@
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { InsightGetDto } from '../../types/dto/insight/insight-get';
+import type { Insights } from '../../database/client';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -14,10 +15,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         type: 'object',
         properties: {
           value: {
-            type: 'number'
+            $ref: 'partsInsightsValueSchema#'
           },
           unit: {
-            type: 'string'
+            $ref: 'partsInsightsUnitSchema#'
           }
         },
         required: ['value', 'unit']
@@ -27,18 +28,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           type: 'object',
           properties: {
             data: {
-              type: 'object',
-              properties: {
-                categories: {
-                  $ref: 'insightSchema#'
-                },
-                posts: {
-                  $ref: 'insightSchema#'
-                },
-                users: {
-                  $ref: 'insightSchema#'
-                }
-              }
+              $ref: 'insightsSchema#'
             },
             statusCode: {
               type: 'number'
@@ -56,8 +46,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     handler: async function (request: FastifyRequest<InsightGetDto>, reply: FastifyReply): Promise<any> {
       const { value, unit }: Record<string, any> = request.query;
 
-      const getPreceding = (): string => request.server.dayjs().subtract(value, unit).toISOString();
-
       const getChangeState = (percent: number): string => {
         return percent === 0 ? 'stasis' : percent > 0 ? 'positive' : 'negative';
       };
@@ -70,85 +58,49 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       };
 
-      // Category stat
+      // Insights
 
-      const categoryPreceding: number = await request.server.prisma.category.count({
+      const insightsPreceding: Partial<Insights> = await request.server.prisma.insights.findUnique({
+        select: request.server.prismaPlugin.getInsightsSelect(),
         where: {
-          createdAt: {
-            lte: getPreceding()
-          }
+          unix: request.server.dayjs().subtract(value, unit).utc().endOf('day').unix()
+        }
+      });
+      const insightsFollowing: Partial<Insights> = await request.server.prisma.insights.findFirst({
+        select: request.server.prismaPlugin.getInsightsSelect(),
+        orderBy: {
+          id: 'desc'
         }
       });
 
-      const categoryFollowing: number = await request.server.prisma.category.count({
-        where: {
-          createdAt: {
-            gte: getPreceding()
-          }
-        }
-      });
+      const categoryChangePercent: number = getChange(insightsPreceding.categories, insightsFollowing.categories);
+      const categoryChangeState: string = getChangeState(categoryChangePercent);
 
-      const categoryChange: number = getChange(categoryPreceding, categoryPreceding + categoryFollowing);
+      const postChangePercent: number = getChange(insightsPreceding.posts, insightsFollowing.posts);
+      const postChangeState: string = getChangeState(postChangePercent);
 
-      // Post stat
-
-      const postPreceding: number = await request.server.prisma.post.count({
-        where: {
-          createdAt: {
-            lte: getPreceding()
-          }
-        }
-      });
-
-      const postFollowing: number = await request.server.prisma.post.count({
-        where: {
-          createdAt: {
-            gte: getPreceding()
-          }
-        }
-      });
-
-      const postChange: number = getChange(postPreceding, postPreceding + postFollowing);
-
-      // User stat
-
-      const userPreceding: number = await request.server.prisma.user.count({
-        where: {
-          createdAt: {
-            lte: getPreceding()
-          }
-        }
-      });
-
-      const userFollowing: number = await request.server.prisma.user.count({
-        where: {
-          createdAt: {
-            gte: getPreceding()
-          }
-        }
-      });
-
-      const userChange: number = getChange(userPreceding, userPreceding + userFollowing);
+      const userChangePercent: number = getChange(insightsPreceding.users, insightsFollowing.users);
+      const userChangeState: string = getChangeState(userChangePercent);
 
       return reply.status(200).send({
         data: {
           categories: {
-            countPreceding: categoryPreceding,
-            countFollowing: categoryFollowing,
-            changeState: getChangeState(categoryChange),
-            changePercent: categoryChange
+            countPreceding: insightsPreceding.categories,
+            countFollowing: insightsFollowing.categories,
+            changeState: categoryChangeState,
+            changePercent: categoryChangePercent
           },
           posts: {
-            countPreceding: postPreceding,
-            countFollowing: postFollowing,
-            changeState: getChangeState(postChange),
-            changePercent: postChange
+            countPreceding: insightsPreceding.posts,
+            countFollowing: insightsFollowing.posts,
+            changeState: postChangeState,
+            changePercent: postChangePercent
           },
           users: {
-            countPreceding: userPreceding,
-            countFollowing: userFollowing,
-            changeState: getChangeState(userChange),
-            changePercent: userChange
+            countPreceding: insightsPreceding.users,
+            countFollowing: insightsFollowing.users,
+            changeState: userChangeState,
+            changePercent: userChangePercent
           }
         },
         statusCode: 200

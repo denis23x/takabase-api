@@ -55,7 +55,7 @@ import usersRoutes from './routes/users';
 // SCHEMAS
 
 import { categorySchema } from './schema/models/category.schema';
-import { insightSchema } from './schema/models/insight.schema';
+import { insightsSchema } from './schema/models/insights.schema';
 import { postSchema } from './schema/models/post.schema';
 import { postBookmarkSchema } from './schema/models/post-bookmark.schema';
 import { postPasswordSchema } from './schema/models/post-password.schema';
@@ -67,6 +67,8 @@ import { partsAlgoliaResponseSchema } from './schema/parts/algolia/parts-algolia
 import { partsAppCheckResponseSchema } from './schema/parts/authorization/parts-app-check-response.schema';
 import { partsCategoryDescriptionSchema } from './schema/parts/category/parts-category-description.schema';
 import { partsCategoryNameSchema } from './schema/parts/category/parts-category-name.schema';
+import { partsInsightsUnitSchema } from './schema/parts/insights/parts-insights-unit.schema';
+import { partsInsightsValueSchema } from './schema/parts/insights/parts-insights-value.schema';
 import { partsPageSchema } from './schema/parts/page/parts-page.schema';
 import { partsPageQuerySchema } from './schema/parts/page/parts-page-query.schema';
 import { partsPageSizeSchema } from './schema/parts/page/parts-page-size.schema';
@@ -134,7 +136,7 @@ export const main = async (): Promise<FastifyInstance> => {
   // JSON SCHEMA CRUD
 
   fastifyInstance.addSchema(categorySchema);
-  fastifyInstance.addSchema(insightSchema);
+  fastifyInstance.addSchema(insightsSchema);
   fastifyInstance.addSchema(postSchema);
   fastifyInstance.addSchema(postBookmarkSchema);
   fastifyInstance.addSchema(postPasswordSchema);
@@ -146,6 +148,8 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsAppCheckResponseSchema);
   fastifyInstance.addSchema(partsCategoryDescriptionSchema);
   fastifyInstance.addSchema(partsCategoryNameSchema);
+  fastifyInstance.addSchema(partsInsightsUnitSchema);
+  fastifyInstance.addSchema(partsInsightsValueSchema);
   fastifyInstance.addSchema(partsPageSchema);
   fastifyInstance.addSchema(partsPageQuerySchema);
   fastifyInstance.addSchema(partsPageSizeSchema);

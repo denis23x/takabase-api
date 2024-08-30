@@ -17,8 +17,6 @@ const DayjsPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fast
   fastifyInstance.decorate('dayjs', (...args) => dayjs(...args));
 
   fastifyInstance.decorate('dayjsPlugin', {
-    getEndOf: (date: Dayjs): Dayjs => date.endOf('day'),
-    getMin: (dateList: Dayjs[]): Dayjs => dayjs.min(dateList),
     getRange: (dateStart: Dayjs, dateEnd: Dayjs, unit: ManipulateType): Dayjs[] => {
       const dateRange: Dayjs[] = [];
 
