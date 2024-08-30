@@ -118,3 +118,16 @@ model PostPrivate {
   @@index([firebaseUid])
   @@index([userFirebaseUid])
 }
+
+model Insights {
+  id                Int       @id @default(autoincrement()) @db.Int
+  categories        Int       @db.Int
+  posts             Int       @db.Int
+  users             Int       @db.Int
+  unix              BigInt    @unique @db.BigInt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
+  deletedAt         DateTime? @db.DateTime(6)
+
+  @@index([unix])
+}
