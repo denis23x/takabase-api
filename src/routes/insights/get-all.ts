@@ -60,12 +60,20 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Insights
 
-      const insightsPreceding: Partial<Insights> = await request.server.prisma.insights.findUnique({
-        select: request.server.prismaPlugin.getInsightsSelect(),
-        where: {
-          unix: request.server.dayjs().subtract(value, unit).utc().endOf('day').unix()
-        }
-      });
+      const insightsPreceding: Partial<Insights> = await request.server.prisma.insights
+        .findUnique({
+          select: request.server.prismaPlugin.getInsightsSelect(),
+          where: {
+            unix: request.server.dayjs().subtract(value, unit).utc().endOf('day').unix()
+          }
+        })
+        .then((insights: null | Partial<Insights>) => {
+          // prettier-ignore
+          return insights || request.server.prisma.insights.findFirst({
+            select: request.server.prismaPlugin.getInsightsSelect()
+          });
+        });
+
       const insightsFollowing: Partial<Insights> = await request.server.prisma.insights.findFirst({
         select: request.server.prismaPlugin.getInsightsSelect(),
         orderBy: {
