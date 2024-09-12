@@ -12,7 +12,7 @@ import type { SearchIndex } from 'algoliasearch';
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'DELETE',
-    url: ':id',
+    url: ':uid',
     onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Users'],
@@ -25,8 +25,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       params: {
         type: 'object',
         properties: {
-          id: {
-            $ref: 'partsIdSchema#'
+          uid: {
+            $ref: 'partsFirebaseUidSchema#'
           }
         }
       },
@@ -64,9 +64,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Extract the firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
-      const userId: number = Number(request.params.id);
       const userIndex: SearchIndex = request.server.algolia.initIndex('user');
-      const userIndexObjects: GetObjectsResponse<any> = await userIndex.getObjects([String(userId)]);
+      const userIndexObjects: GetObjectsResponse<any> = await userIndex.getObjects([userFirebaseUid]);
 
       // Get Auth user record
       const userAuthRecord: UserRecord = await request.server.auth.getUser(userFirebaseUid);
@@ -219,7 +218,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Delete Algolia user index object
               // @ts-ignore
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const userIndexObjectsDelete: ChunkedBatchResponse = await userIndex.deleteObjects([String(userId)]);
+              const userIndexObjectsDelete: ChunkedBatchResponse = await userIndex.deleteObjects([userFirebaseUid]);
             }
 
             //! Define rollback action for user Firestore document
@@ -253,7 +252,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const userDeleteArgs: Prisma.UserDeleteArgs = {
               select: request.server.prismaPlugin.getUserSelect(),
               where: {
-                id: userId,
                 firebaseUid: userFirebaseUid
               }
             };

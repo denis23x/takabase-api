@@ -1,8 +1,8 @@
 /** @format */
 
-import type { ParamsId } from '../../crud/params/params-id';
+import type { ParamsUid } from '../../crud/params/params-uid';
 
-export interface UserDeleteDto extends ParamsId {
+export interface UserDeleteDto extends ParamsUid {
   Querystring: {
     password: string;
   };

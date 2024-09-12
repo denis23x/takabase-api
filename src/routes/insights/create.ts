@@ -108,7 +108,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // RAW query
       // prettier-ignore
       await request.server.prisma
-        .$queryRawUnsafe(`
+        .$executeRawUnsafe(`
           INSERT INTO Insights (unix, categories, posts, users)
           VALUES ${insights.join(',')}
           ON DUPLICATE KEY UPDATE

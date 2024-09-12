@@ -41,11 +41,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const post: Post[] = await request.server.prisma.post.findMany({
         select: {
           ...request.server.prismaPlugin.getPostSelect(),
+          firebaseUid: true,
           user: {
             select: {
               id: true,
               avatar: true,
-              name: true
+              name: true,
+              firebaseUid: true
             }
           },
           category: {
@@ -58,7 +60,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       const postObjects: (Post & Record<string, any>)[] = post.map((post: Post) => ({
         ...request.server.helperPlugin.mapObjectValuesToNull(post),
-        objectID: String(post.id),
+        objectID: String(post.firebaseUid),
         updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(post.updatedAt),
         createdAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(post.createdAt)
       }));
@@ -68,7 +70,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           return request.server.algoliaPlugin.getFile(postObjects, reply);
         }
         case 'Use the API': {
-          return request.server.algoliaPlugin.getSync('post', postObjects, reply);
+          return request.server.algoliaPlugin
+            .setClear('post')
+            .then(() => request.server.algoliaPlugin.getSync('post', postObjects, reply));
         }
         default: {
           return reply.status(400).send({

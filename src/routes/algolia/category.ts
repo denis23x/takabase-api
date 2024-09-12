@@ -63,7 +63,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           return request.server.algoliaPlugin.getFile(categoryObjects, reply);
         }
         case 'Use the API': {
-          return request.server.algoliaPlugin.getSync('category', categoryObjects, reply);
+          return request.server.algoliaPlugin
+            .setClear('category')
+            .then(() => request.server.algoliaPlugin.getSync('category', categoryObjects, reply));
         }
         default: {
           return reply.status(400).send({

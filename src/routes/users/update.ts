@@ -10,7 +10,7 @@ import type { SearchIndex } from 'algoliasearch';
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'PUT',
-    url: ':id',
+    url: ':uid',
     onRequest: fastify.verifyIdToken,
     preValidation: fastify.verifyUsername,
     schema: {
@@ -24,8 +24,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       params: {
         type: 'object',
         properties: {
-          id: {
-            $ref: 'partsIdSchema#'
+          uid: {
+            $ref: 'partsFirebaseUidSchema#'
           }
         }
       },
@@ -69,11 +69,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Extract the firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
-      const userId: number = Number(request.params.id);
       const username: string = String(request.body.name || '');
       const userAvatar: string = String(request.body.avatar || '');
       const userIndex: SearchIndex = request.server.algolia.initIndex('user');
-      const userIndexObjects: GetObjectsResponse<any> = await userIndex.getObjects([String(userId)]);
+      const userIndexObjects: GetObjectsResponse<any> = await userIndex.getObjects([userFirebaseUid]);
 
       // Define the arguments for find a user
       const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {
@@ -82,7 +81,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           name: true
         },
         where: {
-          id: userId,
           firebaseUid: userFirebaseUid
         }
       };
@@ -226,10 +224,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const userUpdateArgs: Prisma.UserUpdateArgs = {
               select: {
                 ...request.server.prismaPlugin.getUserSelect(),
+                firebaseUid: true,
                 description: true
               },
               where: {
-                id: userId,
                 firebaseUid: userFirebaseUid
               },
               data: request.body
@@ -250,7 +248,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const userIndexObject: SaveObjectResponse = await userIndex.partialUpdateObjects([{
                 ...request.server.helperPlugin.mapObjectValuesToNull(user),
-                objectID: String(user.id),
+                objectID: String(user.firebaseUid),
                 updatedAt: user.updatedAt,
                 updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(user.updatedAt),
               }]);

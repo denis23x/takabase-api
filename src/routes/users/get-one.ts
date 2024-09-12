@@ -4,20 +4,20 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, User } from '../../database/client';
 import type { QuerystringScope } from '../../types/crud/querystring/querystring-scope';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
-import type { ParamsId } from '../../types/crud/params/params-id';
+import type { ParamsUid } from '../../types/crud/params/params-uid';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'GET',
-    url: ':id',
+    url: ':uid',
     schema: {
       tags: ['Users'],
       description: 'Get a single user',
       params: {
         type: 'object',
         properties: {
-          id: {
-            $ref: 'partsIdSchema#'
+          uid: {
+            $ref: 'partsFirebaseUidSchema#'
           }
         }
       },
@@ -49,7 +49,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<ParamsId & QuerystringScope>, reply: FastifyReply): Promise<void> {
+    // prettier-ignore
+    handler: async function (request: FastifyRequest<ParamsUid & QuerystringScope>, reply: FastifyReply): Promise<void> {
       const { scope }: Record<string, any> = request.query;
 
       const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {
@@ -58,7 +59,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           description: true
         },
         where: {
-          id: Number(request.params.id)
+          firebaseUid: String(request.params.uid)
         }
       };
 

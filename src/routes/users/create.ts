@@ -120,6 +120,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const userCreateArgs: Prisma.UserCreateArgs = {
               select: {
                 ...request.server.prismaPlugin.getUserSelect(),
+                firebaseUid: true,
                 description: true
               },
               data: {
@@ -137,7 +138,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Define arguments to delete user
               const userDeleteArgs: Prisma.UserDeleteArgs = {
                 where: {
-                  id: user.id,
                   firebaseUid: userFirebaseUid
                 }
               };
@@ -170,7 +170,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Create new object in Algolia user index
             const userIndexObject: SaveObjectResponse = await userIndex.saveObject({
               ...request.server.helperPlugin.mapObjectValuesToNull(user),
-              objectID: String(user.id),
+              objectID: String(user.firebaseUid),
               updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(user.updatedAt),
               createdAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(user.createdAt),
             });

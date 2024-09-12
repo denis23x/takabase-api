@@ -4,7 +4,7 @@ import fp from 'fastify-plugin';
 import algoliasearch from 'algoliasearch';
 import { algoliaConfig } from '../config/algolia.config';
 import type { FastifyInstance, FastifyPluginAsync, FastifyReply } from 'fastify';
-import type { ChunkedBatchResponse, DeleteResponse } from '@algolia/client-search';
+import type { ChunkedBatchResponse } from '@algolia/client-search';
 import type { SearchIndex } from 'algoliasearch';
 import type { SearchClient } from 'algoliasearch/dist/algoliasearch';
 
@@ -41,8 +41,6 @@ const algoliaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
         .catch((error: any) => console.error(error));
     },
     getSync: async (index: string, indexObjects: any, reply: FastifyReply): Promise<FastifyReply> => {
-      // @ts-ignore
-      const deleteResponse: DeleteResponse = await fastifyInstance.algoliaPlugin.setClear(index);
       const searchIndex: SearchIndex = fastifyInstance.algolia.initIndex(index);
       const chunkedBatchResponse: ChunkedBatchResponse = await searchIndex.saveObjects(indexObjects);
 
