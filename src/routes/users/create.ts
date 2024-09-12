@@ -10,6 +10,7 @@ import type { ResponseError } from '../../types/crud/response/response-error.sch
 import type { DocumentReference, WriteResult } from 'firebase-admin/lib/firestore';
 import type { SaveObjectResponse } from '@algolia/client-search';
 import type { SearchIndex } from 'algoliasearch';
+import type { UserRecord } from 'firebase-admin/lib/auth/user-record';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -145,6 +146,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Delete user
               await prismaClient.user.delete(userDeleteArgs);
             };
+
+            // Define the arguments for update Firebase user auth record
+            // @ts-ignore
+            const userAuthRecordUpdate: UserRecord = await request.server.auth.updateUser(userFirebaseUid, {
+              displayName: request.body.name,
+              photoURL: null
+            });
+
+            //! Delete user Auth record
+            requestRollback.userRecord = async (): Promise<void> => {
+              await request.server.auth.deleteUser(userFirebaseUid);
+            }
 
             // Get the reference to the user document
             const userDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(userPath);
