@@ -1,8 +1,6 @@
 /** @format */
 
-import { customAlphabet } from 'nanoid';
-import { alphanumeric } from 'nanoid-dictionary';
-import { animals, colors, uniqueNamesGenerator } from 'unique-names-generator';
+import { faker } from '@faker-js/faker';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, PrismaClient, User } from '../../database/client';
 import type { UserCreateDto } from '../../types/dto/user/user-create';
@@ -87,19 +85,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       } else {
         // Make unique name before start transaction
-        const usernameUid: string = customAlphabet(alphanumeric, 8)().toLowerCase();
-        const usernameSeparator: string = '-';
-
-        // Generate a name by combining words from the 'colors' and 'animals' dictionaries
-        const usernameGenerated: string = uniqueNamesGenerator({
-          dictionaries: [colors, animals],
-          separator: usernameSeparator,
-          length: 2
-        });
+        // @ts-ignore
+        const username: string = faker.animal[faker.animal.type()]().replace(/\s+/g, '-');
+        const usernameUid: string = faker.string.alphanumeric(4);
 
         request.body = {
           ...request.body,
-          name: [usernameGenerated, usernameUid].join(usernameSeparator)
+          name: [username, usernameUid].join('-').toLowerCase()
         };
       }
 

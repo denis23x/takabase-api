@@ -203,6 +203,8 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
                 statusCode: 400
               };
             }
+            case message.includes('postpassword.postpassword'):
+            case message.includes('postprivate.postprivate'):
             case message.includes('post.post'): {
               return {
                 code: error.details.code,
