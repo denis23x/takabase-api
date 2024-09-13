@@ -87,7 +87,17 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Define the arguments for updating category
             const categoryUpdateArgs: Prisma.CategoryUpdateArgs = {
-              select: request.server.prismaPlugin.getCategorySelect(),
+              select: {
+                ...request.server.prismaPlugin.getCategorySelect(),
+                user: {
+                  select: {
+                    ...request.server.prismaPlugin.getCategorySelect(),
+                    firebaseUid: true,
+                    createdAt: false,
+                    updatedAt: false
+                  }
+                }
+              },
               where: {
                 id: categoryId,
                 userFirebaseUid

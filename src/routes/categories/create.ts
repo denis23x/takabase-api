@@ -81,7 +81,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               select: {
                 ...request.server.prismaPlugin.getCategorySelect(),
                 user: {
-                  select: request.server.prismaPlugin.getUserSelect()
+                  select: {
+                    ...request.server.prismaPlugin.getUserSelect(),
+                    firebaseUid: true
+                  }
                 }
               },
               data: {
@@ -120,7 +123,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               user: {
                 id: category.user.id,
                 avatar: category.user.avatar,
-                name: category.user.name
+                name: category.user.name,
+                firebaseUid: category.user.firebaseUid,
               },
             });
 

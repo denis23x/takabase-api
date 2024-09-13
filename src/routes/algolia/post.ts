@@ -60,7 +60,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       const postObjects: (Post & Record<string, any>)[] = post.map((post: Post) => ({
         ...request.server.helperPlugin.mapObjectValuesToNull(post),
-        objectID: String(post.firebaseUid),
+        objectID: String(post.id),
         updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(post.updatedAt),
         createdAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(post.createdAt)
       }));
