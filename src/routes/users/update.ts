@@ -6,6 +6,7 @@ import type { UserUpdateDto } from '../../types/dto/user/user-update';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { ChunkedBatchResponse, GetObjectsResponse, SaveObjectResponse } from '@algolia/client-search';
 import type { SearchIndex } from 'algoliasearch';
+import type { UserRecord } from 'firebase-admin/lib/auth/user-record';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -87,6 +88,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // User previous state
       const user: User = await request.server.prisma.user.findUniqueOrThrow(userFindUniqueOrThrowArgs);
+      const userRecord: UserRecord = await request.server.auth.getUser(userFirebaseUid);
       const userAlgoliaHandler: any = {};
       const userStorageHandler: any = {};
 
@@ -299,6 +301,21 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const postIndexObjectsUpdate: ChunkedBatchResponse = await userAlgoliaHandler.postIndex.partialUpdateObjects([...postIndexObjects]);
               }
+            }
+
+            // Define the arguments for update Firebase user auth record
+            // @ts-ignore
+            const userAuthRecordUpdate: UserRecord = await request.server.auth.updateUser(userFirebaseUid, {
+              displayName: String(request.body.name || '') || null,
+              photoURL: String(request.body.avatar || '') || null
+            });
+
+            //! Restore user Auth record
+            requestRollback.userRecord = async (): Promise<void> => {
+              await request.server.auth.updateUser(userFirebaseUid, {
+                displayName: userRecord.displayName,
+                photoURL: userRecord.photoURL
+              });
             }
 
             // Return the user
