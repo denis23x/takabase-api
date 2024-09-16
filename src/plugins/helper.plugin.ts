@@ -23,6 +23,17 @@ const helperPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
 
         return accumulator;
       }, {});
+    },
+    generateUid: (length: number): string => {
+      const alphabet: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+      let uid: string = '';
+
+      for (let i = 0; i < length; i++) {
+        uid += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+      }
+
+      return uid;
     }
   });
 });

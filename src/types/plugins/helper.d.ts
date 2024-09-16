@@ -8,6 +8,7 @@ declare module 'fastify' {
       throwError: (message: string, error: any, request: FastifyRequest) => any;
       camelCaseToDashCase: (value: string) => string;
       mapObjectValuesToNull: (mapObject: any) => any;
+      generateUid: (length: number) => string;
     };
   }
 }

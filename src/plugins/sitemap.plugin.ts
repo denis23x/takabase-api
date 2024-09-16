@@ -14,10 +14,8 @@ const SitemapPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
 
       priority -= depth * 0.1;
 
-      // Increase priority for recently updated pages
-      const currentDate: Date = new Date();
-      const timeDiff: number = currentDate.getTime() - lastmod.getTime();
-      const daysDiff: number = timeDiff / (1000 * 3600 * 24);
+      // Calculate the time difference using dayjs
+      const daysDiff: number = fastifyInstance.dayjs().diff(fastifyInstance.dayjs(lastmod), 'day');
 
       if (daysDiff < 30) {
         // Recently updated within the last month
@@ -33,10 +31,10 @@ const SitemapPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
       return Math.max(0.0, Math.min(1.0, priority)).toFixed(2);
     },
     getChangeFreq: (lastmod: Date): string => {
-      const currentDate: Date = new Date();
-      const timeDiff: number = currentDate.getTime() - lastmod.getTime();
-      const daysDiff: number = timeDiff / (1000 * 3600 * 24);
+      // Calculate the time difference using dayjs
+      const daysDiff: number = fastifyInstance.dayjs().diff(fastifyInstance.dayjs(lastmod), 'day');
 
+      // Ensure changeFreq
       if (daysDiff < 1) {
         return 'hourly';
       } else if (daysDiff < 7) {

@@ -17,6 +17,7 @@ const main = async () => {
   const deletePosts = prisma.post.deleteMany();
   const deleteCategories = prisma.category.deleteMany();
   const deleteUsers = prisma.user.deleteMany();
+  const deleteInsights = prisma.insights.deleteMany();
 
   await prisma.$transaction([
     deletePostsBookmark,
@@ -24,7 +25,8 @@ const main = async () => {
     deletePostsPrivate,
     deletePosts,
     deleteCategories,
-    deleteUsers
+    deleteUsers,
+    deleteInsights
   ]);
 
   /**

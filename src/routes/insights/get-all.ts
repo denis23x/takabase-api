@@ -81,36 +81,43 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       });
 
-      const categoryChangePercent: number = getChange(insightsPreceding.categories, insightsFollowing.categories);
-      const categoryChangeState: string = getChangeState(categoryChangePercent);
+      if (insightsPreceding && insightsFollowing) {
+        const categoryChangePercent: number = getChange(insightsPreceding.categories, insightsFollowing.categories);
+        const categoryChangeState: string = getChangeState(categoryChangePercent);
 
-      const postChangePercent: number = getChange(insightsPreceding.posts, insightsFollowing.posts);
-      const postChangeState: string = getChangeState(postChangePercent);
+        const postChangePercent: number = getChange(insightsPreceding.posts, insightsFollowing.posts);
+        const postChangeState: string = getChangeState(postChangePercent);
 
-      const userChangePercent: number = getChange(insightsPreceding.users, insightsFollowing.users);
-      const userChangeState: string = getChangeState(userChangePercent);
+        const userChangePercent: number = getChange(insightsPreceding.users, insightsFollowing.users);
+        const userChangeState: string = getChangeState(userChangePercent);
+
+        return reply.status(200).send({
+          data: {
+            categories: {
+              countPreceding: insightsPreceding.categories,
+              countFollowing: insightsFollowing.categories,
+              changeState: categoryChangeState,
+              changePercent: categoryChangePercent
+            },
+            posts: {
+              countPreceding: insightsPreceding.posts,
+              countFollowing: insightsFollowing.posts,
+              changeState: postChangeState,
+              changePercent: postChangePercent
+            },
+            users: {
+              countPreceding: insightsPreceding.users,
+              countFollowing: insightsFollowing.users,
+              changeState: userChangeState,
+              changePercent: userChangePercent
+            }
+          },
+          statusCode: 200
+        });
+      }
 
       return reply.status(200).send({
-        data: {
-          categories: {
-            countPreceding: insightsPreceding.categories,
-            countFollowing: insightsFollowing.categories,
-            changeState: categoryChangeState,
-            changePercent: categoryChangePercent
-          },
-          posts: {
-            countPreceding: insightsPreceding.posts,
-            countFollowing: insightsFollowing.posts,
-            changeState: postChangeState,
-            changePercent: postChangePercent
-          },
-          users: {
-            countPreceding: insightsPreceding.users,
-            countFollowing: insightsFollowing.users,
-            changeState: userChangeState,
-            changePercent: userChangePercent
-          }
-        },
+        data: {},
         statusCode: 200
       });
     }

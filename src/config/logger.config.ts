@@ -1,6 +1,7 @@
 /** @format */
 
 import { config } from 'dotenv';
+import dayjs from 'dayjs';
 import type { PinoLoggerOptions } from 'fastify/types/logger';
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 
@@ -12,7 +13,7 @@ config({
 const loggerConfigBase: PinoLoggerOptions = {
   base: null,
   timestamp: (): string => {
-    const date: string = new Date().toISOString();
+    const date: string = dayjs().toISOString();
 
     return `,"time":"${date}"`;
   },

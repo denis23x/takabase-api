@@ -1,6 +1,5 @@
 /** @format */
 
-import { faker } from '@faker-js/faker';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, PrismaClient, User } from '../../database/client';
 import type { UserCreateDto } from '../../types/dto/user/user-create';
@@ -85,13 +84,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       } else {
         // Make unique name before start transaction
-        // @ts-ignore
-        const username: string = faker.animal[faker.animal.type()]().replace(/\s+/g, '-');
-        const usernameUid: string = faker.string.alphanumeric(4);
+        const username: string = ['newbie', request.server.helperPlugin.generateUid(8)].join('-').toLowerCase();
 
         request.body = {
           ...request.body,
-          name: [username, usernameUid].join('-').toLowerCase()
+          name: username
         };
       }
 
