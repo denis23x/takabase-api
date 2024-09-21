@@ -1,7 +1,6 @@
 /** @format */
 
 import fp from 'fastify-plugin';
-import { storageConfig } from '../config/storage.config';
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 
 const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
@@ -28,9 +27,32 @@ const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: F
       return [];
     },
     getImageListFromBucket: (imageListUrl: string[]): string[] => {
-      // prettier-ignore
-      return fastifyInstance.markdownPlugin.getImageListRelativeUrl(fastifyInstance.markdownPlugin.getImageListFirebaseUrl(imageListUrl));
+      const imageListFirebase: string[] = fastifyInstance.markdownPlugin.getImageListFirebaseUrl(imageListUrl);
+      const imageListRelative: string[] = fastifyInstance.markdownPlugin.getImageListRelativeUrl(imageListFirebase);
+
+      return imageListRelative;
     },
+    getImageListFirebaseUrl: (imageListUrl: string[]): string[] => {
+      // prettier-ignore
+      const regExp: RegExp = new RegExp('^https?:\\/\\/[^\\/]+\\/(avatars|covers|images|seed|temp)\\/[a-zA-Z0-9]{2,}\\.webp$');
+
+      return imageListUrl.filter((imageUrl: string) => regExp.test(imageUrl));
+    },
+    getImageListRelativeUrl: (imageListUrl: string[]): string[] => {
+      // prettier-ignore
+      const regExp: RegExp = new RegExp('(avatars|covers|images|seed|temp)\\/[^\\?]+');
+
+      return imageListUrl.map((imageUrl: string) => {
+        const regExpMatchArray: RegExpMatchArray = decodeURIComponent(imageUrl).match(regExp);
+
+        if (regExpMatchArray) {
+          return regExpMatchArray[0];
+        }
+
+        return imageUrl;
+      });
+    },
+    //!
     getImageListSettled: (imageListUrl: string[]): string[] => {
       const imageListPost: string[] = fastifyInstance.markdownPlugin
         .getImageListFirebaseUrl(imageListUrl)
@@ -53,42 +75,6 @@ const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: F
       }
 
       return markdownNext;
-    },
-    getImageListFirebaseUrl: (imageListUrl: string[]): string[] => {
-      return imageListUrl
-        .filter((imageUrl: string) => imageUrl.startsWith('https://firebasestorage.googleapis.com'))
-        .filter((imageUrl: string) => imageUrl.includes(storageConfig.bucket));
-    },
-    getImageListRelativeUrl: (imageListUrl: string[]): string[] => {
-      return imageListUrl.map((imageUrl: string) => {
-        const url: URL = new URL(imageUrl);
-        const pathname: string = url.pathname;
-
-        // Function to determine the index for substring extraction (root storage relative)
-        const getIndex = (): number => {
-          // Find the index of 'users' in the pathname
-          const users: number = pathname.indexOf('users');
-
-          // Find the index of 'temp' in the pathname
-          const temp: number = pathname.indexOf('temp');
-
-          // Return the appropriate index based on the presence of 'users' or 'temp'
-          switch (true) {
-            case users !== -1: {
-              return users;
-            }
-            case temp !== -1: {
-              return temp;
-            }
-            default: {
-              return 0;
-            }
-          }
-        };
-
-        // Extract the substring URL based on the determined index
-        return pathname.substring(getIndex());
-      });
     }
   });
 });

@@ -2,7 +2,6 @@
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, PostPrivate, PrismaClient } from '../../database/client';
-import type { DocumentReference, DocumentSnapshot, DocumentData, WriteResult } from 'firebase-admin/firestore';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { PostUpdateDto } from '../../types/dto/post/post-update';
 
@@ -13,7 +12,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Posts-Private'],
-      description: 'Updates a Private',
+      description: 'Updates the private post',
       security: [
         {
           swaggerBearerAuth: []
@@ -40,13 +39,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             $ref: 'partsPostMarkdownSchema#'
           },
           image: {
-            $ref: 'partsFirebaseUrlStorageSchema#'
-          },
-          firebaseUid: {
-            $ref: 'partsFirebaseUidSchema#'
+            $ref: 'partsImageSchema#'
           }
-        },
-        required: ['firebaseUid']
+        }
       },
       response: {
         '200': {
@@ -68,89 +63,42 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
+    // prettier-ignore
     handler: async function (request: FastifyRequest<PostUpdateDto>, reply: FastifyReply): Promise<any> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
-      // Extract the firebaseUid from the authenticated user
+      // Extract the user firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
 
       // Extract post information from the request object
-      const postPrivateId: number = Number(request.params.id);
-      const postPrivateFirebaseUid: string = String(request.body.firebaseUid);
-      const postPrivatePath: string = ['users', userFirebaseUid, 'posts-private', postPrivateFirebaseUid].join('/');
-      const postPrivateImage: string = String(request.body.image || '');
-      const postPrivateMarkdown: string = String(request.body.markdown || '');
-      const postPrivateMarkdownListDestination: string = [postPrivatePath, 'markdown'].join('/');
+      const postId: number = Number(request.params.id);
+      const postCover: string | null = request.body.image as any;
+      const postMarkdown: string = request.body.markdown as any;
 
-      // Define an array of DocumentReference objects for the post documents in Firestore
-      // prettier-ignore
-      const postPrivateDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(postPrivatePath);
-
-      // Retrieve the DocumentSnapshot objects for the post documents in Firestore
-      // prettier-ignore
-      const postPrivateDocumentSnapshot: DocumentSnapshot = await postPrivateDocumentReference
-        .get()
-        .catch((error: any) => request.server.helperPlugin.throwError('firestore/get-document-failed', error, request));
+      // Get the list of images in the post markdown body
+      const bodyMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBody(postMarkdown);
+      const tempMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBucket(bodyMarkdownImageList).filter((bodyMarkdownImage: string) => bodyMarkdownImage.startsWith('temp'));
 
       // Define the arguments for find a post
       const postPrivateFindUniqueOrThrowArgs: Prisma.PostPrivateFindUniqueOrThrowArgs = {
         select: {
-          image: true
+          image: true,
+          markdown: true
         },
         where: {
-          id: postPrivateId,
+          id: postId,
           userFirebaseUid
         }
       };
 
       // prettier-ignore
       const postPrivate: PostPrivate = await request.server.prisma.postPrivate.findUniqueOrThrow(postPrivateFindUniqueOrThrowArgs);
-      const postPrivateStorageHandler: any = {};
-
-      // Fill the postStorageHandler if is changed an image
-      if (postPrivate.image !== postPrivateImage) {
-        // Create the destination path for the post image
-        const postPrivateImageStorageListDestination: string = [postPrivateDocumentReference.path, 'image'].join('/');
-
-        // Retrieve the list of post image from the storage
-        // prettier-ignore
-        const postPrivateImageStorageList: string[] = await request.server.storagePlugin
-          .getImageList(postPrivateImageStorageListDestination)
-          .catch((error: any) => request.server.helperPlugin.throwError('storage/get-filelist-failed', error, request));
-
-        // Define a function to set the post image and move unused image to temporary storage
-        const postPrivateImageStorage = async (postPrivateImageNext: string | null): Promise<string | null> => {
-          // prettier-ignore
-          const postPrivateImageListUnused: string[] = postPrivateImageStorageList.filter((postPrivateImageStorage: string) => {
-            return postPrivateImageStorage !== postPrivateImageNext;
-          });
-
-          // Move the unused image to temporary storage
-          const tempImageList: string[] = await request.server.storagePlugin
-            .setImageListMove(postPrivateImageListUnused, 'temp')
-            .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-          //! Define rollback action for post image moved to temporary storage
-          requestRollback.tempImageList = async (): Promise<void> => {
-            await request.server.storagePlugin.setImageListMove(tempImageList, postPrivatePath);
-          };
-
-          return postPrivateImageNext;
-        };
-
-        postPrivateStorageHandler.postPrivateImageStorageListDestination = postPrivateImageStorageListDestination;
-        postPrivateStorageHandler.postPrivateImageStorageList = postPrivateImageStorageList;
-        postPrivateStorageHandler.postPrivateImageStorage = postPrivateImageStorage;
-      }
 
       // Counter for transaction retries
       let requestRetries: number = 0;
-
-      // Object to store rollback actions in case of transaction failure
       let requestRollback: any = undefined;
 
-      // prettier-ignore
       while (requestRetries < MAX_RETRIES) {
         try {
           // Start transaction using Prisma's $transaction method https://www.prisma.io/docs/orm/prisma-client/queries/transactions
@@ -158,118 +106,83 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Re-initialize requestRollback object
             requestRollback = {};
 
-            // Check if the postStorageHandler is filled
-            if (Object.keys(postPrivateStorageHandler).length) {
-              // If there is a post image
-              if (postPrivateImage) {
-                const postPrivateImageStorage: boolean = postPrivateStorageHandler.postPrivateImageStorageList.some((postPrivateImageStorage: string) => {
-                  return decodeURIComponent(postPrivateImage).includes(postPrivateImageStorage);
-                });
+            // If there is a new cover provided
+            if (postCover && postCover !== postPrivate.image) {
+              // Get the cover relative /temp URL
+              const tempCoverList: string[] = request.server.markdownPlugin.getImageListFromBucket([postCover]);
 
-                // Check if the post image is stored in any of the specified locations
-                if (!postPrivateImageStorage) {
-                  // Extract the new image URL with the appropriate destination
-                  const updatedTempImageList: string[] = request.server.markdownPlugin.getImageListRelativeUrl([postPrivateImage]);
-
-                  // Move the updated image to the post image destination
-                  const updatedPostImageList: string[] = await request.server.storagePlugin
-                    .setImageListMove(updatedTempImageList, postPrivateStorageHandler.postPrivateImageStorageListDestination)
-                    .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-                  //! Define rollback action for moving post image to destination
-                  requestRollback.updatedPostImageList = async (): Promise<void> => {
-                    await request.server.storagePlugin.setImageListMove(updatedPostImageList, 'temp');
-                  };
-
-                  // Set the request body image with the updated post image
-                  request.body.image = request.server.markdownPlugin.getImageListReplace(postPrivateImage, updatedTempImageList, updatedPostImageList);
-
-                  // @ts-ignore
-                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                  const updatedPostImage: string = await postPrivateStorageHandler.postPrivateImageStorage(decodeURIComponent([...updatedPostImageList].shift()));
-                }
-              } else {
-                // @ts-ignore
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const updatedPostImage: null = await postPrivateStorageHandler.postPrivateImageStorage(null);
-              }
-            }
-
-            // Get the list of images in the post markdown body
-            const bodyMarkdownList: string[] = request.server.markdownPlugin.getImageListFromBody(postPrivateMarkdown);
-
-            // Get the list of temporary images from the post markdown body
-            const tempMarkdownList: string[] = request.server.markdownPlugin.getImageListFromBucket(bodyMarkdownList).filter((bodyMarkdown: string) => bodyMarkdown.startsWith('temp'));
-
-            // If there are temporary markdown images
-            if (tempMarkdownList.length) {
-              // Move the temporary markdown images to the post markdown destination
-              const postPrivateMarkdownList: string[] = await request.server.storagePlugin
-                .setImageListMove(tempMarkdownList, postPrivateMarkdownListDestination)
+              // Move the /temp cover to the /covers
+              const postCoverList: string[] = await request.server.storagePlugin
+                .setImageListMove(tempCoverList, 'covers')
                 .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
-              //! Define rollback action for moving markdown images to post markdown destination
-              requestRollback.postPrivateMarkdownList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(postPrivateMarkdownList, 'temp');
+              //! Define rollback action for cover to move it to the /temp back
+              requestRollback.postCoverList = async (): Promise<void> => {
+                await request.server.storagePlugin.setImageListMove(postCoverList, 'temp');
               };
 
-              // Rewrite the markdown body with the updated markdown image list
-              request.body.markdown = request.server.markdownPlugin.getImageListReplace(postPrivateMarkdown, tempMarkdownList, postPrivateMarkdownList);
+              // Replace the cover URL in the request body with the new URL
+              request.body.image = request.server.markdownPlugin.getImageListReplace(postCover, tempCoverList, postCoverList);
             }
 
-            // Get the updated list of markdown images from the request body
-            const updatedPostMarkdown: string[] = request.server.markdownPlugin.getImageListFromBody(String(request.body.markdown || ''));
+            // If there is a previous cover exists
+            if (postCover === null || postCover !== postPrivate.image) {
+              // Get the cover relative URL
+              const postPreviousCoverList: string[] = request.server.markdownPlugin.getImageListFromBucket([postPrivate.image]);
 
-            // Extract the list of post markdown images
-            const updatedPostMarkdownList: string[] = request.server.markdownPlugin.getImageListSettled(updatedPostMarkdown);
-
-            // Filter out the post markdown images that are no longer used
-            const updatedPostMarkdownListUnused: string[] = await request.server.storagePlugin
-              .getImageList(postPrivateMarkdownListDestination)
-              .then((imageList: string[]) => imageList.filter((imageUrl: string) => !updatedPostMarkdownList.includes(encodeURIComponent(imageUrl))))
-              .catch((error: any) => request.server.helperPlugin.throwError('storage/get-filelist-failed', error, request));
-
-            // If there are unused post markdown images
-            if (updatedPostMarkdownListUnused.length) {
-              // Move the unused post markdown images to temporary storage
-              const updatedTempMarkdownList: string[] = await request.server.storagePlugin
-                .setImageListMove(updatedPostMarkdownListUnused, 'temp')
+              // Move the previous and unworthy cover to the /temp
+              const tempPreviousCoverList: string[] = await request.server.storagePlugin
+                .setImageListMove(postPreviousCoverList, 'temp')
                 .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
-              //! Define rollback action for moving unused markdown images to temporary storage
-              requestRollback.updatedTempMarkdownList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(updatedTempMarkdownList, postPrivateMarkdownListDestination);
+              //! Define rollback action for cover to move it to the /covers back
+              requestRollback.tempCoverList = async (): Promise<void> => {
+                await request.server.storagePlugin.setImageListMove(tempPreviousCoverList, 'covers');
               };
             }
 
-            //! Define rollback action for Firestore document update
-            requestRollback.postPrivateDocument = async (): Promise<void> => {
-              await postPrivateDocumentReference.set(postPrivateDocumentSnapshot.data() as DocumentData)
-            };
+            // If there are /temp markdown images
+            if (tempMarkdownImageList.length) {
+              // Move the /temp markdown images to the /images
+              const postMarkdownImageList: string[] = await request.server.storagePlugin
+                .setImageListMove(tempMarkdownImageList, 'images')
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
-            // Prepare the DTO for updating the Firestore document
-            const postPrivateDocumentUpdateDto: any = {
-              postPrivateId,
-              markdown: updatedPostMarkdownList.map((imageUrl: string) => decodeURIComponent(imageUrl))
-            };
+              //! Define rollback action for moving markdown images to the /temp back
+              requestRollback.postMarkdownImageList = async (): Promise<void> => {
+                await request.server.storagePlugin.setImageListMove(postMarkdownImageList, 'temp');
+              };
 
-            // Perform the update operation on the Firestore document
-            // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const postPrivateDocumentUpdate: WriteResult = await postPrivateDocumentReference
-              .update(postPrivateDocumentUpdateDto)
-              .catch((error: any) => request.server.helperPlugin.throwError('firestore/update-document-failed', error, request));
+              // Replace the markdown body with the new URL images list
+              request.body.markdown = request.server.markdownPlugin.getImageListReplace(postMarkdown, tempMarkdownImageList, postMarkdownImageList);
+            }
+
+            // Get the original markdown images list
+            const postMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBody(postPrivate.markdown);
+
+            // Get the updated markdown images list
+            const nextMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBody(String(request.body.markdown));
+
+            // Get the unused markdown images list
+            const postMarkdownImageListUnused: string[] = request.server.markdownPlugin.getImageListFromBucket(postMarkdownImageList.filter((postMarkdownImage: string) => !nextMarkdownImageList.includes(postMarkdownImage)));
+
+            // If there are unused markdown images
+            if (postMarkdownImageListUnused.length) {
+              // Move the unused markdown images to the /temp
+              const tempMarkdownImageListUnused: string[] = await request.server.storagePlugin
+                .setImageListMove(postMarkdownImageListUnused, 'temp')
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+
+              //! Define rollback action for moving unused markdown images to the /images back
+              requestRollback.tempMarkdownImageListUnused = async (): Promise<void> => {
+                await request.server.storagePlugin.setImageListMove(tempMarkdownImageListUnused, 'images');
+              };
+            }
 
             // Define the arguments for updating post
             const postPrivateUpdateArgs: Prisma.PostPrivateUpdateArgs = {
-              select: {
-                ...request.server.prismaPlugin.getPostPrivateSelect(),
-                user: {
-                  select: request.server.prismaPlugin.getUserSelect()
-                }
-              },
               where: {
-                id: postPrivateId,
+                id: postId,
                 userFirebaseUid
               },
               data: request.body

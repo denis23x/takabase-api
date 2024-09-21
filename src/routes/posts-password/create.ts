@@ -115,8 +115,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               // Get the temporary image original destination for rollback
-              const tempImageListDestination: string[] = tempImageList.map((tempImag: string) => {
-                return encodeURIComponent(parse(decodeURIComponent(tempImag)).dir);
+              const tempImageListDestination: string[] = tempImageList.map((tempImage: string) => {
+                return encodeURIComponent(parse(decodeURIComponent(tempImage)).dir);
               });
 
               //! Define rollback action for post image moved to the post image destination
@@ -145,8 +145,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               // Get the temporary markdown images original destination for rollback
-              const tempMarkdownListDestination: string[] = tempMarkdownList.map((tempImag: string) => {
-                return encodeURIComponent(parse(decodeURIComponent(tempImag)).dir);
+              const tempMarkdownListDestination: string[] = tempMarkdownList.map((tempImage: string) => {
+                return encodeURIComponent(parse(decodeURIComponent(tempImage)).dir);
               });
 
               //! Define rollback action for moving markdown images to post markdown destination

@@ -2,7 +2,6 @@
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, PostPrivate } from '../../database/client';
-import type { QuerystringScope } from '../../types/crud/querystring/querystring-scope';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { ParamsId } from '../../types/crud/params/params-id';
 
@@ -27,14 +26,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           }
         }
       },
-      querystring: {
-        type: 'object',
-        properties: {
-          scope: {
-            $ref: 'partsScopeSchema#'
-          }
-        }
-      },
       response: {
         '200': {
           type: 'object',
@@ -55,31 +46,33 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<ParamsId & QuerystringScope>, reply: FastifyReply): Promise<any> {
-      const { scope }: Record<string, any> = request.query;
+    handler: async function (request: FastifyRequest<ParamsId>, reply: FastifyReply): Promise<any> {
+      // Extract the user firebaseUid from the authenticated user
+      const userFirebaseUid: string = request.user.uid;
 
+      // Extract post information from the request object
+      const postId: number = Number(request.params.id);
+
+      // Define the arguments for find a post
       const postPrivateFindUniqueOrThrowArgs: Prisma.PostPrivateFindUniqueOrThrowArgs = {
         select: {
           ...request.server.prismaPlugin.getPostPrivateSelect(),
-          firebaseUid: true,
-          markdown: true
+          markdown: true,
+          user: {
+            select: request.server.prismaPlugin.getUserSelect()
+          }
         },
         where: {
-          id: Number(request.params.id),
-          userFirebaseUid: request.user.uid
+          id: postId,
+          userFirebaseUid
         }
       };
 
-      /** Scope */
-
-      if (scope) {
-        // prettier-ignore
-        postPrivateFindUniqueOrThrowArgs.select = request.server.prismaPlugin.setScope(postPrivateFindUniqueOrThrowArgs, scope);
-      }
-
+      // Find the post
       await request.server.prisma.postPrivate
         .findUniqueOrThrow(postPrivateFindUniqueOrThrowArgs)
         .then((postPrivate: PostPrivate) => {
+          // Return the post
           return reply.status(200).send({
             data: postPrivate,
             statusCode: 200

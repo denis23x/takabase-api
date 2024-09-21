@@ -39,7 +39,7 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
         const rejected: PromiseRejectedResult[] = promiseSettledResult.filter((promise: PromiseSettledResult<string>) => promise.status === 'rejected') as PromiseRejectedResult[];
         const fulfilled: PromiseFulfilledResult<string>[] = promiseSettledResult.filter((promise: PromiseSettledResult<string>) => promise.status === 'fulfilled') as PromiseFulfilledResult<string>[];
 
-        return fulfilled.map((promise: PromiseFulfilledResult<string>) => promise.value);
+        return fulfilled.map((promise: PromiseFulfilledResult<string>) => decodeURIComponent(promise.value));
       });
     },
     getImageList: async (imageListDestination: string): Promise<string[]> => {

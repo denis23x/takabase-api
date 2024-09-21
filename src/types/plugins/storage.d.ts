@@ -8,7 +8,7 @@ declare module 'fastify' {
     bucket: Bucket;
     storage: Storage;
     storagePlugin: {
-      setImageListMove: (imageList: string[] = [], destination: string) => Promise<string[]>;
+      setImageListMove: (imageList: string[] = [], moveDestination: string) => Promise<string[]>;
       getImageList: (imageListDestination: string) => Promise<string[]>;
     };
   }

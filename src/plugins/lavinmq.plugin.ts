@@ -36,10 +36,10 @@ const lavinMQPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
         .queue('setImageListMoveToTemp', queueParams)
         .then((amqpQueue: AMQPQueue) => {
           amqpQueue.subscribe(consumeParams, async (amqpMessage: AMQPMessage) => {
-            const imageListPath: any = JSON.parse(amqpMessage.bodyToString());
-            const imageList: string[] = await fastifyInstance.storagePlugin.getImageList(imageListPath);
+            const body: string = amqpMessage.bodyToString();
+            const imageList: string[] = JSON.parse(body);
 
-            // Move the post image (thumbnail) to temporary location (will be erased in 24 hours)
+            // Move any images by url to the /temp, and it will be erased in 24 hours
             await fastifyInstance.storagePlugin.setImageListMove(imageList, 'temp');
 
             // Acknowledge the message
@@ -57,11 +57,9 @@ const lavinMQPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
   fastifyInstance.decorate('lavinMQ', amqpBaseClient);
 
   fastifyInstance.decorate('lavinMQPlugin', {
-    setImageListMoveToTemp: (postPath: string): void => {
-      const buffer: Buffer = Buffer.from(JSON.stringify(postPath));
-
+    setImageListMoveToTemp: (imageList: string): void => {
       // Charging the queue
-      ampqChannel1.basicPublish('', 'setImageListMoveToTemp', buffer);
+      ampqChannel1.basicPublish('', 'setImageListMoveToTemp', imageList);
     }
   });
 
