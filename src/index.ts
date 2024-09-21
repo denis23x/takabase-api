@@ -63,7 +63,6 @@ main()
 
 /** FIREBASE */
 
-// prettier-ignore
 export const apiHttpsOptions: HttpsOptions = {
   region: 'us-central1',
   minInstances: 0,

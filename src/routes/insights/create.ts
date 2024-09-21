@@ -105,7 +105,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         })
         .filter((insight: string) => !/0,\s0,\s0/g.test(insight));
 
-      // RAW query
       // prettier-ignore
       await request.server.prisma
         .$executeRawUnsafe(`

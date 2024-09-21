@@ -9,7 +9,6 @@ import type { Storage } from 'firebase-admin/storage';
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import type { MoveResponse, File, GetFilesResponse, GetFilesOptions, Bucket } from '@google-cloud/storage';
 
-// prettier-ignore
 const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
   const storage: Storage = getStorage();
   const bucket: Bucket = storage.bucket(storageConfig.bucket);
@@ -32,6 +31,7 @@ const storagePlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
           .then((file: File) => String(file.id));
       });
 
+      // prettier-ignore
       return Promise.allSettled(listMoveTo).then((promiseSettledResult: PromiseSettledResult<string>[]) => {
         // TODO: Handle rejected ..
         // @ts-ignore

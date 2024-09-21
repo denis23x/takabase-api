@@ -66,6 +66,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
+    // prettier-ignore
     handler: async function (request: FastifyRequest<PostUpdateDto>, reply: FastifyReply): Promise<any> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
@@ -80,9 +81,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Get the list of images in the post markdown body
       const bodyMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBody(postMarkdown);
-      const tempMarkdownImageList: string[] = request.server.markdownPlugin
-        .getImageListFromBucket(bodyMarkdownImageList)
-        .filter((bodyMarkdownImage: string) => bodyMarkdownImage.startsWith('temp'));
+      const tempMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBucket(bodyMarkdownImageList).filter((bodyMarkdownImage: string) => bodyMarkdownImage.startsWith('temp'));
 
       // Define the arguments for find a post
       const postPasswordFindUniqueOrThrowArgs: Prisma.PostPasswordFindUniqueOrThrowArgs = {
@@ -96,14 +95,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       };
 
-      // prettier-ignore
       const postPassword: PostPassword = await request.server.prisma.postPassword.findUniqueOrThrow(postPasswordFindUniqueOrThrowArgs);
 
       // Counter for transaction retries
       let requestRetries: number = 0;
       let requestRollback: any = undefined;
 
-      // prettier-ignore
       while (requestRetries < MAX_RETRIES) {
         try {
           // Start transaction using Prisma's $transaction method https://www.prisma.io/docs/orm/prisma-client/queries/transactions

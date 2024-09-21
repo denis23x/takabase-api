@@ -1,10 +1,10 @@
 /** @format */
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { Category, Post, Prisma, PrismaClient, User } from '../../database/client';
+import type { Category, Prisma, PrismaClient, User } from '../../database/client';
 import type { UserUpdateDto } from '../../types/dto/user/user-update';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
-import type { ChunkedBatchResponse, GetObjectsResponse, SaveObjectResponse } from '@algolia/client-search';
+import type { GetObjectsResponse } from '@algolia/client-search';
 import type { SearchIndex } from 'algoliasearch';
 import type { UserRecord } from 'firebase-admin/lib/auth/user-record';
 
@@ -16,7 +16,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     preValidation: fastify.verifyUsername,
     schema: {
       tags: ['Users'],
-      description: 'Updates a User',
+      description: 'Updates the user',
       security: [
         {
           swaggerBearerAuth: []
@@ -70,10 +70,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Extract the firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
-      const username: string = String(request.body.name || '');
-      const userAvatar: string = String(request.body.avatar || '');
+
+      // Extract user information from the request object
+      const username: string | null = request.body.name as any;
+      const userAvatar: string | null = request.body.avatar as any;
       const userIndex: SearchIndex = request.server.algolia.initIndex('user');
       const userIndexObjects: GetObjectsResponse<any> = await userIndex.getObjects([userFirebaseUid]);
+      const userRecord: UserRecord = await request.server.auth.getUser(userFirebaseUid);
 
       // Define the arguments for find a user
       const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {
@@ -88,93 +91,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // User previous state
       const user: User = await request.server.prisma.user.findUniqueOrThrow(userFindUniqueOrThrowArgs);
-      const userRecord: UserRecord = await request.server.auth.getUser(userFirebaseUid);
-      const userAlgoliaHandler: any = {};
-      const userStorageHandler: any = {};
-
-      // Fill the userAlgoliaHandler if is changed a username or avatar
-      if (user.avatar !== userAvatar || user.name !== username) {
-        // Define the arguments for finding categories
-        const categoryFindManyArgs: Prisma.CategoryFindManyArgs = {
-          select: {
-            id: true
-          },
-          where: {
-            userFirebaseUid
-          }
-        };
-
-        // Retrieve the list of categories from the MySQL and Algolia
-        const categoryList: Category[] = await request.server.prisma.category.findMany(categoryFindManyArgs);
-        const categoryIndex: SearchIndex = request.server.algolia.initIndex('category');
-        const categoryIndexIDs: string[] = categoryList.map((category: Category) => String(category.id));
-        const categoryIndexObjects: GetObjectsResponse<any> = await categoryIndex.getObjects([...categoryIndexIDs]);
-
-        userAlgoliaHandler.categoryIndex = categoryIndex;
-        userAlgoliaHandler.categoryIndexIDs = categoryIndexIDs;
-        userAlgoliaHandler.categoryIndexObjects = categoryIndexObjects;
-
-        // Define the arguments for finding posts
-        const postFindManyArgs: Prisma.PostFindManyArgs = {
-          select: {
-            id: true
-          },
-          where: {
-            userFirebaseUid
-          }
-        };
-
-        // Retrieve the list of posts from the MySQL and Algolia
-        const postList: Post[] = await request.server.prisma.post.findMany(postFindManyArgs);
-        const postIndex: SearchIndex = request.server.algolia.initIndex('post');
-        const postIndexIDs: string[] = postList.map((post: Post) => String(post.id));
-        const postIndexObjects: GetObjectsResponse<any> = await postIndex.getObjects([...postIndexIDs]);
-
-        userAlgoliaHandler.postIndex = postIndex;
-        userAlgoliaHandler.postIndexIDs = postIndexIDs;
-        userAlgoliaHandler.postIndexObjects = postIndexObjects;
-      }
-
-      // Fill the userStorageHandler if is changed an avatar
-      if (user.avatar !== userAvatar) {
-        // Create the destination path for the user avatar
-        const userAvatarStorageListDestination: string = ['users', userFirebaseUid, 'avatar'].join('/');
-
-        // Retrieve the list of user avatars from the storage
-        // prettier-ignore
-        const userAvatarStorageList: string[] = await request.server.storagePlugin
-          .getImageList(userAvatarStorageListDestination)
-          .catch((error: any) => request.server.helperPlugin.throwError('storage/get-filelist-failed', error, request));
-
-        // Define a function to set the user avatar and move unused avatar to temporary storage
-        const userAvatarStorage = async (userAvatarNext: string | null): Promise<string | null> => {
-          // Filter out the unused user avatar URL
-          const userAvatarListUnused: string[] = userAvatarStorageList.filter(
-            (userAvatarStorage: string) => userAvatarStorage !== userAvatarNext
-          );
-
-          // Move the unused avatar to temporary storage
-          const tempAvatarList: string[] = await request.server.storagePlugin
-            .setImageListMove(userAvatarListUnused, 'temp')
-            .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
-
-          //! Define rollback action for user avatar moved to temporary storage
-          requestRollback.tempAvatarList = async (): Promise<void> => {
-            await request.server.storagePlugin.setImageListMove(tempAvatarList, userAvatarStorageListDestination);
-          };
-
-          return userAvatarNext;
-        };
-
-        userStorageHandler.userAvatarStorageListDestination = userAvatarStorageListDestination;
-        userStorageHandler.userAvatarStorageList = userAvatarStorageList;
-        userStorageHandler.userAvatarStorage = userAvatarStorage;
-      }
 
       // Counter for transaction retries
       let requestRetries: number = 0;
-
-      // Object to store rollback actions in case of transaction failure
       let requestRollback: any = undefined;
 
       // prettier-ignore
@@ -185,40 +104,75 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Re-initialize requestRollback object
             requestRollback = {};
 
-            // Check if the userStorageHandler is filled
-            if (Object.keys(userStorageHandler).length) {
-              // If there is a new avatar image
-              if (userAvatar) {
-                const userAvatarStorage: boolean = userStorageHandler.userAvatarStorageList.some((userAvatarStorage: string) => {
-                  return decodeURIComponent(userAvatar).includes(userAvatarStorage);
-                });
+            // If there is a new avatar provided
+            if (userAvatar && userAvatar !== user.avatar) {
+              // Get the avatar relative /temp URL
+              const tempAvatarList: string[] = request.server.markdownPlugin.getImageListFromBucket([userAvatar]);
 
-                // Check if the user avatar is stored in any of the specified locations
-                if (!userAvatarStorage) {
-                  // Extract the new avatar URL with the appropriate destination
-                  const updatedTempAvatarList: string[] = request.server.markdownPlugin.getImageListRelativeUrl([userAvatar]);
+              // Move the /temp avatar to the /avatars
+              const userAvatarList: string[] = await request.server.storagePlugin
+                .setImageListMove(tempAvatarList, 'avatars')
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
-                  // Move the updated avatar to the user avatar destination
-                  const updatedUserAvatarList: string[] = await request.server.storagePlugin
-                    .setImageListMove(updatedTempAvatarList, userStorageHandler.userAvatarStorageListDestination)
-                    .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+              //! Define rollback action for avatar to move it to the /temp back
+              requestRollback.userAvatarList = async (): Promise<void> => {
+                await request.server.storagePlugin.setImageListMove(userAvatarList, 'temp');
+              };
 
-                  //! Define rollback action for moving user avatar to destination
-                  requestRollback.updatedUserAvatarList = async (): Promise<void> => {
-                    await request.server.storagePlugin.setImageListMove(updatedUserAvatarList, 'temp');
-                  };
+              // Replace the avatar URL in the request body with the new URL
+              request.body.avatar = request.server.markdownPlugin.getImageListReplace(userAvatar, tempAvatarList, userAvatarList);
+            }
 
-                  // Set the request body avatar with the updated user avatar
-                  request.body.avatar = request.server.markdownPlugin.getImageListReplace(userAvatar, updatedTempAvatarList, updatedUserAvatarList);
+            // If there is a previous avatar exists
+            if (userAvatar === null || userAvatar !== user.avatar) {
+              // Get the avatar relative URL
+              const userPreviousAvatarList: string[] = request.server.markdownPlugin.getImageListFromBucket([user.avatar]);
 
-                  // @ts-ignore
-                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                  const updatedUserAvatar: string = await userStorageHandler.userAvatarStorage(decodeURIComponent([...updatedUserAvatarList].shift()));
+              // Move the previous and unworthy avatar to the /temp
+              const tempPreviousAvatarList: string[] = await request.server.storagePlugin
+                .setImageListMove(userPreviousAvatarList, 'temp')
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+
+              //! Define rollback action for avatar to move it to the /avatars back
+              requestRollback.tempAvatarList = async (): Promise<void> => {
+                await request.server.storagePlugin.setImageListMove(tempPreviousAvatarList, 'avatars');
+              };
+            }
+
+            // If there is a changes valuable for searching
+            if (userAvatar !== user.avatar || username !== user.name) {
+              // Define the arguments for finding categories
+              const categoryFindManyArgs: Prisma.CategoryFindManyArgs = {
+                select: {
+                  id: true
+                },
+                where: {
+                  userFirebaseUid
                 }
-              } else {
-                // @ts-ignore
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const updatedUserAvatar: null = await userStorageHandler.userAvatarStorage(null);
+              };
+
+              // Retrieve the list of categories from the MySQL and Algolia
+              const categoryList: Category[] = await request.server.prisma.category.findMany(categoryFindManyArgs);
+              const categoryIndex: SearchIndex = request.server.algolia.initIndex('category');
+              const categoryIndexIDs: string[] = categoryList.map((category: Category) => String(category.id));
+              const categoryIndexObjects: GetObjectsResponse<any> = await categoryIndex.getObjects([...categoryIndexIDs]);
+
+              // Check if there are results in the fetched categories index objects
+              if (categoryIndexObjects.results.length) {
+                //! Define rollback action for Algolia update categories objects
+                requestRollback.categoriesIndexObjects = async (): Promise<void> => {
+                  await categoryIndex.partialUpdateObjects([...categoryIndexObjects.results]);
+                };
+
+                // Update object in Algolia category index object
+                await categoryIndex.partialUpdateObjects([...categoryIndexObjects.results.map((category: any) => ({
+                  ...request.server.helperPlugin.mapObjectValuesToNull(category),
+                  user: {
+                    ...category.user,
+                    avatar: userNext.avatar,
+                    name: userNext.name
+                  }
+                }))]);
               }
             }
 
@@ -236,7 +190,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             };
 
             // Update the user
-            const user: User = await prismaClient.user.update(userUpdateArgs);
+            const userNext: User = await prismaClient.user.update(userUpdateArgs);
 
             // Check if there are results in the fetched user index objects
             if (userIndexObjects.results.length) {
@@ -246,68 +200,18 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
 
               // Update object in Algolia user index
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const userIndexObject: SaveObjectResponse = await userIndex.partialUpdateObjects([{
-                ...request.server.helperPlugin.mapObjectValuesToNull(user),
-                objectID: String(user.firebaseUid),
-                updatedAt: user.updatedAt,
-                updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(user.updatedAt),
+              await userIndex.partialUpdateObjects([{
+                ...request.server.helperPlugin.mapObjectValuesToNull(userNext),
+                objectID: String(userNext.firebaseUid),
+                updatedAt: userNext.updatedAt,
+                updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(userNext.updatedAt),
               }]);
             }
 
-            // Check if the userAlgoliaHandler is filled
-            if (Object.keys(userAlgoliaHandler).length) {
-              // Check if there are results in the fetched categories index objects
-              if (userAlgoliaHandler.categoryIndexObjects.results.length) {
-                //! Define rollback action for Algolia update categories objects
-                requestRollback.categoriesIndexObjects = async (): Promise<void> => {
-                  await userAlgoliaHandler.categoryIndex.partialUpdateObjects([...userAlgoliaHandler.categoryIndexObjects.results]);
-                };
-
-                // Map the results from the post index objects to create a new array of posts
-                const categoryIndexObjects: Partial<Category>[] = userAlgoliaHandler.categoryIndexObjects.results.map((category: any) => ({
-                  ...category,
-                  user: {
-                    ...category.user,
-                    avatar: user.avatar,
-                    name: user.name
-                  }
-                }));
-
-                // @ts-ignore
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const categoryIndexObjectsUpdate: ChunkedBatchResponse = await userAlgoliaHandler.categoryIndex.partialUpdateObjects([...categoryIndexObjects]);
-              }
-
-              // Check if there are results in the fetched posts index objects
-              if (userAlgoliaHandler.postIndexObjects.results.length) {
-                //! Define rollback action for Algolia update posts objects
-                requestRollback.postsIndexObjects = async (): Promise<void> => {
-                  await userAlgoliaHandler.postIndex.partialUpdateObjects([...userAlgoliaHandler.postIndexObjects.results]);
-                };
-
-                // Map the results from the post index objects to create a new array of posts
-                const postIndexObjects: Partial<Post>[] = userAlgoliaHandler.postIndexObjects.results.map((post: any) => ({
-                  ...post,
-                  user: {
-                    ...post.user,
-                    avatar: user.avatar,
-                    name: user.name
-                  }
-                }));
-
-                // @ts-ignore
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const postIndexObjectsUpdate: ChunkedBatchResponse = await userAlgoliaHandler.postIndex.partialUpdateObjects([...postIndexObjects]);
-              }
-            }
-
             // Define the arguments for update Firebase user auth record
-            // @ts-ignore
-            const userAuthRecordUpdate: UserRecord = await request.server.auth.updateUser(userFirebaseUid, {
-              displayName: String(request.body.name || '') || null,
-              photoURL: String(request.body.avatar || '') || null
+            await request.server.auth.updateUser(userFirebaseUid, {
+              displayName: (request.body.name as any) || null,
+              photoURL: (request.body.avatar as any) || null
             });
 
             //! Restore user Auth record
@@ -319,7 +223,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
 
             // Return the user
-            return user;
+            return userNext;
           }).then((user: User) => {
             // Send success response with updated user
             return reply.status(200).send({

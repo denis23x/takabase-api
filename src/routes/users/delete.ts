@@ -3,10 +3,10 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Category, Post, PostPassword, PostPrivate, Prisma, PrismaClient, User } from '../../database/client';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
-import type { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
+import type { DocumentData, DocumentReference, DocumentSnapshot } from 'firebase-admin/lib/firestore';
 import type { UserRecord } from 'firebase-admin/lib/auth/user-record';
 import type { UserDeleteDto } from '../../types/dto/user/user-delete';
-import type { ChunkedBatchResponse, GetObjectsResponse } from '@algolia/client-search';
+import type { GetObjectsResponse } from '@algolia/client-search';
 import type { SearchIndex } from 'algoliasearch';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
@@ -16,7 +16,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Users'],
-      description: 'Removes specific User from the database',
+      description: 'Removes the user',
       security: [
         {
           swaggerBearerAuth: []
@@ -58,6 +58,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
+    // prettier-ignore
     handler: async function (request: FastifyRequest<UserDeleteDto>, reply: FastifyReply): Promise<any> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
@@ -71,19 +72,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const userAuthRecord: UserRecord = await request.server.auth.getUser(userFirebaseUid);
 
       // Construct Firestore document references for user
-      // prettier-ignore
       const userDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(['users', userFirebaseUid].join('/'));
-
-      // Fetch document snapshots for user from Firestore
-      // prettier-ignore
       const userDocumentSnapshot: DocumentSnapshot = await userDocumentReference.get();
 
       // Define arguments to fetch user's posts and password and private from Prisma
-      // prettier-ignore
       const postFindManyArgs: Prisma.PostPasswordFindManyArgs | Prisma.PostPrivateFindManyArgs | Prisma.PostFindManyArgs = {
         select: {
           id: true,
-          firebaseUid: true
         },
         where: {
           userFirebaseUid
@@ -95,32 +90,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         postPassword: await request.server.prisma.postPassword.findMany(postFindManyArgs),
         postPrivate: await request.server.prisma.postPrivate.findMany(postFindManyArgs),
         post: await request.server.prisma.post.findMany(postFindManyArgs)
-      };
-
-      // Construct Firestore document references for user's posts or password or private from the Firestore
-      // prettier-ignore
-      const getReference = (postList: (Post | PostPassword | PostPrivate)[], postPath: string): DocumentReference[] => {
-        return postList
-          .map((post: Post | PostPassword | PostPrivate) => ['users', userFirebaseUid, postPath, post.firebaseUid].join('/'))
-          .map((documentPath: string) => request.server.firestorePlugin.getDocumentReference(documentPath));
-      };
-
-      const postReferenceListMap: Record<string, DocumentReference[]> = {
-        postPassword: getReference(postListMap.postPassword, 'posts-password'),
-        postPrivate: getReference(postListMap.postPrivate, 'posts-private'),
-        post: getReference(postListMap.post, 'posts')
-      };
-
-      // Fetch document snapshots for user's posts or password or private from the Firestore
-      // prettier-ignore
-      const getSnapshot = (postListReference: DocumentReference[]): Promise<DocumentSnapshot[]> => {
-        return Promise.all(postListReference.map(async (documentReference: DocumentReference): Promise<DocumentSnapshot> => documentReference.get()));
-      };
-
-      const postSnapshotListMap: Record<string, DocumentSnapshot[]> = {
-        postPassword: await getSnapshot(postReferenceListMap.postPassword),
-        postPrivate: await getSnapshot(postReferenceListMap.postPrivate),
-        post: await getSnapshot(postReferenceListMap.post)
       };
 
       // Initialize the Algolia search index for category related posts objects
@@ -148,11 +117,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Counter for transaction retries
       let requestRetries: number = 0;
-
-      // Object to store rollback actions in case of transaction failure
       let requestRollback: any = undefined;
 
-      // prettier-ignore
       while (requestRetries < MAX_RETRIES) {
         try {
           // Start transaction using Prisma's $transaction method https://www.prisma.io/docs/orm/prisma-client/queries/transactions
@@ -160,52 +126,26 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Re-initialize requestRollback object
             requestRollback = {};
 
-            // Run for every post entity
-            for (const key of Object.keys(postListMap)) {
-              const postReferenceList: DocumentReference[] = postReferenceListMap[key];
-              const postSnapshotList: DocumentSnapshot[] = postSnapshotListMap[key];
-
-              //! Define rollback action for user's Firestore post documents
-              requestRollback[key + 'Document'] = async (): Promise<void> => {
-                await Promise.all(postReferenceList.map(async (documentReference: DocumentReference): Promise<WriteResult> => {
-                  const documentSnapshot: DocumentSnapshot | undefined = postSnapshotList.find((snapshot: DocumentSnapshot) => {
-                    return snapshot.id === documentReference.id
-                  });
-
-                  return documentReference.set(documentSnapshot?.data() as DocumentData);
-                }));
-              };
-
-              // Delete user's Firestore post documents
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const postListDocumentDelete: WriteResult[] = await Promise
-                .all(postReferenceList.map(async (documentReference: DocumentReference): Promise<WriteResult> => documentReference.delete()))
-                .catch((error: any) => request.server.helperPlugin.throwError('firestore/delete-document-failed', error, request));
-            }
-
-            // Check if there are results in the fetched post index objects
+            // Check if there are results in the fetched posts index objects
             if (postIndexObjects.results.length) {
               //! Define rollback action for Algolia delete category related post objects
               requestRollback.postIndexObjects = async (): Promise<void> => {
                 await postIndex.saveObjects([...postIndexObjects.results]);
               };
 
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const postIndexObjectsDelete: ChunkedBatchResponse = await postIndex.deleteObjects([...postIndexIDs]);
+              // Delete Algolia posts index object
+              await postIndex.deleteObjects([...postIndexIDs]);
             }
 
-            // Check if there are results in the fetched category index objects
+            // Check if there are results in the fetched categories index objects
             if (categoryIndexObjects.results.length) {
               //! Define rollback action for Algolia delete category objects
               requestRollback.categoryIndexObjects = async (): Promise<void> => {
                 await categoryIndex.saveObjects([...categoryIndexObjects.results]);
               };
 
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const categoryIndexObjectsDelete: ChunkedBatchResponse = await categoryIndex.deleteObjects([...categoryIndexIDs]);
+              // Delete Algolia categories index object
+              await categoryIndex.deleteObjects([...categoryIndexIDs]);
             }
 
             // Check if there are results in the fetched user index objects
@@ -216,20 +156,16 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
 
               // Delete Algolia user index object
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const userIndexObjectsDelete: ChunkedBatchResponse = await userIndex.deleteObjects([userFirebaseUid]);
+              await userIndex.deleteObjects([userFirebaseUid]);
             }
 
             //! Define rollback action for user Firestore document
             requestRollback.userDocument = async (): Promise<void> => {
-              await userDocumentReference.set(userDocumentSnapshot?.data() as DocumentData);
+              await userDocumentReference.set(userDocumentSnapshot.data() as DocumentData);
             };
 
             // Delete user Firestore document
-            // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const userDocumentDelete: WriteResult = await userDocumentReference.delete();
+            await userDocumentReference.delete();
 
             //! Define rollback action for user Auth record
             requestRollback.userRecord = async (): Promise<void> => {
@@ -244,13 +180,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             };
 
             // Delete user Auth record
-            // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const userAuthRecordDelete: UserRecord = await request.server.auth.deleteUser(userAuthRecord.uid);
+            await request.server.auth.deleteUser(userAuthRecord.uid);
 
             // Define arguments to delete user
             const userDeleteArgs: Prisma.UserDeleteArgs = {
-              select: request.server.prismaPlugin.getUserSelect(),
+              select: {
+                avatar: true
+              },
               where: {
                 firebaseUid: userFirebaseUid
               }
@@ -262,17 +198,30 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Run for every post entity
             for (const key of Object.keys(postListMap)) {
               postListMap[key].forEach((post: Post | PostPassword | PostPrivate) => {
-                const postPathEntity: string = request.server.helperPlugin.camelCaseToDashCase(key).replace('post', 'posts');
-                const postPath: string = ['users', userFirebaseUid, postPathEntity, post.firebaseUid].join('/');
+                // Extract post information from the request object
+                const postCover: string | null = post.image;
+                const postMarkdown: string = post.markdown;
 
-                //! Queue append
-                request.server.lavinMQPlugin.setImageListMoveToTemp([postPath, 'image'].join('/'));
-                request.server.lavinMQPlugin.setImageListMoveToTemp([postPath, 'markdown'].join('/'));
+                // Get the list of images in the post markdown body
+                const bodyMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBody(postMarkdown);
+                const postMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBucket(bodyMarkdownImageList);
+
+                // If there is a cover
+                if (postCover) {
+                  //! Queue append
+                  request.server.lavinMQPlugin.setImageListMoveToTemp(JSON.stringify(request.server.markdownPlugin.getImageListFromBucket([postCover])));
+                }
+
+                // If there are post markdown images
+                if (postMarkdownImageList.length) {
+                  //! Queue append
+                  request.server.lavinMQPlugin.setImageListMoveToTemp(JSON.stringify(postMarkdownImageList));
+                }
               });
             }
 
             //! Queue append
-            request.server.lavinMQPlugin.setImageListMoveToTemp(['users', userFirebaseUid, 'avatar'].join('/'));
+            request.server.lavinMQPlugin.setImageListMoveToTemp(JSON.stringify(request.server.markdownPlugin.getImageListFromBucket([user.avatar])));
 
             // Send success response with deleted user data
             return reply.status(200).send({

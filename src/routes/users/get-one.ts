@@ -21,14 +21,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           }
         }
       },
-      querystring: {
-        type: 'object',
-        properties: {
-          scope: {
-            $ref: 'partsScopeSchema#'
-          }
-        }
-      },
       response: {
         '200': {
           type: 'object',
@@ -51,27 +43,25 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     },
     // prettier-ignore
     handler: async function (request: FastifyRequest<ParamsUid & QuerystringScope>, reply: FastifyReply): Promise<void> {
-      const { scope }: Record<string, any> = request.query;
+      // Extract post information from the request object
+      const userFirebaseUid: string = String(request.params.uid)
 
+      // Define the arguments for find a post
       const userFindUniqueOrThrowArgs: Prisma.UserFindUniqueOrThrowArgs = {
         select: {
           ...request.server.prismaPlugin.getUserSelect(),
           description: true
         },
         where: {
-          firebaseUid: String(request.params.uid)
+          firebaseUid: userFirebaseUid
         }
       };
 
-      /** Scope */
-
-      if (scope) {
-        userFindUniqueOrThrowArgs.select = request.server.prismaPlugin.setScope(userFindUniqueOrThrowArgs, scope);
-      }
-
+      // Find the post
       await request.server.prisma.user
         .findUniqueOrThrow(userFindUniqueOrThrowArgs)
         .then((user: User) => {
+          // Return the post
           return reply.status(200).send({
             data: user,
             statusCode: 200

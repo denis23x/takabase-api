@@ -4,10 +4,9 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, PrismaClient, User } from '../../database/client';
 import type { UserCreateDto } from '../../types/dto/user/user-create';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
-import type { DocumentReference, WriteResult } from 'firebase-admin/lib/firestore';
+import type { DocumentReference } from 'firebase-admin/lib/firestore';
 import type { SaveObjectResponse } from '@algolia/client-search';
 import type { SearchIndex } from 'algoliasearch';
-import type { UserRecord } from 'firebase-admin/lib/auth/user-record';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -17,7 +16,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     preValidation: fastify.verifyUsername,
     schema: {
       tags: ['Users'],
-      description: 'Creates a new User',
+      description: 'Creates a new user',
       security: [
         {
           swaggerBearerAuth: []
@@ -94,8 +93,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Counter for transaction retries
       let requestRetries: number = 0;
-
-      // Object to store rollback actions in case of transaction failure
       let requestRollback: any = undefined;
 
       // prettier-ignore
@@ -137,8 +134,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             };
 
             // Define the arguments for update Firebase user auth record
-            // @ts-ignore
-            const userAuthRecordUpdate: UserRecord = await request.server.auth.updateUser(userFirebaseUid, {
+            await request.server.auth.updateUser(userFirebaseUid, {
               displayName: request.body.name,
               photoURL: null
             });
@@ -158,9 +154,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
 
             // Create Firestore user document
-            // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const userDocumentCreate: WriteResult = await userDocumentReference
+            await userDocumentReference
               .create(userDocumentCreateData)
               .catch((error: any) => request.server.helperPlugin.throwError('firestore/update-document-failed', error, request));
 

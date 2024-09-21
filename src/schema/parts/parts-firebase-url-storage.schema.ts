@@ -1,6 +1,5 @@
 /** @format */
 
-// prettier-ignore
 export const partsFirebaseUrlStorageSchema: Record<string, any> = {
   $id: 'partsFirebaseUrlStorageSchema',
   type: 'string',

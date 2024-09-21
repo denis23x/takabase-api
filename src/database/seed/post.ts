@@ -23,7 +23,6 @@ export const postRaw = async (): Promise<any> => {
     }
   });
 
-  // prettier-ignore
   const getImagePath = (): any => {
     const imageStorage: string = String(process.env.APP_STORAGE);
     const imagePath: string = [imageStorage, 'o/seed'].join('/');

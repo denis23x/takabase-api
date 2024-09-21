@@ -92,7 +92,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       };
 
-      // prettier-ignore
       const postPrivate: PostPrivate = await request.server.prisma.postPrivate.findUniqueOrThrow(postPrivateFindUniqueOrThrowArgs);
 
       // Counter for transaction retries

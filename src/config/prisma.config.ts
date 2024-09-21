@@ -11,6 +11,7 @@ config({
 });
 
 // https://docs.pingcap.com/tidbcloud/serverless-driver-prisma-example
+
 // prettier-ignore
 const prismaTiDBCloud: any = new PrismaTiDBCloud(connect({
   url: String(process.env.API_DATABASE_URL),

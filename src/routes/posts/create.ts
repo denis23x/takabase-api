@@ -87,7 +87,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       let requestRetries: number = 0;
       let requestRollback: any = undefined;
 
-      // prettier-ignore
       while (requestRetries < MAX_RETRIES) {
         try {
           // Start transaction using Prisma's $transaction method https://www.prisma.io/docs/orm/prisma-client/queries/transactions

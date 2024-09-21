@@ -19,7 +19,6 @@ export const userRaw = async (): Promise<any> => {
    * Create RAW user data
    */
 
-  // prettier-ignore
   const getAvatarPath = (): any => {
     const avatarStorage: string = String(process.env.APP_STORAGE);
     const avatarPath: string = [avatarStorage, 'o/seed'].join('/');
