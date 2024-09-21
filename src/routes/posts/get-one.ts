@@ -21,17 +21,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           }
         }
       },
-      querystring: {
-        type: 'object',
-        properties: {
-          userFirebaseUid: {
-            $ref: 'partsFirebaseUidSchema#'
-          },
-          scope: {
-            $ref: 'partsScopeSchema#'
-          }
-        }
-      },
       response: {
         '200': {
           type: 'object',
@@ -53,29 +42,35 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<ParamsId & QuerystringScope>, reply: FastifyReply): Promise<any> {
-      const { userFirebaseUid, scope }: Record<string, any> = request.query;
+      // Extract post information from the request object
+      const postId: number = Number(request.params.id);
 
+      // Extract information from the request query
+      const userFirebaseUid: string = request.query.userFirebaseUid;
+
+      // Define the arguments for find a post
       const postFindUniqueOrThrowArgs: Prisma.PostFindUniqueOrThrowArgs = {
         select: {
           ...request.server.prismaPlugin.getPostSelect(),
-          firebaseUid: true,
-          markdown: true
+          markdown: true,
+          user: {
+            select: request.server.prismaPlugin.getUserSelect()
+          },
+          category: {
+            select: request.server.prismaPlugin.getCategorySelect()
+          }
         },
         where: {
-          id: Number(request.params.id),
+          id: postId,
           userFirebaseUid
         }
       };
 
-      /** Scope */
-
-      if (scope) {
-        postFindUniqueOrThrowArgs.select = request.server.prismaPlugin.setScope(postFindUniqueOrThrowArgs, scope);
-      }
-
+      // Find the post
       await request.server.prisma.post
         .findUniqueOrThrow(postFindUniqueOrThrowArgs)
         .then((post: Post) => {
+          // Return the post
           return reply.status(200).send({
             data: post,
             statusCode: 200

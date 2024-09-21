@@ -50,7 +50,6 @@ model Category {
 model Post {
   id                Int       @id @default(autoincrement()) @db.Int
   name              String    @db.VarChar(255)
-  firebaseUid       String    @unique @db.VarChar(255)
   description       String    @db.VarChar(255)
   markdown          String    @db.Text
   image             String?   @db.VarChar(255)
@@ -65,7 +64,6 @@ model Post {
 
   @@unique([name, categoryId])
   @@index([categoryId])
-  @@index([firebaseUid])
   @@index([userFirebaseUid])
 }
 

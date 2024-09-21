@@ -1,11 +1,8 @@
 /** @format */
 
-import { parse } from 'path';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { PostCreateDto } from '../../types/dto/post/post-create';
-import type { DocumentReference } from 'firebase-admin/firestore';
 import type { Post, Prisma, PrismaClient } from '../../database/client';
-import type { WriteResult } from 'firebase-admin/lib/firestore';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { SaveObjectResponse } from '@algolia/client-search';
 import type { SearchIndex } from 'algoliasearch';
@@ -17,7 +14,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Posts'],
-      description: 'Creates a new Post',
+      description: 'Creates a new post',
       security: [
         {
           swaggerBearerAuth: []
@@ -36,7 +33,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             $ref: 'partsPostMarkdownSchema#'
           },
           image: {
-            $ref: 'partsFirebaseUrlStorageSchema#'
+            $ref: 'partsImageSchema#'
           },
           categoryId: {
             $ref: 'partsIdSchema#'
@@ -64,19 +61,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
+    // prettier-ignore
     handler: async function (request: FastifyRequest<PostCreateDto>, reply: FastifyReply): Promise<void> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
-      // Extract the firebaseUid from the authenticated user
+      // Extract the user firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
 
       // Extract post information from the request object
-      const postPath: string = ['users', userFirebaseUid, 'posts'].join('/');
-      const postImage: string | null | undefined = request.body.image;
+      const postCover: string | null = request.body.image;
       const postCategoryId: number = Number(request.body.categoryId);
       const postMarkdown: string = request.body.markdown;
       const postIndex: SearchIndex = request.server.algolia.initIndex('post');
+
+      // Get the list of images in the post markdown body
+      const bodyMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBody(postMarkdown);
+      const tempMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBucket(bodyMarkdownImageList).filter((bodyMarkdownImage: string) => bodyMarkdownImage.startsWith('temp'));
 
       // Delete for more adjustable Prisma input
       delete request.body.categoryId;
@@ -84,8 +85,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Counter for transaction retries
       let requestRetries: number = 0;
-
-      // Object to store rollback actions in case of transaction failure
       let requestRollback: any = undefined;
 
       // prettier-ignore
@@ -96,96 +95,45 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Re-initialize requestRollback object
             requestRollback = {};
 
-            // Create a reference for the new post document in Firestore
-            const postDocumentReference: DocumentReference = await request.server.firestorePlugin
-              .addDocument(postPath, {})
-              .catch((error: any) => request.server.helperPlugin.throwError('firestore/add-document-failed', error, request));
+            // If there is a cover provided
+            if (postCover) {
+              // Get the cover relative /temp URL
+              const tempCoverList: string[] = request.server.markdownPlugin.getImageListRelativeUrl([postCover]);
 
-            // Prepare the DTO for updating the Firestore document
-            const postDocumentUpdateDto: any = {};
-
-            //! Define the rollback action for deleting the newly created post document in Firestore
-            requestRollback.postDocument = async (): Promise<void> => {
-              await postDocumentReference.delete();
-            };
-
-            // If there is an image associated with the post
-            if (postImage) {
-              // Prepare the post image temporary URL
-              const tempImageList: string[] = request.server.markdownPlugin.getImageListRelativeUrl([postImage]);
-
-              // Define the destination path for the post image in storage
-              const postImageListDestination: string = [postDocumentReference.path, 'image'].join('/');
-
-              // Move the temporary post image to the post image destination
-              const postImageList: string[] = await request.server.storagePlugin
-                .setImageListMove(tempImageList, postImageListDestination)
+              // Move the /temp cover to the /covers
+              const postCoverList: string[] = await request.server.storagePlugin
+                .setImageListMove(tempCoverList, 'covers')
                 .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
-              // Get the temporary image original destination for rollback
-              const tempImageListDestination: string[] = tempImageList.map((tempImage: string) => {
-                return encodeURIComponent(parse(decodeURIComponent(tempImage)).dir);
-              });
-
-              //! Define rollback action for post image moved to the post image destination
-              requestRollback.postImageList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(postImageList, tempImageListDestination.shift());
+              //! Define rollback action for cover to move it to the /temp back
+              requestRollback.postCoverList = async (): Promise<void> => {
+                await request.server.storagePlugin.setImageListMove(postCoverList, 'temp');
               };
 
-              // Rewrite the image URL in the request body with the new post image URL
-              request.body.image = request.server.markdownPlugin.getImageListReplace(postImage, tempImageList, postImageList);
+              // Replace the cover URL in the request body with the new URL
+              request.body.image = request.server.markdownPlugin.getImageListReplace(postCover, tempCoverList, postCoverList);
             }
 
-            // Get the list of images in the post markdown body
-            const bodyMarkdownList: string[] = request.server.markdownPlugin.getImageListFromBody(postMarkdown);
-
-            // Get the list of temporary images from the post markdown body
-            const tempMarkdownList: string[] = request.server.markdownPlugin.getImageListFromBucket(bodyMarkdownList);
-
-            // If there are temporary markdown images
-            if (tempMarkdownList.length) {
-              // Define the destination path for the post markdown images in storage
-              const postMarkdownListDestination: string = [postDocumentReference.path, 'markdown'].join('/');
-
-              // Move the temporary markdown images to the post markdown destination
-              const postMarkdownList: string[] = await request.server.storagePlugin
-                .setImageListMove(tempMarkdownList, postMarkdownListDestination)
+            // If there are /temp markdown images
+            if (tempMarkdownImageList.length) {
+              // Move the /temp markdown images to the /images
+              const postMarkdownImageList: string[] = await request.server.storagePlugin
+                .setImageListMove(tempMarkdownImageList, 'images')
                 .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
-              // Get the temporary markdown images original destination for rollback
-              const tempMarkdownListDestination: string[] = tempMarkdownList.map((tempImage: string) => {
-                return encodeURIComponent(parse(decodeURIComponent(tempImage)).dir);
-              });
-
-              //! Define rollback action for moving markdown images to post markdown destination
-              requestRollback.postMarkdownList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(postMarkdownList, tempMarkdownListDestination.shift());
+              //! Define rollback action for moving markdown images to the /temp back
+              requestRollback.postMarkdownImageList = async (): Promise<void> => {
+                await request.server.storagePlugin.setImageListMove(postMarkdownImageList, 'temp');
               };
 
-              // Rewrite the markdown body with the updated markdown image list
-              request.body.markdown = request.server.markdownPlugin.getImageListReplace(postMarkdown, tempMarkdownList, postMarkdownList);
-
-              // Update the DTO for updating the Firestore document
-              postDocumentUpdateDto.markdown = postMarkdownList.map((imageUrl: string) => decodeURIComponent(imageUrl));
+              // Replace the markdown body with the new URL images list
+              request.body.markdown = request.server.markdownPlugin.getImageListReplace(postMarkdown, tempMarkdownImageList, postMarkdownImageList);
             }
 
             // Define the arguments for create post
             const postCreateArgs: Prisma.PostCreateArgs = {
-              select: {
-                ...request.server.prismaPlugin.getPostSelect(),
-                category: {
-                  select: request.server.prismaPlugin.getCategorySelect()
-                },
-                user: {
-                  select: {
-                    ...request.server.prismaPlugin.getUserSelect(),
-                    firebaseUid: true
-                  }
-                }
-              },
               data: {
                 ...request.body,
-                firebaseUid: postDocumentReference.id,
                 user: {
                   connect: {
                     firebaseUid: userFirebaseUid
@@ -200,9 +148,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             };
 
             // Create the post
-            const post: Post & Record<string, any> = await prismaClient.post.create(postCreateArgs);
+            const post: Post = await prismaClient.post.create(postCreateArgs);
 
-            //! Define rollback action for delete post row
+            //! Define rollback action for delete post
             requestRollback.post = async (): Promise<void> => {
               // Define arguments to delete post
               const postDeleteArgs: Prisma.PostDeleteArgs = {
@@ -216,31 +164,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               await prismaClient.post.delete(postDeleteArgs);
             }
 
-            // Update the DTO for updating the Firestore document
-            postDocumentUpdateDto.postId = post.id;
-
-            // Perform the update operation on the Firestore document
-            // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const postDocumentUpdate: WriteResult = await postDocumentReference
-              .update(postDocumentUpdateDto)
-              .catch((error: any) => request.server.helperPlugin.throwError('firestore/update-document-failed', error, request));
-
             // Create new object in Algolia post index
             const postIndexObject: SaveObjectResponse = await postIndex.saveObject({
               ...request.server.helperPlugin.mapObjectValuesToNull(post),
               objectID: String(post.id),
               updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(post.updatedAt),
-              createdAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(post.createdAt),
-              user: {
-                id: post.user.id,
-                avatar: post.user.avatar,
-                name: post.user.name,
-                firebaseUid: post.user.firebaseUid,
-              },
-              category: {
-                id: post.category.id
-              },
+              createdAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(post.createdAt)
             });
 
             //! Define rollback action for Algolia delete post object

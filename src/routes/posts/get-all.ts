@@ -35,17 +35,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           },
           size: {
             $ref: 'partsPageSizeSchema#'
-          },
-          scope: {
-            allOf: [
-              {
-                $ref: 'partsScopeSchema#'
-              },
-              {
-                default: ['user', 'category'],
-                example: ['user', 'category']
-              }
-            ]
           }
         },
         required: ['page', 'size']
@@ -74,8 +63,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<QuerystringSearch>, reply: FastifyReply): Promise<any> {
-      const { username, categoryId, postIdList, query, scope, size, page }: Record<string, any> = request.query;
+      // Extract information from the request query
+      const username: string = request.query.username;
+      const categoryId: number = request.query.categoryId;
+      const postIdList: number[] = request.query.postIdList;
+      const size: number = request.query.size;
+      const page: number = request.query.page;
+      const query: string = request.query.query;
 
+      // Define the arguments for find a posts
       const postFindManyArgs: Prisma.PostFindManyArgs = {
         select: request.server.prismaPlugin.getPostSelect(),
         orderBy: {
@@ -126,15 +122,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         };
       }
 
-      /** Scope */
-
-      if (scope) {
-        postFindManyArgs.select = request.server.prismaPlugin.setScope(postFindManyArgs, scope);
-      }
-
+      // Find the posts
       await request.server.prisma.post
         .findMany(postFindManyArgs)
         .then((postList: Post[]) => {
+          // Return the post
           return reply.status(200).send({
             data: postList,
             statusCode: 200
