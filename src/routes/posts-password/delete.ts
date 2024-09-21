@@ -2,7 +2,6 @@
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { PostPassword, Prisma, PrismaClient } from '../../database/client';
-import type { DocumentData, DocumentReference, DocumentSnapshot, WriteResult } from 'firebase-admin/lib/firestore';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { PostDeleteDto } from '../../types/dto/post/post-delete';
 
@@ -13,7 +12,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Posts-Password'],
-      description: 'Removes specific Private from the database',
+      description: 'Removes the post protected by password',
       security: [
         {
           swaggerBearerAuth: []
@@ -26,18 +25,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             $ref: 'partsIdSchema#'
           }
         }
-      },
-      querystring: {
-        type: 'object',
-        properties: {
-          firebaseUid: {
-            $ref: 'partsFirebaseUidSchema#'
-          },
-          image: {
-            $ref: 'partsFirebaseUrlStorageSchema#'
-          }
-        },
-        required: ['firebaseUid']
       },
       response: {
         '200': {
@@ -63,18 +50,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 
-      // Extract the firebaseUid from the authenticated user
+      // Extract the user firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
 
       // Extract post information from the request object
-      const postPasswordId: number = Number(request.params.id);
-      const postPasswordFirebaseUid: string = request.query.firebaseUid;
-      const postPasswordPath: string = ['users', userFirebaseUid, 'posts-password', postPasswordFirebaseUid].join('/');
+      const postId: number = Number(request.params.id);
 
       // Counter for transaction retries
       let requestRetries: number = 0;
-
-      // Object to store rollback actions in case of transaction failure
       let requestRollback: any = undefined;
 
       // prettier-ignore
@@ -85,35 +68,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Re-initialize requestRollback object
             requestRollback = {};
 
-            // Get the reference to the post document
-            const postPasswordDocumentReference: DocumentReference = request.server.firestorePlugin.getDocumentReference(postPasswordPath);
-
-            // Get the snapshot of the post document
-            const postPasswordDocumentSnapshot: DocumentSnapshot = await postPasswordDocumentReference
-              .get()
-              .catch((error: any) => request.server.helperPlugin.throwError('firestore/get-document-failed', error, request));
-
-            //! Define rollback action for delete Firestore post document
-            requestRollback.postPasswordDocument = async (): Promise<void> => {
-              await postPasswordDocumentReference.set(postPasswordDocumentSnapshot.data() as DocumentData)
-            };
-
-            // Delete Firestore post document
-            // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const postPasswordDocumentDelete: WriteResult = await postPasswordDocumentReference
-              .delete()
-              .catch((error: any) => request.server.helperPlugin.throwError('firestore/delete-document-failed', error, request));
-
             // Define arguments to delete post
             const postPasswordDeleteArgs: Prisma.PostPasswordDeleteArgs = {
               select: {
-                ...request.server.prismaPlugin.getPostPasswordSelect(),
-                firebaseUid: true,
-                userFirebaseUid: true
+                image: true,
+                markdown: true
               },
               where: {
-                id: postPasswordId,
+                id: postId,
                 userFirebaseUid
               }
             };
@@ -121,9 +83,25 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Delete post
             return prismaClient.postPassword.delete(postPasswordDeleteArgs);
           }).then((postPassword: PostPassword) => {
-            //! Queue append
-            request.server.lavinMQPlugin.setImageListMoveToTemp([postPasswordPath, 'image'].join('/'));
-            request.server.lavinMQPlugin.setImageListMoveToTemp([postPasswordPath, 'markdown'].join('/'));
+            // Extract post information from the request object
+            const postCover: string | null = postPassword.image;
+            const postMarkdown: string = postPassword.markdown;
+
+            // Get the list of images in the post markdown body
+            const bodyMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBody(postMarkdown);
+            const postMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBucket(bodyMarkdownImageList);
+
+            // If there is a cover
+            if (postCover) {
+              //! Queue append
+              request.server.lavinMQPlugin.setImageListMoveToTemp(JSON.stringify(request.server.markdownPlugin.getImageListFromBucket([postCover])));
+            }
+
+            // If there are post markdown images
+            if (postMarkdownImageList.length) {
+              //! Queue append
+              request.server.lavinMQPlugin.setImageListMoveToTemp(JSON.stringify(postMarkdownImageList));
+            }
 
             // Send success response with deleted post
             return reply.status(200).send({

@@ -13,7 +13,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     onRequest: fastify.verifyIdTokenOptional,
     schema: {
       tags: ['Posts-Password'],
-      description: 'Get a single private',
+      description: 'Get a single post protected by password',
       params: {
         type: 'object',
         properties: {
@@ -54,16 +54,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<ParamsId & QuerystringScope>, reply: FastifyReply): Promise<any> {
-      const { password, scope }: Record<string, any> = request.query;
+      // Extract post information from the request object
+      const postId: number = Number(request.params.id);
 
+      // Extract information from the request query
+      const password: string = request.query.password;
+
+      // Define the arguments for find a post
       const postPasswordFindUniqueArgs: Prisma.PostPasswordFindUniqueArgs = {
         select: {
           ...request.server.prismaPlugin.getPostPasswordSelect(),
-          firebaseUid: true,
-          markdown: true
+          markdown: true,
+          user: {
+            select: request.server.prismaPlugin.getUserSelect()
+          }
         },
         where: {
-          id: Number(request.params.id)
+          id: postId
         }
       };
 
@@ -85,22 +92,19 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
 
-      /** Scope */
-
-      if (scope) {
-        postPasswordFindUniqueArgs.select = request.server.prismaPlugin.setScope(postPasswordFindUniqueArgs, scope);
-      }
-
+      // Find the post
       await request.server.prisma.postPassword
         .findUnique(postPasswordFindUniqueArgs)
         .then((postPassword: PostPassword | null) => {
           if (!postPassword && password) {
+            // Return error
             return reply.status(403).send({
               error: 'Forbidden',
               message: 'Access denied',
               statusCode: 403
             });
           } else {
+            // Return the post
             return reply.status(200).send({
               data: postPassword,
               statusCode: 200

@@ -72,7 +72,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             const postPrivateDeleteArgs: Prisma.PostPrivateDeleteArgs = {
               select: {
                 image: true,
-                markdown: true,
+                markdown: true
               },
               where: {
                 id: postId,

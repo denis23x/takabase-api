@@ -12,7 +12,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Posts-Password'],
-      description: 'List all privates, paginated',
+      description: 'List all posts protected by password, paginated',
       security: [
         {
           swaggerBearerAuth: []
@@ -29,17 +29,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           },
           size: {
             $ref: 'partsPageSizeSchema#'
-          },
-          scope: {
-            allOf: [
-              {
-                $ref: 'partsScopeSchema#'
-              },
-              {
-                default: ['user'],
-                example: ['user']
-              }
-            ]
           }
         },
         required: ['page', 'size']
@@ -68,12 +57,19 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     handler: async function (request: FastifyRequest<QuerystringSearch>, reply: FastifyReply): Promise<any> {
-      const { query, scope, size, page }: Record<string, any> = request.query;
+      // Extract the user firebaseUid from the authenticated user
+      const userFirebaseUid: string = request.user.uid;
 
+      // Extract information from the request query
+      const size: number = request.query.size;
+      const page: number = request.query.page;
+      const query: string = request.query.query;
+
+      // Define the arguments for find a posts
       const postPasswordFindManyArgs: Prisma.PostPasswordFindManyArgs = {
         select: request.server.prismaPlugin.getPostPasswordSelect(),
         where: {
-          userFirebaseUid: request.user.uid
+          userFirebaseUid
         },
         orderBy: {
           id: 'desc'
@@ -93,15 +89,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         };
       }
 
-      /** Scope */
-
-      if (scope) {
-        postPasswordFindManyArgs.select = request.server.prismaPlugin.setScope(postPasswordFindManyArgs, scope);
-      }
-
+      // Find the posts
       await request.server.prisma.postPassword
         .findMany(postPasswordFindManyArgs)
         .then((postPasswordList: PostPassword[]) => {
+          // Return the post
           return reply.status(200).send({
             data: postPasswordList,
             statusCode: 200
