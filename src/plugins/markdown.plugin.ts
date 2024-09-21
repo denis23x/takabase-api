@@ -52,18 +52,6 @@ const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: F
         return imageUrl;
       });
     },
-    //!
-    getImageListSettled: (imageListUrl: string[]): string[] => {
-      const imageListPost: string[] = fastifyInstance.markdownPlugin
-        .getImageListFirebaseUrl(imageListUrl)
-        .filter((imageUrl: string) => {
-          return ['users', 'posts', 'posts-password', 'posts-private'].some((imageUrlDestination: string) => {
-            return imageUrl.includes(imageUrlDestination);
-          });
-        });
-
-      return fastifyInstance.markdownPlugin.getImageListRelativeUrl(imageListPost);
-    },
     getImageListReplace: (markdown: string, previousList: string[], nextList: string[]): string => {
       let markdownNext: string = markdown;
 

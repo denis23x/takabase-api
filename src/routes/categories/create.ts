@@ -64,8 +64,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Counter for transaction retries
       let requestRetries: number = 0;
-
-      // Object to store rollback actions in case of transaction failure
       let requestRollback: any = undefined;
 
       // prettier-ignore

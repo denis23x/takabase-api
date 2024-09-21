@@ -5,7 +5,7 @@ import type { Prisma, Category, PrismaClient } from '../../database/client';
 import type { CategoryUpdateDto } from '../../types/dto/category/category-update';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { SearchIndex } from 'algoliasearch';
-import type { GetObjectsResponse, SaveObjectResponse } from '@algolia/client-search';
+import type { GetObjectsResponse } from '@algolia/client-search';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -14,7 +14,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Categories'],
-      description: 'Updates a Category',
+      description: 'Updates a category',
       security: [
         {
           swaggerBearerAuth: []
@@ -73,8 +73,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Counter for transaction retries
       let requestRetries: number = 0;
-
-      // Object to store rollback actions in case of transaction failure
       let requestRollback: any = undefined;
 
       // prettier-ignore
@@ -92,9 +90,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 user: {
                   select: {
                     ...request.server.prismaPlugin.getCategorySelect(),
-                    firebaseUid: true,
-                    createdAt: false,
-                    updatedAt: false
+                    firebaseUid: true
                   }
                 }
               },
@@ -116,9 +112,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
 
               // Update object in Algolia category index object
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const categoryIndexObject: SaveObjectResponse = await categoryIndex.partialUpdateObjects([{
+              await categoryIndex.partialUpdateObjects([{
                 ...request.server.helperPlugin.mapObjectValuesToNull(category),
                 objectID: String(category.id),
                 updatedAt: category.updatedAt,

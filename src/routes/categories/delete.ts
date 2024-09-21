@@ -3,11 +3,9 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Category, Post, Prisma, PrismaClient } from '../../database/client';
 import type { CategoryDeleteDto } from '../../types/dto/category/category-delete';
-import type { DocumentReference, DocumentSnapshot } from 'firebase-admin/firestore';
-import type { DocumentData, WriteResult } from 'firebase-admin/lib/firestore';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { SearchIndex } from 'algoliasearch';
-import type { ChunkedBatchResponse, GetObjectsResponse } from '@algolia/client-search';
+import type { GetObjectsResponse } from '@algolia/client-search';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -67,60 +65,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Extract category and post related information from the request object
       const categoryId: number = Number(request.params.id);
-      const categoryPostListMoveTo: number = Number(request.query.categoryId);
-      const categoryPostList: Post[] = [];
-      const categoryPostListDocumentReference: DocumentReference[] = [];
-      const categoryPostListDocumentSnapshot: DocumentSnapshot[] = [];
+      const categoryIdNext: number = Number(request.query.categoryId);
       const categoryIndex: SearchIndex = request.server.algolia.initIndex('category');
       const categoryIndexObjects: GetObjectsResponse<any> = await categoryIndex.getObjects([String(categoryId)]);
 
-      // Define arguments to find posts associated with the category
-      const postFindManyArgs: Prisma.PostFindManyArgs = {
-        select: {
-          id: true,
-          firebaseUid: true
-        },
-        where: {
-          userFirebaseUid,
-          categoryId
-        }
-      };
-
-      // Retrieve the list of posts associated with the category
-      const postList: Post[] = await request.server.prisma.post.findMany(postFindManyArgs);
-
-      // Push the retrieved posts to the categoryPostList array
-      categoryPostList.push(...postList);
-
-      // Initialize the Algolia search index for category related posts objects
-      const postIndex: SearchIndex = request.server.algolia.initIndex('post');
-      const postIndexIDs: string[] = categoryPostList.map((post: Post) => String(post.id));
-      const postIndexObjects: GetObjectsResponse<any> = await postIndex.getObjects([...postIndexIDs]);
-
-      // Make post deleting preparations (Firebase References & Snapshots)
-      if (!categoryPostListMoveTo) {
-        // Define an array of DocumentReference objects for the post documents in Firestore
-        const postListDocumentReference: DocumentReference[] = categoryPostList
-          .map((post: Post) => ['users', userFirebaseUid, 'posts', post.firebaseUid].join('/'))
-          .map((documentPath: string) => request.server.firestorePlugin.getDocumentReference(documentPath));
-
-        // Push the DocumentReference objects to the categoryPostListDocumentReference array
-        categoryPostListDocumentReference.push(...postListDocumentReference);
-
-        // Retrieve the DocumentSnapshot objects for the post documents in Firestore
-        // prettier-ignore
-        const postListDocumentSnapshot: DocumentSnapshot[] = await Promise
-          .all(postListDocumentReference.map(async (documentReference: DocumentReference): Promise<DocumentSnapshot> => documentReference.get()))
-          .catch((error: any) => request.server.helperPlugin.throwError('firestore/get-list-failed', error, request));
-
-        // Push the retrieved DocumentSnapshot objects to the categoryPostListDocumentSnapshot array
-        categoryPostListDocumentSnapshot.push(...postListDocumentSnapshot);
-      }
+      // Preparing for queue
+      let postListDelete: Post[] = [];
 
       // Counter for transaction retries
       let requestRetries: number = 0;
-
-      // Object to store rollback actions in case of transaction failure
       let requestRollback: any = undefined;
 
       // prettier-ignore
@@ -131,75 +84,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Re-initialize requestRollback object
             requestRollback = {};
 
-            // If there is NOT a move operation
-            if (!categoryPostListMoveTo) {
-              //! Define rollback action for Firestore delete category related post documents
-              requestRollback.postListDocument = async (): Promise<void> => {
-                await Promise.all(categoryPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<WriteResult> => {
-                  const documentSnapshot: DocumentSnapshot | undefined = categoryPostListDocumentSnapshot.find((snapshot: DocumentSnapshot) => {
-                    return snapshot.id === documentReference.id
-                  });
-
-                  return documentReference.set(documentSnapshot?.data() as DocumentData);
-                }));
-              };
-
-              // Delete category related Firestore post documents
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const postListDocumentDelete: WriteResult[] = await Promise
-                .all(categoryPostListDocumentReference.map(async (documentReference: DocumentReference): Promise<WriteResult> => documentReference.delete()))
-                .catch((error: any) => request.server.helperPlugin.throwError('firestore/delete-document-failed', error, request));
-
-              // Check if there are results in the fetched post index objects
-              if (postIndexObjects.results.length) {
-                //! Define rollback action for Algolia delete category related post objects
-                requestRollback.postIndexObjects = async (): Promise<void> => {
-                  await postIndex.saveObjects([...postIndexObjects.results]);
-                };
-
-                // @ts-ignore
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const postIndexObjectsDelete: ChunkedBatchResponse = await postIndex.deleteObjects([...postIndexIDs]);
-              }
-            } else {
-              // Check if there are results in the fetched post index objects
-              if (postIndexObjects.results.length) {
-                //! Define rollback action for Algolia update category related post objects
-                requestRollback.postIndexObjects = async (): Promise<void> => {
-                  await postIndex.partialUpdateObjects([...postIndexObjects.results]);
-                };
-
-                // Map the results from the post index objects to create a new array of posts
-                const postIndexObjectsNext: Partial<Post>[] = postIndexObjects.results.map((post: Partial<Post>) => ({
-                  ...post,
-                  category: {
-                    id: categoryPostListMoveTo
-                  }
-                }));
-
-                // @ts-ignore
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const postIndexObjectsUpdate: ChunkedBatchResponse = await postIndex.partialUpdateObjects([...postIndexObjectsNext]);
-              }
-
-              // Define arguments to update category related posts
-              const postUpdateManyArgs: Prisma.PostUpdateManyArgs = {
-                where: {
-                  userFirebaseUid,
-                  categoryId
-                },
-                data: {
-                  categoryId: categoryPostListMoveTo
-                }
-              };
-
-              // Update category related posts
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const postList: Prisma.BatchPayload = await prismaClient.post.updateMany(postUpdateManyArgs);
-            }
-
             // Check if there are results in the fetched category index objects
             if (categoryIndexObjects.results.length) {
               //! Define rollback action for Algolia delete category object
@@ -208,14 +92,43 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
 
               // Delete Algolia category index object
-              // @ts-ignore
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const categoryIndexObjectsDelete: ChunkedBatchResponse = await categoryIndex.deleteObjects([String(categoryId)]);
+              await categoryIndex.deleteObjects([String(categoryId)]);
+            }
+
+            // If there is a categoryIdNext provided
+            if (categoryIdNext) {
+              // Define arguments to update category related posts
+              const postUpdateManyArgs: Prisma.PostUpdateManyArgs = {
+                where: {
+                  userFirebaseUid,
+                  categoryId
+                },
+                data: {
+                  categoryId: categoryIdNext
+                }
+              };
+
+              // Update category related posts
+              await prismaClient.post.updateMany(postUpdateManyArgs);
+            } else {
+              // Define arguments to find posts associated with the category
+              const postFindManyArgs: Prisma.PostFindManyArgs = {
+                select: {
+                  image: true,
+                  markdown: true
+                },
+                where: {
+                  userFirebaseUid,
+                  categoryId
+                }
+              };
+
+              // Retrieve the list of posts associated with the category
+              await request.server.prisma.post.findMany(postFindManyArgs).then((postList: Post[]) => postListDelete = postList);
             }
 
             // Define arguments to delete category
             const categoryDeleteArgs: Prisma.CategoryDeleteArgs = {
-              select: request.server.prismaPlugin.getCategorySelect(),
               where: {
                 id: categoryId,
                 userFirebaseUid
@@ -226,16 +139,27 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             return prismaClient.category.delete(categoryDeleteArgs);
           }).then((category: Category) => {
             // If there is NOT a move operation
-            if (!categoryPostListMoveTo) {
-              categoryPostList.forEach((post: Post) => {
-                // Extract URLs of posts associated with category
-                const postPath: string = ['users', userFirebaseUid, 'posts', post.firebaseUid].join('/');
+            postListDelete.forEach((post: Post) => {
+              // Extract post information from the request object
+              const postCover: string | null = post.image;
+              const postMarkdown: string = post.markdown;
 
+              // Get the list of images in the post markdown body
+              const bodyMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBody(postMarkdown);
+              const postMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBucket(bodyMarkdownImageList);
+
+              // If there is a cover
+              if (postCover) {
                 //! Queue append
-                request.server.lavinMQPlugin.setImageListMoveToTemp([postPath, 'image'].join('/'));
-                request.server.lavinMQPlugin.setImageListMoveToTemp([postPath, 'markdown'].join('/'));
-              });
-            }
+                request.server.lavinMQPlugin.setImageListMoveToTemp(JSON.stringify(request.server.markdownPlugin.getImageListFromBucket([postCover])));
+              }
+
+              // If there are post markdown images
+              if (postMarkdownImageList.length) {
+                //! Queue append
+                request.server.lavinMQPlugin.setImageListMoveToTemp(JSON.stringify(postMarkdownImageList));
+              }
+            });
 
             // Send success response with deleted category
             return reply.status(200).send({

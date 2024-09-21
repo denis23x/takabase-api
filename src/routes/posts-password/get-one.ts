@@ -27,9 +27,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         properties: {
           password: {
             $ref: 'partsPasswordSchema#'
-          },
-          scope: {
-            $ref: 'partsScopeSchema#'
           }
         }
       },
