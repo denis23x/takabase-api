@@ -4,6 +4,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, PostPrivate, PrismaClient } from '../../database/client';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { PostUpdateDto } from '../../types/dto/post/post-update';
+import type { ParamsId } from '../../types/crud/params/params-id';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -64,7 +65,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     // prettier-ignore
-    handler: async function (request: FastifyRequest<PostUpdateDto>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<ParamsId & PostUpdateDto>, reply: FastifyReply): Promise<any> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 

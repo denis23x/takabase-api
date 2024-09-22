@@ -2,9 +2,9 @@
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, Post } from '../../database/client';
-import type { QuerystringScope } from '../../types/crud/querystring/querystring-scope';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { ParamsId } from '../../types/crud/params/params-id';
+import type { PostGetOneDto } from '../../types/dto/post/post-get-one';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -41,7 +41,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<ParamsId & QuerystringScope>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<ParamsId & PostGetOneDto>, reply: FastifyReply): Promise<any> {
       // Extract post information from the request object
       const postId: number = Number(request.params.id);
 

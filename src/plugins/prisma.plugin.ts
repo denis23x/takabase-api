@@ -84,62 +84,6 @@ const prismaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
       updatedAt: true,
       deletedAt: false
     }),
-    setScope: (anyManyArgs: any, scope: string[]): any => {
-      const getSelect = (value: string): any => {
-        switch (value) {
-          case 'category': {
-            return {
-              category: {
-                select: fastifyInstance.prismaPlugin.getCategorySelect()
-              }
-            };
-          }
-          case 'categories': {
-            return {
-              categories: {
-                select: fastifyInstance.prismaPlugin.getCategorySelect(),
-                orderBy: {
-                  id: 'desc'
-                }
-              }
-            };
-          }
-          case 'posts': {
-            return {
-              posts: {
-                select: fastifyInstance.prismaPlugin.getPostSelect(),
-                orderBy: {
-                  id: 'desc'
-                }
-              }
-            };
-          }
-          case 'user': {
-            return {
-              user: {
-                select: fastifyInstance.prismaPlugin.getUserSelect()
-              }
-            };
-          }
-          default: {
-            return undefined;
-          }
-        }
-      };
-
-      let anyManyArgsSelect: any = {
-        ...anyManyArgs.select
-      };
-
-      scope.forEach((value: string) => {
-        anyManyArgsSelect = {
-          ...anyManyArgsSelect,
-          ...getSelect(value)
-        };
-      });
-
-      return anyManyArgsSelect;
-    },
     getErrorPrisma: (error: Prisma.PrismaClientKnownRequestError): ResponseError | null => {
       const prismaErrorReference: string = 'https://prisma.io/docs/reference/api-reference/error-reference';
       const prismaErrorMessage: string = [prismaErrorReference, error.code?.toLowerCase()].join('#');

@@ -86,7 +86,6 @@ import { partsIdSchema } from './schema/parts/parts-id.schema';
 import { partsImageSchema } from './schema/parts/parts-image.schema';
 import { partsInsightsSchema } from './schema/parts/parts-insights.schema';
 import { partsPasswordSchema } from './schema/parts/parts-password.schema';
-import { partsScopeSchema } from './schema/parts/parts-scope.schema';
 
 export const main = async (): Promise<FastifyInstance> => {
   const fastifyInstance: FastifyInstance = fastify({
@@ -169,7 +168,6 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsImageSchema);
   fastifyInstance.addSchema(partsInsightsSchema);
   fastifyInstance.addSchema(partsPasswordSchema);
-  fastifyInstance.addSchema(partsScopeSchema);
 
   // LOCALHOST
 

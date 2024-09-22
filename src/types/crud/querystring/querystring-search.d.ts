@@ -7,7 +7,6 @@ export interface QuerystringSearch {
     username?: string;
     categoryId?: number;
     postIdList?: number[];
-    scope?: string[];
     page: number;
     size: number;
   };

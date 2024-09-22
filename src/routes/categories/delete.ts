@@ -6,6 +6,7 @@ import type { CategoryDeleteDto } from '../../types/dto/category/category-delete
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { SearchIndex } from 'algoliasearch';
 import type { GetObjectsResponse } from '@algolia/client-search';
+import type { ParamsId } from '../../types/crud/params/params-id';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -56,7 +57,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<CategoryDeleteDto>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<ParamsId & CategoryDeleteDto>, reply: FastifyReply): Promise<any> {
       // Maximum number of transaction retries
       const MAX_RETRIES: number = 3;
 

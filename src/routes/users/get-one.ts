@@ -2,7 +2,6 @@
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, User } from '../../database/client';
-import type { QuerystringScope } from '../../types/crud/querystring/querystring-scope';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { ParamsUid } from '../../types/crud/params/params-uid';
 
@@ -42,7 +41,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       }
     },
     // prettier-ignore
-    handler: async function (request: FastifyRequest<ParamsUid & QuerystringScope>, reply: FastifyReply): Promise<void> {
+    handler: async function (request: FastifyRequest<ParamsUid>, reply: FastifyReply): Promise<void> {
       // Extract post information from the request object
       const userFirebaseUid: string = String(request.params.uid)
 
