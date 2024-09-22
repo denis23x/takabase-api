@@ -79,6 +79,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const postFindManyArgs: Prisma.PostPasswordFindManyArgs | Prisma.PostPrivateFindManyArgs | Prisma.PostFindManyArgs = {
         select: {
           id: true,
+          image: true,
+          markdown: true
         },
         where: {
           userFirebaseUid

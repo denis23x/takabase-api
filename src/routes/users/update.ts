@@ -40,7 +40,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             $ref: 'partsUserDescriptionSchema#'
           },
           avatar: {
-            $ref: 'partsFirebaseUrlStorageSchema#'
+            $ref: 'partsImageSchema#'
           }
         }
       },
@@ -91,6 +91,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // User previous state
       const user: User = await request.server.prisma.user.findUniqueOrThrow(userFindUniqueOrThrowArgs);
+
+      // Prepare the list of categories for update Algolia indices
+      let categoryList: Category[] = [];
+      let categoryIndex: SearchIndex = undefined;
+      let categoryIndexIDs: string[] = [];
+      let categoryIndexObjects: GetObjectsResponse<any> = undefined;
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -152,28 +158,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
 
               // Retrieve the list of categories from the MySQL and Algolia
-              const categoryList: Category[] = await request.server.prisma.category.findMany(categoryFindManyArgs);
-              const categoryIndex: SearchIndex = request.server.algolia.initIndex('category');
-              const categoryIndexIDs: string[] = categoryList.map((category: Category) => String(category.id));
-              const categoryIndexObjects: GetObjectsResponse<any> = await categoryIndex.getObjects([...categoryIndexIDs]);
-
-              // Check if there are results in the fetched categories index objects
-              if (categoryIndexObjects.results.length) {
-                //! Define rollback action for Algolia update categories objects
-                requestRollback.categoriesIndexObjects = async (): Promise<void> => {
-                  await categoryIndex.partialUpdateObjects([...categoryIndexObjects.results]);
-                };
-
-                // Update object in Algolia category index object
-                await categoryIndex.partialUpdateObjects([...categoryIndexObjects.results.map((category: any) => ({
-                  ...request.server.helperPlugin.mapObjectValuesToNull(category),
-                  user: {
-                    ...category.user,
-                    avatar: userNext.avatar,
-                    name: userNext.name
-                  }
-                }))]);
-              }
+              categoryList = await request.server.prisma.category.findMany(categoryFindManyArgs);
+              categoryIndex = request.server.algolia.initIndex('category');
+              categoryIndexIDs = categoryList.map((category: Category) => String(category.id));
+              categoryIndexObjects = await categoryIndex.getObjects([...categoryIndexIDs]);
             }
 
             // Define the arguments for updating user
@@ -206,6 +194,24 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 updatedAt: userNext.updatedAt,
                 updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(userNext.updatedAt),
               }]);
+            }
+
+            // Check if there are results in the fetched categories index objects
+            if (categoryIndexObjects.results.length) {
+              //! Define rollback action for Algolia update categories objects
+              requestRollback.categoriesIndexObjects = async (): Promise<void> => {
+                await categoryIndex.partialUpdateObjects([...categoryIndexObjects.results]);
+              };
+
+              // Update object in Algolia category index object
+              await categoryIndex.partialUpdateObjects([...categoryIndexObjects.results.map((category: any) => ({
+                ...request.server.helperPlugin.mapObjectValuesToNull(category),
+                user: {
+                  ...category.user,
+                  avatar: userNext.avatar,
+                  name: userNext.name
+                }
+              }))]);
             }
 
             // Define the arguments for update Firebase user auth record
