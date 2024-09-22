@@ -12,14 +12,17 @@ config({
 const storageConfigList: Record<string, any> = {
   localhost: {
     projectId: 'takabase-local',
+    origin: 'http://localhost:4200',
     bucket: 'takabase-local.appspot.com'
   },
   development: {
     projectId: 'takabase-dev',
+    origin: 'https://takabase-dev.web.app',
     bucket: 'takabase-dev.appspot.com'
   },
   production: {
     projectId: 'takabase-prod',
+    origin: 'https://takabase.com',
     bucket: 'takabase-prod.appspot.com'
   }
 };

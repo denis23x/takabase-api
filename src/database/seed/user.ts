@@ -3,6 +3,7 @@
 import { faker } from '@faker-js/faker';
 import { PrismaClient } from '../client';
 import { config } from 'dotenv';
+import { storageConfig } from '../../config/storage.config';
 
 config({
   path: '.env.takabase-local',
@@ -19,12 +20,8 @@ export const userRaw = async (): Promise<any> => {
    * Create RAW user data
    */
 
-  const getAvatarPath = (): any => {
-    const avatarStorage: string = String(process.env.APP_STORAGE);
-    const avatarPath: string = [avatarStorage, 'o/seed'].join('/');
-    const avatarFile: string = faker.number.int({ min: 1, max: 32 }) + '.webp';
-
-    return [avatarPath, avatarFile].join('%2F');
+  const getAvatarPath = (): string => {
+    return [storageConfig.origin, 'seed', faker.number.int({ min: 1, max: 32 })].join('/') + '.webp';
   };
 
   const raw: any[] = [];

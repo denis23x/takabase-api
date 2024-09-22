@@ -192,6 +192,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Define the arguments for updating post
             const postUpdateArgs: Prisma.PostUpdateArgs = {
+              select: request.server.prismaPlugin.getPostSelect(),
               where: {
                 id: postId,
                 userFirebaseUid

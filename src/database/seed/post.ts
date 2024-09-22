@@ -3,6 +3,7 @@
 import { PrismaClient, Category } from '../client';
 import { faker } from '@faker-js/faker';
 import { config } from 'dotenv';
+import { storageConfig } from '../../config/storage.config';
 
 config({
   path: '.env.takabase-local',
@@ -23,27 +24,21 @@ export const postRaw = async (): Promise<any> => {
     }
   });
 
-  const getImagePath = (): any => {
-    const imageStorage: string = String(process.env.APP_STORAGE);
-    const imagePath: string = [imageStorage, 'o/seed'].join('/');
-    const imageFile: string = faker.number.int({ min: 1, max: 32 }) + '.webp';
-
-    return [imagePath, imageFile].join('%2F');
+  const getCoverPath = (): string => {
+    return [storageConfig.origin, 'seed', faker.number.int({ min: 1, max: 32 })].join('/') + '.webp';
   };
 
   const raw: any[] = [];
 
   for (let i: number = 0; i < categoriesDB.length * 5; i++) {
-    const uid: string = faker.string.alphanumeric(20);
     const categoryIndex: number = faker.number.int({ min: 0, max: categoriesDB.length - 1 });
     const category: Category = categoriesDB[categoryIndex];
 
     raw.push({
-      firebaseUid: uid,
       name: faker.commerce.productName(),
       description: faker.commerce.productDescription(),
       markdown: faker.lorem.paragraphs(10),
-      image: faker.datatype.boolean() ? getImagePath() : null,
+      image: faker.datatype.boolean() ? getCoverPath() : null,
       userFirebaseUid: category.userFirebaseUid,
       categoryId: category.id
     });

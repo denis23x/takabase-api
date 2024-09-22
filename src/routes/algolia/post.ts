@@ -39,23 +39,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     },
     handler: async function (request: FastifyRequest<AlgoliaGetDto>, reply: FastifyReply): Promise<any> {
       const post: Post[] = await request.server.prisma.post.findMany({
-        select: {
-          ...request.server.prismaPlugin.getPostSelect(),
-          firebaseUid: true,
-          user: {
-            select: {
-              id: true,
-              avatar: true,
-              name: true,
-              firebaseUid: true
-            }
-          },
-          category: {
-            select: {
-              id: true
-            }
-          }
-        }
+        select: request.server.prismaPlugin.getPostSelect()
       });
 
       const postObjects: (Post & Record<string, any>)[] = post.map((post: Post) => ({
