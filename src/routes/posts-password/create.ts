@@ -1,5 +1,6 @@
 /** @format */
 
+import { parse } from 'path';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { PostPassword, Prisma, PrismaClient } from '../../database/client';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
@@ -91,34 +92,42 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Get the cover relative /temp URL
               const tempCoverList: string[] = request.server.markdownPlugin.getImageListRelativeUrl([postCover]);
 
-              // Move the /temp cover to the /covers
-              const postCoverList: string[] = await request.server.storagePlugin
-                .setImageListMove(tempCoverList, 'covers')
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+              // Checking to avoid unnecessary move when changing post type
+              if (tempCoverList.some((tempCover: string) => !tempCover.startsWith('covers'))) {
+                // Move the /temp cover to the /covers
+                const postCoverList: string[] = await request.server.storagePlugin
+                  .setImageListMove(tempCoverList, 'covers')
+                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
-              //! Define rollback action for cover to move it to the /temp back
-              requestRollback.postCoverList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(postCoverList, 'temp');
-              };
+                //! Define rollback action for cover to move it to the /temp back
+                requestRollback.postCoverList = async (): Promise<void> => {
+                  // Get the temporary image original destination for rollback
+                  await request.server.storagePlugin.setImageListMove(postCoverList, tempCoverList.map((tempCover: string) => parse(tempCover).dir).shift());
+                };
 
-              // Replace the cover URL in the request body with the new URL
-              request.body.image = request.server.markdownPlugin.getImageListReplace(postCover, tempCoverList, postCoverList);
+                // Replace the cover URL in the request body with the new URL
+                request.body.image = request.server.markdownPlugin.getImageListReplace(postCover, tempCoverList, postCoverList);
+              }
             }
 
             // If there are /temp markdown images
             if (tempMarkdownImageList.length) {
-              // Move the /temp markdown images to the /images
-              const postMarkdownImageList: string[] = await request.server.storagePlugin
-                .setImageListMove(tempMarkdownImageList, 'images')
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+              // Checking to avoid unnecessary move when changing post type
+              if (tempMarkdownImageList.some((tempMarkdownImage: string) => !tempMarkdownImage.startsWith('images'))) {
+                // Move the /temp markdown images to the /images
+                const postMarkdownImageList: string[] = await request.server.storagePlugin
+                  .setImageListMove(tempMarkdownImageList, 'images')
+                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
-              //! Define rollback action for moving markdown images to the /temp back
-              requestRollback.postMarkdownImageList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(postMarkdownImageList, 'temp');
-              };
+                //! Define rollback action for moving markdown images to the /temp back
+                requestRollback.postMarkdownImageList = async (): Promise<void> => {
+                  // Get the temporary image original destination for rollback
+                  await request.server.storagePlugin.setImageListMove(postMarkdownImageList, postMarkdownImageList.map((tempImage: string) => parse(tempImage).dir).shift());
+                };
 
-              // Replace the markdown body with the new URL images list
-              request.body.markdown = request.server.markdownPlugin.getImageListReplace(postMarkdown, tempMarkdownImageList, postMarkdownImageList);
+                // Replace the markdown body with the new URL images list
+                request.body.markdown = request.server.markdownPlugin.getImageListReplace(postMarkdown, tempMarkdownImageList, postMarkdownImageList);
+              }
             }
 
             // Define the arguments for create post
