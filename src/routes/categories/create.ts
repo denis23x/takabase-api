@@ -80,7 +80,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 ...request.server.prismaPlugin.getCategorySelect(),
                 user: {
                   select: {
-                    ...request.server.prismaPlugin.getUserSelect(),
+                    id: true,
+                    avatar: true,
+                    name: true,
                     firebaseUid: true
                   }
                 }
