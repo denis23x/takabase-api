@@ -1,5 +1,6 @@
 /** @format */
 
+import { storageConfig } from '../../config/storage.config';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, PostPassword, PrismaClient } from '../../database/client';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
@@ -116,7 +117,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
               // Move the /temp cover to the /covers
               const postCoverList: string[] = await request.server.storagePlugin
-                .setImageListMove(tempCoverList, 'covers')
+                .setImageListMove(tempCoverList, storageConfig.paths.PASSWORD_COVERS)
                 .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               //! Define rollback action for cover to move it to the /temp back
@@ -140,7 +141,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
               //! Define rollback action for cover to move it to the /covers back
               requestRollback.tempCoverList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(tempPreviousCoverList, 'covers');
+                await request.server.storagePlugin.setImageListMove(tempPreviousCoverList, storageConfig.paths.PASSWORD_COVERS);
               };
             }
 
@@ -148,7 +149,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             if (tempMarkdownImageList.length) {
               // Move the /temp markdown images to the /images
               const postMarkdownImageList: string[] = await request.server.storagePlugin
-                .setImageListMove(tempMarkdownImageList, 'images')
+                .setImageListMove(tempMarkdownImageList, storageConfig.paths.PASSWORD_IMAGES)
                 .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               //! Define rollback action for moving markdown images to the /temp back
@@ -178,7 +179,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
               //! Define rollback action for moving unused markdown images to the /images back
               requestRollback.tempMarkdownImageListUnused = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(tempMarkdownImageListUnused, 'images');
+                await request.server.storagePlugin.setImageListMove(tempMarkdownImageListUnused, storageConfig.paths.PASSWORD_IMAGES);
               };
             }
 

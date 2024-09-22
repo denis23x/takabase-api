@@ -1,6 +1,7 @@
 /** @format */
 
 import { parse } from 'path';
+import { storageConfig } from '../../config/storage.config';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { PostPrivate, Prisma, PrismaClient } from '../../database/client';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
@@ -90,10 +91,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               const tempCoverList: string[] = request.server.markdownPlugin.getImageListFromBucket([postCover]);
 
               // Checking to avoid unnecessary move when changing post type
-              if (tempCoverList.some((tempCover: string) => !tempCover.startsWith('covers'))) {
+              if (tempCoverList.some((tempCover: string) => !tempCover.startsWith(storageConfig.paths.PRIVATE_COVERS))) {
                 // Move the /temp cover to the /covers
                 const postCoverList: string[] = await request.server.storagePlugin
-                  .setImageListMove(tempCoverList, 'covers')
+                  .setImageListMove(tempCoverList, storageConfig.paths.PRIVATE_COVERS)
                   .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
                 //! Define rollback action for cover to move it to the /temp back
@@ -110,10 +111,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // If there are /temp markdown images
             if (tempMarkdownImageList.length) {
               // Checking to avoid unnecessary move when changing post type
-              if (tempMarkdownImageList.some((tempMarkdownImage: string) => !tempMarkdownImage.startsWith('images'))) {
+              if (tempMarkdownImageList.some((tempMarkdownImage: string) => !tempMarkdownImage.startsWith(storageConfig.paths.PRIVATE_IMAGES))) {
                 // Move the /temp markdown images to the /images
                 const postMarkdownImageList: string[] = await request.server.storagePlugin
-                  .setImageListMove(tempMarkdownImageList, 'images')
+                  .setImageListMove(tempMarkdownImageList, storageConfig.paths.PRIVATE_IMAGES)
                   .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
                 //! Define rollback action for moving markdown images to the /temp back

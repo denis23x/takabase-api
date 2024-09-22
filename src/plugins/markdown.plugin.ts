@@ -1,6 +1,7 @@
 /** @format */
 
 import fp from 'fastify-plugin';
+import { partsImageSchema } from '../schema/parts/parts-image.schema';
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 
 const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: FastifyInstance) {
@@ -33,24 +34,12 @@ const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: F
       return imageListRelative;
     },
     getImageListFirebaseUrl: (imageListUrl: string[]): string[] => {
-      // prettier-ignore
-      const regExp: RegExp = new RegExp('^https?:\\/\\/[^\\/]+\\/(avatars|covers|images|seed|temp)\\/[a-zA-Z0-9]{2,}\\.webp$');
-
-      return imageListUrl.filter((imageUrl: string) => regExp.test(imageUrl));
+      return imageListUrl.filter((imageUrl: string) => new RegExp(partsImageSchema.pattern).test(imageUrl));
     },
     getImageListRelativeUrl: (imageListUrl: string[]): string[] => {
-      // prettier-ignore
-      const regExp: RegExp = new RegExp('(avatars|covers|images|seed|temp)\\/[^\\?]+');
-
-      return imageListUrl.map((imageUrl: string) => {
-        const regExpMatchArray: RegExpMatchArray = decodeURIComponent(imageUrl).match(regExp);
-
-        if (regExpMatchArray) {
-          return regExpMatchArray[0];
-        }
-
-        return imageUrl;
-      });
+      return imageListUrl
+        .map((imageUrl: string) => new URL(imageUrl))
+        .map((url: URL) => (url.pathname.startsWith('/') ? url.pathname.slice(1) : url.pathname));
     },
     getImageListReplace: (markdown: string, previousList: string[], nextList: string[]): string => {
       let markdownNext: string = markdown;

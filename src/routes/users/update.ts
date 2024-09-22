@@ -1,5 +1,6 @@
 /** @format */
 
+import { storageConfig } from '../../config/storage.config';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Category, Prisma, PrismaClient, User } from '../../database/client';
 import type { UserUpdateDto } from '../../types/dto/user/user-update';
@@ -117,7 +118,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
               // Move the /temp avatar to the /avatars
               const userAvatarList: string[] = await request.server.storagePlugin
-                .setImageListMove(tempAvatarList, 'avatars')
+                .setImageListMove(tempAvatarList, storageConfig.paths.USER_AVATARS)
                 .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
 
               //! Define rollback action for avatar to move it to the /temp back
@@ -141,7 +142,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
               //! Define rollback action for avatar to move it to the /avatars back
               requestRollback.tempAvatarList = async (): Promise<void> => {
-                await request.server.storagePlugin.setImageListMove(tempPreviousAvatarList, 'avatars');
+                await request.server.storagePlugin.setImageListMove(tempPreviousAvatarList, storageConfig.paths.USER_AVATARS);
               };
             }
 
