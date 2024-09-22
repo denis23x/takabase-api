@@ -12,7 +12,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Posts-Password'],
-      description: 'List all posts protected by password, paginated',
+      description: 'List of all posts protected by password',
       security: [
         {
           swaggerBearerAuth: []

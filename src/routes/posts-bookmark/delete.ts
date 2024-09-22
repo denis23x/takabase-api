@@ -12,7 +12,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Posts-Bookmark'],
-      description: 'Removes specific Private from the database',
+      description: 'Removes the bookmark',
       security: [
         {
           swaggerBearerAuth: []

@@ -11,7 +11,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     url: '',
     schema: {
       tags: ['Categories'],
-      description: 'List all categories, paginated',
+      description: 'List of all categories',
       querystring: {
         type: 'object',
         properties: {

@@ -15,7 +15,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     onRequest: fastify.verifyIdToken,
     schema: {
       tags: ['Categories'],
-      description: 'Removes specific Category from the database',
+      description: 'Removes the category',
       security: [
         {
           swaggerBearerAuth: []
