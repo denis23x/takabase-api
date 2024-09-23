@@ -19,8 +19,8 @@ export const postSchema: Record<string, any> = {
     markdown: {
       $ref: 'partsPostMarkdownSchema#'
     },
-    image: {
-      $ref: 'partsFirebaseUrlStorageSchema#'
+    cover: {
+      $ref: 'partsImageSchema#'
     },
     user: {
       $ref: 'userSchema#'

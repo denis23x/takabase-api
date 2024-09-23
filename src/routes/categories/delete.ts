@@ -115,7 +115,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Define arguments to find posts associated with the category
               const postFindManyArgs: Prisma.PostFindManyArgs = {
                 select: {
-                  image: true,
+                  cover: true,
                   markdown: true
                 },
                 where: {
@@ -142,7 +142,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // If there is NOT a move operation
             postListDelete.forEach((post: Post) => {
               // Extract post information from the request object
-              const postCover: string | null = post.image;
+              const postCover: string | null = post.cover;
               const postMarkdown: string = post.markdown;
 
               // Get the list of images in the post markdown body

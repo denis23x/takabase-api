@@ -20,8 +20,8 @@ export const postPasswordSchema: Record<string, any> = {
     markdown: {
       $ref: 'partsPostMarkdownSchema#'
     },
-    image: {
-      $ref: 'partsFirebaseUrlStorageSchema#'
+    cover: {
+      $ref: 'partsImageSchema#'
     },
     password: {
       $ref: 'partsPasswordSchema#'

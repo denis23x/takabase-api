@@ -71,7 +71,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Define arguments to delete post
             const postPasswordDeleteArgs: Prisma.PostPasswordDeleteArgs = {
               select: {
-                image: true,
+                cover: true,
                 markdown: true
               },
               where: {
@@ -84,7 +84,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             return prismaClient.postPassword.delete(postPasswordDeleteArgs);
           }).then((postPassword: PostPassword) => {
             // Extract post information from the request object
-            const postCover: string | null = postPassword.image;
+            const postCover: string | null = postPassword.cover;
             const postMarkdown: string = postPassword.markdown;
 
             // Get the list of images in the post markdown body

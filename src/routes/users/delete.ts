@@ -79,7 +79,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const postFindManyArgs: Prisma.PostPasswordFindManyArgs | Prisma.PostPrivateFindManyArgs | Prisma.PostFindManyArgs = {
         select: {
           id: true,
-          image: true,
+          cover: true,
           markdown: true
         },
         where: {
@@ -201,7 +201,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             for (const key of Object.keys(postListMap)) {
               postListMap[key].forEach((post: Post | PostPassword | PostPrivate) => {
                 // Extract post information from the request object
-                const postCover: string | null = post.image;
+                const postCover: string | null = post.cover;
                 const postMarkdown: string = post.markdown;
 
                 // Get the list of images in the post markdown body

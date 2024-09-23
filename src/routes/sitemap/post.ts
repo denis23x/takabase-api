@@ -36,7 +36,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         select: {
           id: true,
           name: true,
-          image: true,
+          cover: true,
           updatedAt: true
         }
       });
@@ -62,10 +62,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
         // Image
 
-        if (post.image) {
+        if (post.cover) {
           const imageElement: XMLElement = urlElement.ele('image:image');
 
-          imageElement.ele('image:loc', post.image + '?alt=media');
+          imageElement.ele('image:loc', post.cover + '?alt=media');
           imageElement.ele('image:title', post.name);
         }
       });

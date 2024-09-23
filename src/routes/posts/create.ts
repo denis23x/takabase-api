@@ -34,7 +34,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           markdown: {
             $ref: 'partsPostMarkdownSchema#'
           },
-          image: {
+          cover: {
             $ref: 'partsImageSchema#'
           },
           categoryId: {
@@ -72,7 +72,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const userFirebaseUid: string = request.user.uid;
 
       // Extract post information from the request object
-      const postCover: string | null = request.body.image;
+      const postCover: string | null = request.body.cover;
       const postCategoryId: number = Number(request.body.categoryId);
       const postMarkdown: string = request.body.markdown;
       const postIndex: SearchIndex = request.server.algolia.initIndex('post');
@@ -110,12 +110,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
                 //! Define rollback action for cover to move it to the /temp back
                 requestRollback.postCoverList = async (): Promise<void> => {
-                  // Get the temporary image original destination for rollback
+                  // Get the original destination for rollback
                   await request.server.storagePlugin.setImageListMove(postCoverList, tempCoverList.map((tempCover: string) => parse(tempCover).dir).shift());
                 };
 
                 // Replace the cover URL in the request body with the new URL
-                request.body.image = request.server.markdownPlugin.getImageListReplace(postCover, tempCoverList, postCoverList);
+                request.body.cover = request.server.markdownPlugin.getImageListReplace(postCover, tempCoverList, postCoverList);
               }
             }
 
@@ -130,7 +130,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
                 //! Define rollback action for moving markdown images to the /temp back
                 requestRollback.postMarkdownImageList = async (): Promise<void> => {
-                  // Get the temporary image original destination for rollback
+                  // Get the original destination for rollback
                   await request.server.storagePlugin.setImageListMove(postMarkdownImageList, postMarkdownImageList.map((tempImage: string) => parse(tempImage).dir).shift());
                 };
 

@@ -40,7 +40,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
           markdown: {
             $ref: 'partsPostMarkdownSchema#'
           },
-          image: {
+          cover: {
             $ref: 'partsImageSchema#'
           },
           password: {
@@ -78,7 +78,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Extract post information from the request object
       const postId: number = Number(request.params.id);
-      const postCover: string | null = request.body.image as any;
+      const postCover: string | null = request.body.cover as any;
       const postMarkdown: string = request.body.markdown as any;
 
       // Get the list of images in the post markdown body
@@ -88,7 +88,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Define the arguments for find a post
       const postPasswordFindUniqueOrThrowArgs: Prisma.PostPasswordFindUniqueOrThrowArgs = {
         select: {
-          image: true,
+          cover: true,
           markdown: true
         },
         where: {
@@ -111,7 +111,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             requestRollback = {};
 
             // If there is a new cover provided
-            if (postCover && postCover !== postPassword.image) {
+            if (postCover && postCover !== postPassword.cover) {
               // Get the cover relative /temp URL
               const tempCoverList: string[] = request.server.markdownPlugin.getImageListFromBucket([postCover]);
 
@@ -126,13 +126,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
 
               // Replace the cover URL in the request body with the new URL
-              request.body.image = request.server.markdownPlugin.getImageListReplace(postCover, tempCoverList, postCoverList);
+              request.body.cover = request.server.markdownPlugin.getImageListReplace(postCover, tempCoverList, postCoverList);
             }
 
             // If there is a previous cover exists
-            if (postCover === null || postCover !== postPassword.image) {
+            if (postCover === null || postCover !== postPassword.cover) {
               // Get the cover relative URL
-              const postPreviousCoverList: string[] = request.server.markdownPlugin.getImageListFromBucket([postPassword.image]);
+              const postPreviousCoverList: string[] = request.server.markdownPlugin.getImageListFromBucket([postPassword.cover]);
 
               // Move the previous and unworthy cover to the /temp
               const tempPreviousCoverList: string[] = await request.server.storagePlugin
