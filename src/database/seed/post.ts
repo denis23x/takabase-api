@@ -38,7 +38,7 @@ export const postRaw = async (): Promise<any> => {
       name: faker.commerce.productName(),
       description: faker.commerce.productDescription(),
       markdown: faker.lorem.paragraphs(10),
-      image: faker.datatype.boolean() ? getCoverPath() : null,
+      cover: faker.datatype.boolean() ? getCoverPath() : null,
       userFirebaseUid: category.userFirebaseUid,
       categoryId: category.id
     });

@@ -52,7 +52,6 @@ model Post {
   name              String    @db.VarChar(255)
   description       String    @db.VarChar(255)
   markdown          String    @db.Text
-  image             String?   @db.VarChar(255)
   cover             String?   @db.VarChar(255)
   userFirebaseUid   String    @db.VarChar(255)
   categoryId        Int       @db.Int
@@ -88,7 +87,6 @@ model PostPassword {
   name              String    @db.VarChar(255)
   description       String    @db.VarChar(255)
   markdown          String    @db.Text
-  image             String?   @db.VarChar(255)
   cover             String?   @db.VarChar(255)
   userFirebaseUid   String    @db.VarChar(255)
   password          String    @db.VarChar(255)
@@ -106,7 +104,6 @@ model PostPrivate {
   name              String    @db.VarChar(255)
   description       String    @db.VarChar(255)
   markdown          String    @db.Text
-  image             String?   @db.VarChar(255)
   cover             String?   @db.VarChar(255)
   userFirebaseUid   String    @db.VarChar(255)
   createdAt         DateTime  @default(now())

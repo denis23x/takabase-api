@@ -84,7 +84,7 @@ const projectList: any = {
     if (action.action === 'seed') {
       command.push(`export API_DATABASE_URL=$(firebase functions:secrets:access API_DATABASE_URL)`);
       command.push(`export API_DATABASE_DIRECT_URL=$(firebase functions:secrets:access API_DATABASE_DIRECT_URL)`);
-      command.push(`export APP_STORAGE=https://firebasestorage.googleapis.com/v0/b/${project.project}.appspot.com`);
+      command.push(`export APP_NODE_ENV=development`);
       command.push(`npx prisma db seed`);
     }
 
