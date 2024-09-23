@@ -85,7 +85,7 @@ model PostBookmark {
 model PostPassword {
   id                Int       @id @default(autoincrement()) @db.Int
   name              String    @db.VarChar(255)
-  description       String    @db.VarChar(255)
+  description       String?   @db.VarChar(255)
   markdown          String    @db.Text
   cover             String?   @db.VarChar(255)
   userFirebaseUid   String    @db.VarChar(255)
@@ -102,7 +102,7 @@ model PostPassword {
 model PostPrivate {
   id                Int       @id @default(autoincrement()) @db.Int
   name              String    @db.VarChar(255)
-  description       String    @db.VarChar(255)
+  description       String?   @db.VarChar(255)
   markdown          String    @db.Text
   cover             String?   @db.VarChar(255)
   userFirebaseUid   String    @db.VarChar(255)
