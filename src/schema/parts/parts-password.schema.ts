@@ -6,5 +6,5 @@ export const partsPasswordSchema: Record<string, any> = {
   example: 'password123',
   minLength: 6,
   maxLength: 48,
-  pattern: '^(?=.*[\\d!@#$%^&*]).+$'
+  pattern: '^(?=.*[a-zA-Z])(?=.*[\\d!@#$%^&*]).{6,}$'
 };

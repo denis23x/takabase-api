@@ -81,7 +81,6 @@ import { partsUserEmailSchema } from './schema/parts/user/parts-user-email.schem
 import { partsUsernameSchema } from './schema/parts/user/parts-user-name.schema';
 import { partsUserTermsSchema } from './schema/parts/user/parts-user-terms.schema';
 import { partsFirebaseUidSchema } from './schema/parts/parts-firebase-uid.schema';
-import { partsFirebaseUrlStorageSchema } from './schema/parts/parts-firebase-url-storage.schema';
 import { partsIdSchema } from './schema/parts/parts-id.schema';
 import { partsImageSchema } from './schema/parts/parts-image.schema';
 import { partsInsightsSchema } from './schema/parts/parts-insights.schema';
@@ -163,7 +162,6 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsUsernameSchema);
   fastifyInstance.addSchema(partsUserTermsSchema);
   fastifyInstance.addSchema(partsFirebaseUidSchema);
-  fastifyInstance.addSchema(partsFirebaseUrlStorageSchema);
   fastifyInstance.addSchema(partsIdSchema);
   fastifyInstance.addSchema(partsImageSchema);
   fastifyInstance.addSchema(partsInsightsSchema);

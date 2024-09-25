@@ -3,7 +3,7 @@
 import { config } from 'dotenv';
 import dayjs from 'dayjs';
 import type { PinoLoggerOptions } from 'fastify/types/logger';
-import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
 config({
   path: '.env.takabase-local',
@@ -28,11 +28,6 @@ const loggerConfigBase: PinoLoggerOptions = {
     'response.cookie'
   ],
   serializers: {
-    err(error: FastifyError): any {
-      return {
-        message: error.message
-      };
-    },
     res(reply: FastifyReply): any {
       return {
         statusCode: reply.statusCode

@@ -198,7 +198,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
 
             // Check if there are results in the fetched categories index objects
-            if (categoryIndexObjects.results.length) {
+            if (categoryIndexObjects?.results.length) {
               //! Define rollback action for Algolia update categories objects
               requestRollback.categoriesIndexObjects = async (): Promise<void> => {
                 await categoryIndex.partialUpdateObjects([...categoryIndexObjects.results]);
