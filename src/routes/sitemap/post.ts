@@ -65,7 +65,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         if (post.cover) {
           const imageElement: XMLElement = urlElement.ele('image:image');
 
-          imageElement.ele('image:loc', post.cover + '?alt=media');
+          imageElement.ele('image:loc', post.cover);
           imageElement.ele('image:title', post.name);
         }
       });
