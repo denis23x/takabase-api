@@ -51,11 +51,13 @@ import postsPrivateRoutes from './routes/posts-private';
 import sitemapRoutes from './routes/sitemap';
 import testsRoutes from './routes/tests';
 import usersRoutes from './routes/users';
+import utilitiesRoutes from './routes/utilities';
 
 // SCHEMAS
 
 import { categorySchema } from './schema/models/category.schema';
 import { insightsSchema } from './schema/models/insights.schema';
+import { metadataSchema } from './schema/models/metadata.schema';
 import { postSchema } from './schema/models/post.schema';
 import { postBookmarkSchema } from './schema/models/post-bookmark.schema';
 import { postPasswordSchema } from './schema/models/post-password.schema';
@@ -137,6 +139,7 @@ export const main = async (): Promise<FastifyInstance> => {
 
   fastifyInstance.addSchema(categorySchema);
   fastifyInstance.addSchema(insightsSchema);
+  fastifyInstance.addSchema(metadataSchema);
   fastifyInstance.addSchema(postSchema);
   fastifyInstance.addSchema(postBookmarkSchema);
   fastifyInstance.addSchema(postPasswordSchema);
@@ -221,6 +224,9 @@ export const main = async (): Promise<FastifyInstance> => {
       });
       api.register(usersRoutes, {
         prefix: '/users/'
+      });
+      api.register(utilitiesRoutes, {
+        prefix: '/utilities/'
       });
     },
     {

@@ -16,12 +16,12 @@ export const swaggerConfig: SwaggerOptions = {
     },
     tags: [
       {
-        name: 'Authorization',
-        description: 'Authorization end-points'
-      },
-      {
         name: 'Algolia',
         description: 'Algolia search end-points'
+      },
+      {
+        name: 'Authorization',
+        description: 'Authorization end-points'
       },
       {
         name: 'Categories',
@@ -48,16 +48,20 @@ export const swaggerConfig: SwaggerOptions = {
         description: 'Post-private related end-points'
       },
       {
-        name: 'Users',
-        description: 'User related end-points'
-      },
-      {
         name: 'Sitemap',
         description: 'Sitemap related end-points'
       },
       {
         name: 'Tests',
         description: 'Testing end-points'
+      },
+      {
+        name: 'Users',
+        description: 'User related end-points'
+      },
+      {
+        name: 'Utilities',
+        description: 'Utility related end-points'
       }
     ],
     components: {
