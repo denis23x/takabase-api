@@ -131,7 +131,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 //! Define rollback action for moving markdown images to the /temp back
                 requestRollback.postMarkdownImageList = async (): Promise<void> => {
                   // Get the original destination for rollback
-                  await request.server.storagePlugin.setImageListMove(postMarkdownImageList, postMarkdownImageList.map((tempImage: string) => parse(tempImage).dir).shift());
+                  await request.server.storagePlugin.setImageListMove(postMarkdownImageList, tempMarkdownImageList.map((tempImage: string) => parse(tempImage).dir).shift());
                 };
 
                 // Replace the markdown body with the new URL images list
