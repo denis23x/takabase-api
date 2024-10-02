@@ -127,7 +127,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
 
               // Replace the avatar URL in the request body with the new URL
-              request.body.avatar = request.server.markdownPlugin.getImageListReplace(userAvatar, tempAvatarList, userAvatarList);
+              request.body.avatar = userAvatar.replace(tempAvatarList.shift(), userAvatarList.shift());
             }
 
             // If there is a previous avatar exists
