@@ -115,6 +115,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Define arguments to find posts associated with the category
               const postFindManyArgs: Prisma.PostFindManyArgs = {
                 select: {
+                  id: true,
                   cover: true,
                   markdown: true
                 },
@@ -126,6 +127,22 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
               // Retrieve the list of posts associated with the category
               await request.server.prisma.post.findMany(postFindManyArgs).then((postList: Post[]) => postListDelete = postList);
+
+              // Initialize the Algolia search index for category related posts objects
+              const postIndex: SearchIndex = request.server.algolia.initIndex('post');
+              const postIndexIDs: string[] = postListDelete.map((post: Post) => String(post.id));
+              const postIndexObjects: GetObjectsResponse<any> = await postIndex.getObjects([...postIndexIDs]);
+
+              // Check if there are results in the fetched post index objects
+              if (postIndexObjects.results.length) {
+                //! Define rollback action for Algolia delete category related post objects
+                requestRollback.postIndexObjects = async (): Promise<void> => {
+                  await postIndex.saveObjects([...postIndexObjects.results]);
+                };
+
+                // Delete Algolia category posts index objects
+                await postIndex.deleteObjects([...postIndexIDs]);
+              }
             }
 
             // Define arguments to delete category
