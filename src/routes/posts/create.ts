@@ -115,7 +115,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 };
 
                 // Replace the cover URL in the request body with the new URL
-                request.body.cover = request.server.markdownPlugin.getImageListReplace(postCover, tempCoverList, postCoverList);
+                request.body.cover = postCover.replace(tempCoverList.shift(), postCoverList.shift());
               }
             }
 

@@ -56,8 +56,6 @@ const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: F
 
           markdownNext = markdownNext.replace(previousPathUrl.href, previousPathUrl.href.replace(previousPath, nextPath));
         }
-      } else {
-        fastifyInstance.helperPlugin.throwError('storage/file-move-failed', {})
       }
 
       return markdownNext;

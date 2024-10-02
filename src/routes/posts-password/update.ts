@@ -126,7 +126,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
 
               // Replace the cover URL in the request body with the new URL
-              request.body.cover = request.server.markdownPlugin.getImageListReplace(postCover, tempCoverList, postCoverList);
+              request.body.cover = postCover.replace(tempCoverList.shift(), postCoverList.shift());
             }
 
             // If there is a previous cover exists
@@ -157,13 +157,13 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 await request.server.storagePlugin.setImageListMove(postMarkdownImageList, 'temp');
               };
 
-              // Get the list of images in the post markdown body (ignore SEO things)
-              const tempMarkdownImageListAbsolute: string[] = tempMarkdownImageList
+              // Get the temp list of images in the post markdown body (ignore SEO things)
+              const bodyMarkdownImageListClean: string[] = tempMarkdownImageList
                 .map((tempMarkdownImage: string) => tempMarkdownImage.split('/').pop())
                 .map((tempMarkdownImage: string) => bodyMarkdownImageList.find((bodyMarkdownImage: string) => bodyMarkdownImage.endsWith(tempMarkdownImage)));
 
               // Replace the markdown body with the new URL images list
-              request.body.markdown = request.server.markdownPlugin.getImageListReplace(postMarkdown, tempMarkdownImageListAbsolute, postMarkdownImageList);
+              request.body.markdown = request.server.markdownPlugin.getImageListReplace(postMarkdown, bodyMarkdownImageListClean, postMarkdownImageList);
             }
 
             // Get the original markdown images list
