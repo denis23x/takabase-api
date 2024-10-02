@@ -156,7 +156,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Create Firestore user document
             await userDocumentReference
               .create(userDocumentCreateData)
-              .catch((error: any) => request.server.helperPlugin.throwError('firestore/update-document-failed', error, request));
+              .catch((error: any) => request.server.helperPlugin.throwError('firestore/update-document-failed', error));
 
             //! Define rollback action for delete Firestore user document
             requestRollback.userDocument = async (): Promise<void> => {

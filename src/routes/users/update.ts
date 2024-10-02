@@ -119,7 +119,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Move the /temp avatar to the /avatars
               const userAvatarList: string[] = await request.server.storagePlugin
                 .setImageListMove(tempAvatarList, storageConfig.paths.USER_AVATARS)
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error));
 
               //! Define rollback action for avatar to move it to the /temp back
               requestRollback.userAvatarList = async (): Promise<void> => {
@@ -138,7 +138,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Move the previous and unworthy avatar to the /temp
               const tempPreviousAvatarList: string[] = await request.server.storagePlugin
                 .setImageListMove(userPreviousAvatarList, 'temp')
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error));
 
               //! Define rollback action for avatar to move it to the /avatars back
               requestRollback.tempAvatarList = async (): Promise<void> => {

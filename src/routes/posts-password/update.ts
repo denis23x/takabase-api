@@ -118,7 +118,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Move the /temp cover to the /covers
               const postCoverList: string[] = await request.server.storagePlugin
                 .setImageListMove(tempCoverList, storageConfig.paths.PASSWORD_COVERS)
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error));
 
               //! Define rollback action for cover to move it to the /temp back
               requestRollback.postCoverList = async (): Promise<void> => {
@@ -137,7 +137,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Move the previous and unworthy cover to the /temp
               const tempPreviousCoverList: string[] = await request.server.storagePlugin
                 .setImageListMove(postPreviousCoverList, 'temp')
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error));
 
               //! Define rollback action for cover to move it to the /covers back
               requestRollback.tempCoverList = async (): Promise<void> => {
@@ -150,32 +150,37 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               // Move the /temp markdown images to the /images
               const postMarkdownImageList: string[] = await request.server.storagePlugin
                 .setImageListMove(tempMarkdownImageList, storageConfig.paths.PASSWORD_IMAGES)
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error));
 
               //! Define rollback action for moving markdown images to the /temp back
               requestRollback.postMarkdownImageList = async (): Promise<void> => {
                 await request.server.storagePlugin.setImageListMove(postMarkdownImageList, 'temp');
               };
 
+              // Get the list of images in the post markdown body (ignore SEO things)
+              const tempMarkdownImageListAbsolute: string[] = tempMarkdownImageList
+                .map((tempMarkdownImage: string) => tempMarkdownImage.split('/').pop())
+                .map((tempMarkdownImage: string) => bodyMarkdownImageList.find((bodyMarkdownImage: string) => bodyMarkdownImage.endsWith(tempMarkdownImage)));
+
               // Replace the markdown body with the new URL images list
-              request.body.markdown = request.server.markdownPlugin.getImageListReplace(postMarkdown, tempMarkdownImageList, postMarkdownImageList);
+              request.body.markdown = request.server.markdownPlugin.getImageListReplace(postMarkdown, tempMarkdownImageListAbsolute, postMarkdownImageList);
             }
 
             // Get the original markdown images list
-            const postMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBody(postPassword.markdown);
+            const postMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBucket(request.server.markdownPlugin.getImageListFromBody(postPassword.markdown));
 
             // Get the updated markdown images list
-            const nextMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBody(String(request.body.markdown));
+            const nextMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBucket(request.server.markdownPlugin.getImageListFromBody(String(request.body.markdown)));
 
             // Get the unused markdown images list
-            const postMarkdownImageListUnused: string[] = request.server.markdownPlugin.getImageListFromBucket(postMarkdownImageList.filter((postMarkdownImage: string) => !nextMarkdownImageList.includes(postMarkdownImage)));
+            const postMarkdownImageListUnused: string[] = postMarkdownImageList.filter((postMarkdownImage: string) => !nextMarkdownImageList.includes(postMarkdownImage));
 
             // If there are unused markdown images
             if (postMarkdownImageListUnused.length) {
               // Move the unused markdown images to the /temp
               const tempMarkdownImageListUnused: string[] = await request.server.storagePlugin
                 .setImageListMove(postMarkdownImageListUnused, 'temp')
-                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+                .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error));
 
               //! Define rollback action for moving unused markdown images to the /images back
               requestRollback.tempMarkdownImageListUnused = async (): Promise<void> => {

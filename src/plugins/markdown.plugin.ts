@@ -44,17 +44,20 @@ const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: F
     getImageListReplace: (markdown: string, previousList: string[], nextList: string[]): string => {
       let markdownNext: string = markdown;
 
-      // Replacing text while preserving SEO context
+      // prettier-ignore
+      if (previousList.length === nextList.length) {
+        for (let i: number = 0; i < previousList.length; i++) {
+          const previousPathUrl: URL = new URL(previousList[i]);
+          const previousPathUrlPathname: string[] = previousPathUrl.pathname.split('/').filter((path: string) => !!path);
+          const previousPath: string = previousPathUrlPathname.join('/');
 
-      for (let i: number = 0; i < previousList.length; i++) {
-        const previousPathUrl: URL = new URL(previousList[i]);
-        const previousPathUrlPathname: string[] = previousPathUrl.pathname.split('/').filter((path: string) => !!path);
-        const previousPath: string = previousPathUrlPathname.join('/');
+          const nextPathUrlPathname: string[] = nextList[i].split('/').filter((path: string) => !!path);
+          const nextPath: string = [nextPathUrlPathname.shift(), ...previousPathUrlPathname.slice(1)].join('/');
 
-        const nextPathUrlPathname: string[] = nextList[i].split('/').filter((path: string) => !!path);
-        const nextPath: string = [nextPathUrlPathname.shift(), ...previousPathUrlPathname.slice(1)].join('/');
-
-        markdownNext = markdownNext.replace(previousPathUrl.href, previousPathUrl.href.replace(previousPath, nextPath));
+          markdownNext = markdownNext.replace(previousPathUrl.href, previousPathUrl.href.replace(previousPath, nextPath));
+        }
+      } else {
+        fastifyInstance.helperPlugin.throwError('storage/file-move-failed', {})
       }
 
       return markdownNext;

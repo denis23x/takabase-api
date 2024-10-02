@@ -95,7 +95,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 // Move the /temp cover to the /covers
                 const postCoverList: string[] = await request.server.storagePlugin
                   .setImageListMove(tempCoverList, storageConfig.paths.PRIVATE_COVERS)
-                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error));
 
                 //! Define rollback action for cover to move it to the /temp back
                 requestRollback.postCoverList = async (): Promise<void> => {
@@ -115,7 +115,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 // Move the /temp markdown images to the /images
                 const postMarkdownImageList: string[] = await request.server.storagePlugin
                   .setImageListMove(tempMarkdownImageList, storageConfig.paths.PRIVATE_IMAGES)
-                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error, request));
+                  .catch((error: any) => request.server.helperPlugin.throwError('storage/file-move-failed', error));
 
                 //! Define rollback action for moving markdown images to the /temp back
                 requestRollback.postMarkdownImageList = async (): Promise<void> => {
