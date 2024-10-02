@@ -133,6 +133,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Define the arguments for create post
             const postPasswordCreateArgs: Prisma.PostPasswordCreateArgs = {
+              select: {
+                ...request.server.prismaPlugin.getPostPasswordSelect(),
+                markdown: true
+              },
               data: {
                 ...request.body,
                 user: {

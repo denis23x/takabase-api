@@ -98,7 +98,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Return error
             return reply.status(403).send({
               error: 'Forbidden',
-              message: 'Access denied',
+              message: 'Wrong password',
               statusCode: 403
             });
           } else {

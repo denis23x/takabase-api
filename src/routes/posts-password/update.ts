@@ -185,6 +185,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Define the arguments for updating post
             const postPasswordUpdateArgs: Prisma.PostPasswordUpdateArgs = {
+              select: {
+                ...request.server.prismaPlugin.getPostPasswordSelect(),
+                markdown: true
+              },
               where: {
                 id: postId,
                 userFirebaseUid

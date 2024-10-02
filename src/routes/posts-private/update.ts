@@ -182,6 +182,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Define the arguments for updating post
             const postPrivateUpdateArgs: Prisma.PostPrivateUpdateArgs = {
+              select: {
+                ...request.server.prismaPlugin.getPostPrivateSelect(),
+                markdown: true
+              },
               where: {
                 id: postId,
                 userFirebaseUid

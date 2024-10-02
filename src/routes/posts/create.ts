@@ -141,7 +141,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
             // Define the arguments for create post
             const postCreateArgs: Prisma.PostCreateArgs = {
-              select: request.server.prismaPlugin.getPostSelect(),
+              select: {
+                ...request.server.prismaPlugin.getPostSelect(),
+                markdown: true
+              },
               data: {
                 ...request.body,
                 user: {
