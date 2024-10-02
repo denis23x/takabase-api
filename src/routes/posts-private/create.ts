@@ -124,7 +124,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 };
 
                 // Replace the markdown body with the new URL images list
-                request.body.markdown = request.server.markdownPlugin.getImageListReplace(postMarkdown, tempMarkdownImageList, postMarkdownImageList);
+                request.body.markdown = request.server.markdownPlugin.getImageListReplace(postMarkdown, bodyMarkdownImageList, postMarkdownImageList);
               }
             }
 

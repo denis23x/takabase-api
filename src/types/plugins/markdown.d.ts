@@ -6,8 +6,6 @@ declare module 'fastify' {
       getImageListFromBody: (markdown: string) => string[];
       getImageListFromBucket: (markdownImageList: string[]) => string[];
       getImageListReplace: (markdown: string, previousList: string[], nextList: string[]) => string;
-      getImageListFirebaseUrl: (markdownImageList: string[]) => string[];
-      getImageListRelativeUrl: (markdownImageList: string[]) => string[];
     };
   }
 }

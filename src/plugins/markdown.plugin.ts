@@ -28,27 +28,33 @@ const markdownPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: F
       return [];
     },
     getImageListFromBucket: (imageListUrl: string[]): string[] => {
-      const imageListFirebase: string[] = fastifyInstance.markdownPlugin.getImageListFirebaseUrl(imageListUrl);
-      const imageListRelative: string[] = fastifyInstance.markdownPlugin.getImageListRelativeUrl(imageListFirebase);
+      // prettier-ignore
+      const imageListFirebase: string[] = imageListUrl.filter((imageUrl: string) => new RegExp(partsImageSchema.pattern).test(imageUrl));
+      const imageListRelative: string[] = fastifyInstance.helperPlugin.getRelativeUrl(imageListFirebase);
 
-      return imageListRelative;
-    },
-    getImageListFirebaseUrl: (imageListUrl: string[]): string[] => {
-      return imageListUrl.filter((imageUrl: string) => new RegExp(partsImageSchema.pattern).test(imageUrl));
-    },
-    getImageListRelativeUrl: (imageListUrl: string[]): string[] => {
-      return imageListUrl
-        .map((imageUrl: string) => new URL(imageUrl))
-        .map((url: URL) => (url.pathname.startsWith('/') ? url.pathname.slice(1) : url.pathname));
+      // Remove SEO context things and left only Uid
+
+      return imageListRelative.map((markdownImageUrl: string) => {
+        const filename: string = markdownImageUrl.split('/').pop();
+        const filenameUid: string = filename.split('-').pop();
+
+        return markdownImageUrl.replace(filename, filenameUid);
+      });
     },
     getImageListReplace: (markdown: string, previousList: string[], nextList: string[]): string => {
       let markdownNext: string = markdown;
 
-      for (let i: number = 0; i < previousList.length; i++) {
-        const previousPath: string = previousList[i];
-        const nextPath: string = nextList[i];
+      // Replacing text while preserving SEO context
 
-        markdownNext = markdownNext.replace(previousPath, nextPath);
+      for (let i: number = 0; i < previousList.length; i++) {
+        const previousPathUrl: URL = new URL(previousList[i]);
+        const previousPathUrlPathname: string[] = previousPathUrl.pathname.split('/').filter((path: string) => !!path);
+        const previousPath: string = previousPathUrlPathname.join('/');
+
+        const nextPathUrlPathname: string[] = nextList[i].split('/').filter((path: string) => !!path);
+        const nextPath: string = [nextPathUrlPathname.shift(), ...previousPathUrlPathname.slice(1)].join('/');
+
+        markdownNext = markdownNext.replace(previousPathUrl.href, previousPathUrl.href.replace(previousPath, nextPath));
       }
 
       return markdownNext;

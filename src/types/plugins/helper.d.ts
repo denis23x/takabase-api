@@ -9,6 +9,7 @@ declare module 'fastify' {
       camelCaseToDashCase: (value: string) => string;
       mapObjectValuesToNull: (mapObject: any) => any;
       generateUid: (length: number) => string;
+      getRelativeUrl: (urlList: string[]) => string[];
     };
   }
 }

@@ -34,6 +34,11 @@ const helperPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fas
       }
 
       return uid;
+    },
+    getRelativeUrl: (urlList: string[]): string[] => {
+      return urlList
+        .map((url: string) => new URL(url))
+        .map((url: URL) => (url.pathname.startsWith('/') ? url.pathname.slice(1) : url.pathname));
     }
   });
 });

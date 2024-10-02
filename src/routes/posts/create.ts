@@ -99,7 +99,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // If there is a cover provided
             if (postCover) {
               // Get the cover relative /temp URL
-              const tempCoverList: string[] = request.server.markdownPlugin.getImageListRelativeUrl([postCover]);
+              const tempCoverList: string[] = request.server.markdownPlugin.getImageListFromBucket([postCover]);
 
               // Checking to avoid unnecessary move when changing post type
               if (tempCoverList.some((tempCover: string) => !tempCover.startsWith(storageConfig.paths.POST_COVERS))) {
@@ -135,7 +135,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
                 };
 
                 // Replace the markdown body with the new URL images list
-                request.body.markdown = request.server.markdownPlugin.getImageListReplace(postMarkdown, tempMarkdownImageList, postMarkdownImageList);
+                request.body.markdown = request.server.markdownPlugin.getImageListReplace(postMarkdown, bodyMarkdownImageList, postMarkdownImageList);
               }
             }
 
