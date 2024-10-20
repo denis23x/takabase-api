@@ -3,22 +3,25 @@
 import xmlbuilder from 'xmlbuilder';
 import { sitemapConfig } from '../../config/sitemap.config';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { User } from '../../database/client';
+import type { Post } from '../../database/client';
 import type { XMLElement } from 'xmlbuilder';
+import type { SitemapGetDto } from '../../types/dto/sitemap/sitemap-get';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'GET',
-    url: 'user',
-    onRequest: [fastify.verifyIdToken, fastify.verifyAdmin],
+    url: 'posts',
     schema: {
-      tags: ['Sitemap'],
-      description: 'Get User related sitemap',
-      security: [
-        {
-          swaggerBearerAuth: []
+      tags: ['Sitemaps'],
+      description: 'Get Post related sitemap',
+      querystring: {
+        type: 'object',
+        properties: {
+          download: {
+            $ref: 'partsSitemapDownloadSchema#'
+          }
         }
-      ],
+      },
       response: {
         '200': {
           type: 'array'
@@ -31,11 +34,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<any>, reply: FastifyReply): Promise<any> {
-      const userList: Partial<User>[] = await request.server.prisma.user.findMany({
+    handler: async function (request: FastifyRequest<SitemapGetDto>, reply: FastifyReply): Promise<any> {
+      // Extract information from the request query
+      const download: boolean = request.query.download;
+
+      const postList: Partial<Post>[] = await request.server.prisma.post.findMany({
         select: {
+          id: true,
           name: true,
-          avatar: true,
+          cover: true,
           updatedAt: true
         }
       });
@@ -45,14 +52,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         .att('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9')
         .att('xmlns:image', 'http://www.google.com/schemas/sitemap-image/1.1');
 
-      userList.forEach((user: Partial<User>) => {
+      postList.forEach((post: Partial<Post>) => {
         const urlElement: XMLElement = sitemap.ele('url');
 
         // @ts-ignore
-        const loc: string = [sitemapConfig.origin, user.name].join('/');
-        const lastmod: string = user.updatedAt.toISOString();
-        const priority: string = request.server.sitemapPlugin.getPriority(loc, user.updatedAt);
-        const changefreq: string = request.server.sitemapPlugin.getChangeFreq(user.updatedAt);
+        const loc: string = [sitemapConfig.origin, 'post', post.id].join('/');
+        const lastmod: string = post.updatedAt.toISOString();
+        const priority: string = request.server.sitemapPlugin.getPriority(loc, post.updatedAt);
+        const changefreq: string = request.server.sitemapPlugin.getChangeFreq(post.updatedAt);
 
         urlElement.ele('loc', loc);
         urlElement.ele('lastmod', lastmod);
@@ -61,11 +68,11 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
         // Image
 
-        if (user.avatar) {
+        if (post.cover) {
           const imageElement: XMLElement = urlElement.ele('image:image');
 
-          imageElement.ele('image:loc', user.avatar);
-          imageElement.ele('image:title', user.name);
+          imageElement.ele('image:loc', post.cover);
+          imageElement.ele('image:title', post.name);
         }
       });
 
@@ -74,7 +81,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       });
 
       return reply
-        .header('Content-Disposition', 'attachment; filename=sitemap-user.xml')
+        .header('Content-Disposition', download ? 'attachment; filename=sitemap-post.xml' : 'inline')
         .type('application/xml')
         .status(200)
         .send(xml);

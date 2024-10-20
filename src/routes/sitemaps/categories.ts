@@ -5,20 +5,23 @@ import { sitemapConfig } from '../../config/sitemap.config';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Category } from '../../database/client';
 import type { XMLElement } from 'xmlbuilder';
+import type { SitemapGetDto } from '../../types/dto/sitemap/sitemap-get';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
     method: 'GET',
-    url: 'category',
-    onRequest: [fastify.verifyIdToken, fastify.verifyAdmin],
+    url: 'categories',
     schema: {
-      tags: ['Sitemap'],
+      tags: ['Sitemaps'],
       description: 'Get Category related sitemap',
-      security: [
-        {
-          swaggerBearerAuth: []
+      querystring: {
+        type: 'object',
+        properties: {
+          download: {
+            $ref: 'partsSitemapDownloadSchema#'
+          }
         }
-      ],
+      },
       response: {
         '200': {
           type: 'array'
@@ -31,7 +34,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         }
       }
     },
-    handler: async function (request: FastifyRequest<any>, reply: FastifyReply): Promise<any> {
+    handler: async function (request: FastifyRequest<SitemapGetDto>, reply: FastifyReply): Promise<any> {
+      // Extract information from the request query
+      const download: boolean = request.query.download;
+
       const categoryList: Partial<Category>[] = await request.server.prisma.category.findMany({
         select: {
           id: true,
@@ -68,7 +74,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       });
 
       return reply
-        .header('Content-Disposition', 'attachment; filename=sitemap-category.xml')
+        .header('Content-Disposition', download ? 'attachment; filename=sitemap-category.xml' : 'inline')
         .type('application/xml')
         .status(200)
         .send(xml);

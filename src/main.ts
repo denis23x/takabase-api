@@ -48,7 +48,7 @@ import postsRoutes from './routes/posts';
 import postsBookmarkRoutes from './routes/posts-bookmark';
 import postsPasswordRoutes from './routes/posts-password';
 import postsPrivateRoutes from './routes/posts-private';
-import sitemapRoutes from './routes/sitemap';
+import sitemapRoutes from './routes/sitemaps';
 import testsRoutes from './routes/tests';
 import usersRoutes from './routes/users';
 import utilitiesRoutes from './routes/utilities';
@@ -78,6 +78,7 @@ import { partsPostDescriptionSchema } from './schema/parts/post/parts-post-descr
 import { partsPostMarkdownSchema } from './schema/parts/post/parts-post-markdown.schema';
 import { partsPostNameSchema } from './schema/parts/post/parts-post-name.schema';
 import { partsPostBookmarkAttachSchema } from './schema/parts/post-bookmark/parts-post-bookmark-attach.schema';
+import { partsSitemapDownloadSchema } from './schema/parts/sitemap/parts-sitemap-download.schema';
 import { partsUserDescriptionSchema } from './schema/parts/user/parts-user-description.schema';
 import { partsUserEmailSchema } from './schema/parts/user/parts-user-email.schema';
 import { partsUsernameSchema } from './schema/parts/user/parts-user-name.schema';
@@ -160,6 +161,7 @@ export const main = async (): Promise<FastifyInstance> => {
   fastifyInstance.addSchema(partsPostMarkdownSchema);
   fastifyInstance.addSchema(partsPostNameSchema);
   fastifyInstance.addSchema(partsPostBookmarkAttachSchema);
+  fastifyInstance.addSchema(partsSitemapDownloadSchema);
   fastifyInstance.addSchema(partsUserDescriptionSchema);
   fastifyInstance.addSchema(partsUserEmailSchema);
   fastifyInstance.addSchema(partsUsernameSchema);
@@ -217,7 +219,7 @@ export const main = async (): Promise<FastifyInstance> => {
         prefix: '/posts-private/'
       });
       api.register(sitemapRoutes, {
-        prefix: '/sitemap/'
+        prefix: '/sitemaps/'
       });
       api.register(testsRoutes, {
         prefix: '/tests/'
