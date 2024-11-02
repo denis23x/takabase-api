@@ -6,7 +6,6 @@ import type { UserCreateDto } from '../../types/dto/user/user-create';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { DocumentReference } from 'firebase-admin/lib/firestore';
 import type { SaveObjectResponse } from '@algolia/client-search';
-import type { SearchIndex } from 'algoliasearch';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -59,7 +58,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const userFirebaseUid: string = request.user.uid;
       const userPath: string = ['users', userFirebaseUid].join('/');
       const username: string | undefined = request.body?.name;
-      const userIndex: SearchIndex = request.server.algolia.initIndex('user');
 
       // Check if name already exists
       if (username) {
@@ -164,16 +162,22 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             };
 
             // Create new object in Algolia user index
-            const userIndexObject: SaveObjectResponse = await userIndex.saveObject({
-              ...request.server.helperPlugin.mapObjectValuesToNull(user),
-              objectID: String(user.firebaseUid),
-              updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(user.updatedAt),
-              createdAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(user.createdAt),
+            const userIndexObject: SaveObjectResponse = await request.server.algolia.saveObject({
+              indexName: 'user',
+              body: {
+                ...request.server.helperPlugin.mapObjectValuesToNull(user),
+                objectID: String(user.firebaseUid),
+                updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(user.updatedAt),
+                createdAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(user.createdAt),
+              }
             });
 
             //! Define rollback action for Algolia delete user object
             requestRollback.userIndexObjects = async (): Promise<void> => {
-              await userIndex.deleteObjects([userIndexObject.objectID]);
+              await request.server.algolia.deleteObject({
+                indexName: 'user',
+                objectID: userIndexObject.objectID
+              });
             };
 
             // Return the user

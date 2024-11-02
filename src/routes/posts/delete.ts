@@ -3,8 +3,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Post, Prisma, PrismaClient } from '../../database/client';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
-import type { SearchIndex } from 'algoliasearch';
-import type { GetObjectsResponse } from '@algolia/client-search';
 import type { ParamsId } from '../../types/crud/params/params-id';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
@@ -57,8 +55,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Extract post information from the request object
       const postId: number = Number(request.params.id);
-      const postIndex: SearchIndex = request.server.algolia.initIndex('post');
-      const postIndexObjects: GetObjectsResponse<any> = await postIndex.getObjects([String(postId)]);
+
+      // Check if there are results in the fetched post index objects
+      const postIndexObject: Record<string, unknown> = await request.server.algolia.getObject({
+        indexName: 'post',
+        objectID: String(postId)
+      });
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -72,16 +74,19 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Re-initialize requestRollback object
             requestRollback = {};
 
-            // Check if there are results in the fetched post index objects
-            if (postIndexObjects.results.length) {
-              //! Define rollback action for Algolia delete post object
-              requestRollback.postIndexObjects = async (): Promise<void> => {
-                await postIndex.saveObjects([...postIndexObjects.results]);
-              };
+            //! Define rollback action for Algolia delete post object
+            requestRollback.postIndexObject = async (): Promise<void> => {
+              await request.server.algolia.saveObject({
+                indexName: 'post',
+                body: postIndexObject
+              });
+            };
 
-              // Delete Algolia post index object
-              await postIndex.deleteObjects([String(postId)]);
-            }
+            // Delete Algolia post index object
+            await request.server.algolia.deleteObject({
+              indexName: 'post',
+              objectID: String(postId)
+            });
 
             // Define arguments to delete post
             const postDeleteArgs: Prisma.PostDeleteArgs = {

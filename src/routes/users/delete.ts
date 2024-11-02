@@ -7,7 +7,6 @@ import type { DocumentData, DocumentReference, DocumentSnapshot } from 'firebase
 import type { UserRecord } from 'firebase-admin/lib/auth/user-record';
 import type { UserDeleteDto } from '../../types/dto/user/user-delete';
 import type { GetObjectsResponse } from '@algolia/client-search';
-import type { SearchIndex } from 'algoliasearch';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -65,8 +64,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Extract the firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
-      const userIndex: SearchIndex = request.server.algolia.initIndex('user');
-      const userIndexObjects: GetObjectsResponse<any> = await userIndex.getObjects([userFirebaseUid]);
+
+      // Check if there are results in the fetched user index objects
+      const userIndexObject: Record<string, unknown> = await request.server.algolia.getObject({
+        indexName: 'user',
+        objectID: userFirebaseUid
+      });
 
       // Get Auth user record
       const userAuthRecord: UserRecord = await request.server.auth.getUser(userFirebaseUid);
@@ -95,9 +98,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       };
 
       // Initialize the Algolia search index for category related posts objects
-      const postIndex: SearchIndex = request.server.algolia.initIndex('post');
-      const postIndexIDs: string[] = (postListMap.post as Post[]).map((post: Post) => String(post.id));
-      const postIndexObjects: GetObjectsResponse<any> = await postIndex.getObjects([...postIndexIDs]);
+      const postIndexObjects: GetObjectsResponse<any> = await request.server.algolia.getObjects({
+        requests: (postListMap.post as Post[]).map((post: Post) => ({
+          indexName: 'post',
+          objectID: String(post.id)
+        }))
+      });
 
       // Define arguments to fetch user's categories from Prisma
       const categoryPostFindManyArgs: Prisma.CategoryFindManyArgs = {
@@ -113,9 +119,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const categoryPostList: Category[] = await request.server.prisma.category.findMany(categoryPostFindManyArgs);
 
       // Initialize the Algolia search index for category objects
-      const categoryIndex: SearchIndex = request.server.algolia.initIndex('category');
-      const categoryIndexIDs: string[] = categoryPostList.map((category: Category) => String(category.id));
-      const categoryIndexObjects: GetObjectsResponse<any> = await categoryIndex.getObjects([...categoryIndexIDs]);
+      const categoryIndexObjects: GetObjectsResponse<any> = await request.server.algolia.getObjects({
+        requests: categoryPostList.map((category: Category) => ({
+          indexName: 'category',
+          objectID: String(category.id)
+        }))
+      });
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -129,37 +138,72 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             requestRollback = {};
 
             // Check if there are results in the fetched posts index objects
-            if (postIndexObjects.results.length) {
+            if (postIndexObjects?.results.length) {
               //! Define rollback action for Algolia delete category related post objects
               requestRollback.postIndexObjects = async (): Promise<void> => {
-                await postIndex.saveObjects([...postIndexObjects.results]);
+                await request.server.algolia.batch({
+                  indexName: 'post',
+                  batchWriteParams: {
+                    requests: postIndexObjects.results.map((postIndexObject: any) => ({
+                      action: 'addObject',
+                      body: postIndexObject
+                    }))
+                  }
+                });
               };
 
               // Delete Algolia posts index object
-              await postIndex.deleteObjects([...postIndexIDs]);
+              await request.server.algolia.batch({
+                indexName: 'post',
+                batchWriteParams: {
+                  requests: postIndexObjects.results.map((postIndexObject: any) => ({
+                    action: 'deleteObject',
+                    body: postIndexObject
+                  }))
+                }
+              });
             }
 
             // Check if there are results in the fetched categories index objects
-            if (categoryIndexObjects.results.length) {
+            if (categoryIndexObjects?.results.length) {
               //! Define rollback action for Algolia delete category objects
               requestRollback.categoryIndexObjects = async (): Promise<void> => {
-                await categoryIndex.saveObjects([...categoryIndexObjects.results]);
+                await request.server.algolia.batch({
+                  indexName: 'category',
+                  batchWriteParams: {
+                    requests: categoryIndexObjects.results.map((categoryIndexObject: any) => ({
+                      action: 'addObject',
+                      body: categoryIndexObject
+                    }))
+                  }
+                });
               };
 
               // Delete Algolia categories index object
-              await categoryIndex.deleteObjects([...categoryIndexIDs]);
+              await request.server.algolia.batch({
+                indexName: 'category',
+                batchWriteParams: {
+                  requests: categoryIndexObjects.results.map((categoryIndexObject: any) => ({
+                    action: 'deleteObject',
+                    body: categoryIndexObject
+                  }))
+                }
+              });
             }
 
-            // Check if there are results in the fetched user index objects
-            if (userIndexObjects.results.length) {
-              //! Define rollback action for Algolia delete user object
-              requestRollback.userIndexObjects = async (): Promise<void> => {
-                await userIndex.saveObjects([...userIndexObjects.results]);
-              };
+            //! Define rollback action for Algolia delete user object
+            requestRollback.userIndexObjects = async (): Promise<void> => {
+              await request.server.algolia.saveObject({
+                indexName: 'user',
+                body: userIndexObject
+              });
+            };
 
-              // Delete Algolia user index object
-              await userIndex.deleteObjects([userFirebaseUid]);
-            }
+            // Delete Algolia user index object
+            await request.server.algolia.deleteObject({
+              indexName: 'user',
+              objectID: userFirebaseUid
+            });
 
             //! Define rollback action for user Firestore document
             requestRollback.userDocument = async (): Promise<void> => {

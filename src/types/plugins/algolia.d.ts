@@ -1,7 +1,7 @@
 /** @format */
 
-import type { SearchClient } from 'algoliasearch/dist/algoliasearch';
 import type { FastifyReply } from 'fastify';
+import type { SearchClient } from 'algoliasearch';
 
 declare module 'fastify' {
   interface FastifyInstance {

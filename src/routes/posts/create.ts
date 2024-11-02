@@ -7,7 +7,6 @@ import type { PostCreateDto } from '../../types/dto/post/post-create';
 import type { Post, Prisma, PrismaClient } from '../../database/client';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { SaveObjectResponse } from '@algolia/client-search';
-import type { SearchIndex } from 'algoliasearch';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -75,7 +74,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const postCover: string | null = request.body.cover;
       const postCategoryId: number = Number(request.body.categoryId);
       const postMarkdown: string = request.body.markdown;
-      const postIndex: SearchIndex = request.server.algolia.initIndex('post');
 
       // Get the list of images in the post markdown body
       const bodyMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBody(postMarkdown);
@@ -178,16 +176,22 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
 
             // Create new object in Algolia post index
-            const postIndexObject: SaveObjectResponse = await postIndex.saveObject({
-              ...request.server.helperPlugin.mapObjectValuesToNull(post),
-              objectID: String(post.id),
-              updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(post.updatedAt),
-              createdAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(post.createdAt)
+            const postIndexObject: SaveObjectResponse = await request.server.algolia.saveObject({
+              indexName: 'post',
+              body: {
+                ...request.server.helperPlugin.mapObjectValuesToNull(post),
+                objectID: String(post.id),
+                updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(post.updatedAt),
+                createdAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(post.createdAt)
+              }
             });
 
             //! Define rollback action for Algolia delete post object
             requestRollback.postIndexObjects = async (): Promise<void> => {
-              await postIndex.deleteObjects([postIndexObject.objectID]);
+              await request.server.algolia.deleteObject({
+                indexName: 'post',
+                objectID: postIndexObject.objectID
+              });
             };
 
             // Return the post

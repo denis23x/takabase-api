@@ -4,7 +4,6 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Category, Post, Prisma, PrismaClient } from '../../database/client';
 import type { CategoryDeleteDto } from '../../types/dto/category/category-delete';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
-import type { SearchIndex } from 'algoliasearch';
 import type { GetObjectsResponse } from '@algolia/client-search';
 import type { ParamsId } from '../../types/crud/params/params-id';
 
@@ -67,8 +66,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Extract category and post related information from the request object
       const categoryId: number = Number(request.params.id);
       const categoryIdNext: number = Number(request.query.categoryId);
-      const categoryIndex: SearchIndex = request.server.algolia.initIndex('category');
-      const categoryIndexObjects: GetObjectsResponse<any> = await categoryIndex.getObjects([String(categoryId)]);
+
+      // Check if there are results in the fetched category index objects
+      const categoryIndexObject: Record<string, unknown> = await request.server.algolia.getObject({
+        indexName: 'category',
+        objectID: String(categoryId)
+      });
 
       // Preparing for queue
       let postListDelete: Post[] = [];
@@ -85,16 +88,19 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Re-initialize requestRollback object
             requestRollback = {};
 
-            // Check if there are results in the fetched category index objects
-            if (categoryIndexObjects.results.length) {
-              //! Define rollback action for Algolia delete category object
-              requestRollback.categoryIndexObjects = async (): Promise<void> => {
-                await categoryIndex.saveObjects([...categoryIndexObjects.results]);
-              };
+            //! Define rollback action for Algolia delete category object
+            requestRollback.categoryIndexObjects = async (): Promise<void> => {
+              await request.server.algolia.saveObject({
+                indexName: 'category',
+                body: categoryIndexObject
+              });
+            };
 
-              // Delete Algolia category index object
-              await categoryIndex.deleteObjects([String(categoryId)]);
-            }
+            // Delete Algolia category index object
+            await request.server.algolia.deleteObject({
+              indexName: 'category',
+              objectID: String(categoryId)
+            });
 
             // If there is a categoryIdNext provided
             if (categoryIdNext) {
@@ -126,22 +132,41 @@ export default async function (fastify: FastifyInstance): Promise<void> {
               };
 
               // Retrieve the list of posts associated with the category
-              await request.server.prisma.post.findMany(postFindManyArgs).then((postList: Post[]) => postListDelete = postList);
+              postListDelete = await request.server.prisma.post.findMany(postFindManyArgs);
 
               // Initialize the Algolia search index for category related posts objects
-              const postIndex: SearchIndex = request.server.algolia.initIndex('post');
-              const postIndexIDs: string[] = postListDelete.map((post: Post) => String(post.id));
-              const postIndexObjects: GetObjectsResponse<any> = await postIndex.getObjects([...postIndexIDs]);
+              const postIndexObjects: GetObjectsResponse<any> = await request.server.algolia.getObjects({
+                requests: postListDelete.map((post: Post) => ({
+                  indexName: 'post',
+                  objectID: String(post.id)
+                }))
+              });
 
               // Check if there are results in the fetched post index objects
-              if (postIndexObjects.results.length) {
+              if (postIndexObjects?.results.length) {
                 //! Define rollback action for Algolia delete category related post objects
                 requestRollback.postIndexObjects = async (): Promise<void> => {
-                  await postIndex.saveObjects([...postIndexObjects.results]);
+                  await request.server.algolia.batch({
+                    indexName: 'post',
+                    batchWriteParams: {
+                      requests: postIndexObjects.results.map((postIndexObject: any) => ({
+                        action: 'addObject',
+                        body: postIndexObject
+                      }))
+                    }
+                  });
                 };
 
                 // Delete Algolia category posts index objects
-                await postIndex.deleteObjects([...postIndexIDs]);
+                await request.server.algolia.batch({
+                  indexName: 'post',
+                  batchWriteParams: {
+                    requests: postIndexObjects.results.map((postIndexObject: any) => ({
+                      action: 'deleteObject',
+                      body: postIndexObject
+                    }))
+                  }
+                });
               }
             }
 

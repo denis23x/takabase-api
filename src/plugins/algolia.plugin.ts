@@ -1,12 +1,10 @@
 /** @format */
 
 import fp from 'fastify-plugin';
-import algoliasearch from 'algoliasearch';
 import { algoliaConfig } from '../config/algolia.config';
+import { algoliasearch } from 'algoliasearch';
 import type { FastifyInstance, FastifyPluginAsync, FastifyReply } from 'fastify';
-import type { ChunkedBatchResponse } from '@algolia/client-search';
-import type { SearchIndex } from 'algoliasearch';
-import type { SearchClient } from 'algoliasearch/dist/algoliasearch';
+import type { BatchResponse, SearchClient } from 'algoliasearch';
 
 //! Singleton
 
@@ -33,16 +31,16 @@ const algoliaPlugin: FastifyPluginAsync = fp(async function (fastifyInstance: Fa
         .send(indexObjectsBuffer);
     },
     setClear: async (index: string): Promise<void> => {
-      const searchIndex: SearchIndex = fastifyInstance.algolia.initIndex(index);
-
-      searchIndex
-        .clearObjects()
+      await fastifyInstance.algolia
+        .clearObjects({ indexName: index })
         .then(() => console.log(index + ' index was cleared'))
         .catch((error: any) => console.error(error));
     },
     getSync: async (index: string, indexObjects: any, reply: FastifyReply): Promise<FastifyReply> => {
-      const searchIndex: SearchIndex = fastifyInstance.algolia.initIndex(index);
-      const chunkedBatchResponse: ChunkedBatchResponse = await searchIndex.saveObjects(indexObjects);
+      const chunkedBatchResponse: BatchResponse[] = await fastifyInstance.algolia.saveObjects({
+        indexName: index,
+        objects: indexObjects
+      });
 
       return reply.status(200).send({
         data: chunkedBatchResponse,

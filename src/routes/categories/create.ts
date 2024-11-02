@@ -5,7 +5,6 @@ import type { Prisma, Category, PrismaClient } from '../../database/client';
 import type { CategoryCreateDto } from '../../types/dto/category/category-create';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { SaveObjectResponse } from '@algolia/client-search';
-import type { SearchIndex } from 'algoliasearch';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.route({
@@ -58,9 +57,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Extract the firebaseUid from the authenticated user
       const userFirebaseUid: string = request.user.uid;
-
-      // Define Algolia category index
-      const categoryIndex: SearchIndex = request.server.algolia.initIndex('category');
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -115,22 +111,28 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             }
 
             // Create new object in Algolia category index
-            const categoryIndexObject: SaveObjectResponse = await categoryIndex.saveObject({
-              ...request.server.helperPlugin.mapObjectValuesToNull(category),
-              objectID: String(category.id),
-              updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(category.updatedAt),
-              createdAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(category.createdAt),
-              user: {
-                id: category.user.id,
-                avatar: category.user.avatar,
-                name: category.user.name,
-                firebaseUid: category.user.firebaseUid,
-              },
+            const categoryIndexObject: SaveObjectResponse = await request.server.algolia.saveObject({
+              indexName: 'category',
+              body: {
+                ...request.server.helperPlugin.mapObjectValuesToNull(category),
+                objectID: String(category.id),
+                updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(category.updatedAt),
+                createdAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(category.createdAt),
+                user: {
+                  id: category.user.id,
+                  avatar: category.user.avatar,
+                  name: category.user.name,
+                  firebaseUid: category.user.firebaseUid,
+                },
+              }
             });
 
             //! Define rollback action for Algolia delete category object
             requestRollback.categoryIndexObjects = async (): Promise<void> => {
-              await categoryIndex.deleteObjects([categoryIndexObject.objectID]);
+              await request.server.algolia.deleteObject({
+                indexName: 'category',
+                objectID: categoryIndexObject.objectID
+              });
             };
 
             // Return the category

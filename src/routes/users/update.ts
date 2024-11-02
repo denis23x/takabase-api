@@ -6,7 +6,6 @@ import type { Category, Prisma, PrismaClient, User } from '../../database/client
 import type { UserUpdateDto } from '../../types/dto/user/user-update';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
 import type { GetObjectsResponse } from '@algolia/client-search';
-import type { SearchIndex } from 'algoliasearch';
 import type { UserRecord } from 'firebase-admin/lib/auth/user-record';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
@@ -75,8 +74,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // Extract user information from the request object
       const username: string | null = request.body.name as any;
       const userAvatar: string | null = request.body.avatar as any;
-      const userIndex: SearchIndex = request.server.algolia.initIndex('user');
-      const userIndexObjects: GetObjectsResponse<any> = await userIndex.getObjects([userFirebaseUid]);
       const userRecord: UserRecord = await request.server.auth.getUser(userFirebaseUid);
 
       // Define the arguments for find a user
@@ -93,10 +90,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       // User previous state
       const user: User = await request.server.prisma.user.findUniqueOrThrow(userFindUniqueOrThrowArgs);
 
+      // Check if there are results in the fetched user index object
+      const userIndexObject: Record<string, unknown> = await request.server.algolia.getObject({
+        indexName: 'user',
+        objectID: userFirebaseUid
+      });
+
       // Prepare the list of categories for update Algolia indices
       let categoryList: Category[] = [];
-      let categoryIndex: SearchIndex = undefined;
-      let categoryIndexIDs: string[] = [];
       let categoryIndexObjects: GetObjectsResponse<any> = undefined;
 
       // Counter for transaction retries
@@ -160,9 +161,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
               // Retrieve the list of categories from the MySQL and Algolia
               categoryList = await request.server.prisma.category.findMany(categoryFindManyArgs);
-              categoryIndex = request.server.algolia.initIndex('category');
-              categoryIndexIDs = categoryList.map((category: Category) => String(category.id));
-              categoryIndexObjects = await categoryIndex.getObjects([...categoryIndexIDs]);
+              categoryIndexObjects = await request.server.algolia.getObjects({
+                requests: categoryList.map((category: Category) => ({
+                  indexName: 'category',
+                  objectID: String(category.id)
+                }))
+              });
             }
 
             // Define the arguments for updating user
@@ -181,38 +185,59 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Update the user
             const userNext: User = await prismaClient.user.update(userUpdateArgs);
 
-            // Check if there are results in the fetched user index objects
-            if (userIndexObjects.results.length) {
-              //! Define rollback action for Algolia update user object
-              requestRollback.userIndexObjects = async (): Promise<void> => {
-                await userIndex.partialUpdateObjects([...userIndexObjects.results]);
-              };
+            //! Define rollback action for Algolia update user object
+            requestRollback.userIndexObject = async (): Promise<void> => {
+              await request.server.algolia.partialUpdateObject({
+                indexName: 'user',
+                objectID: userFirebaseUid,
+                attributesToUpdate: userIndexObject
+              });
+            };
 
-              // Update object in Algolia user index
-              await userIndex.partialUpdateObjects([{
+            // Update object in Algolia user index
+            await request.server.algolia.partialUpdateObject({
+              indexName: 'user',
+              objectID: userFirebaseUid,
+              attributesToUpdate: {
                 ...request.server.helperPlugin.mapObjectValuesToNull(userNext),
                 objectID: String(userNext.firebaseUid),
                 updatedAt: userNext.updatedAt,
-                updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(userNext.updatedAt),
-              }]);
-            }
+                updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(userNext.updatedAt)
+              }
+            });
 
             // Check if there are results in the fetched categories index objects
             if (categoryIndexObjects?.results.length) {
               //! Define rollback action for Algolia update categories objects
               requestRollback.categoriesIndexObjects = async (): Promise<void> => {
-                await categoryIndex.partialUpdateObjects([...categoryIndexObjects.results]);
+                await request.server.algolia.batch({
+                  indexName: 'category',
+                  batchWriteParams: {
+                    requests: categoryIndexObjects.results.map((categoryIndexObject: any) => ({
+                      action: 'partialUpdateObject',
+                      body: categoryIndexObject
+                    }))
+                  }
+                });
               };
 
               // Update object in Algolia category index object
-              await categoryIndex.partialUpdateObjects([...categoryIndexObjects.results.map((category: any) => ({
-                ...request.server.helperPlugin.mapObjectValuesToNull(category),
-                user: {
-                  ...category.user,
-                  avatar: userNext.avatar,
-                  name: userNext.name
+              await request.server.algolia.batch({
+                indexName: 'category',
+                batchWriteParams: {
+                  requests: categoryIndexObjects.results.map((categoryIndexObject: any) => ({
+                    action: 'partialUpdateObject',
+                    body: {
+                      ...request.server.helperPlugin.mapObjectValuesToNull(categoryIndexObject),
+                      user: {
+                        ...categoryIndexObject.user,
+                        avatar: userNext.avatar,
+                        name: userNext.name
+                      }
+                    }
+                  }))
                 }
-              }))]);
+              });
             }
 
             // Define the arguments for update Firebase user auth record

@@ -4,8 +4,6 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, Category, PrismaClient } from '../../database/client';
 import type { CategoryUpdateDto } from '../../types/dto/category/category-update';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
-import type { SearchIndex } from 'algoliasearch';
-import type { GetObjectsResponse } from '@algolia/client-search';
 import type { ParamsId } from '../../types/crud/params/params-id';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
@@ -69,8 +67,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       // Extract post information from the request object
       const categoryId: number = Number(request.params.id);
-      const categoryIndex: SearchIndex = request.server.algolia.initIndex('category');
-      const categoryIndexObjects: GetObjectsResponse<any> = await categoryIndex.getObjects([String(categoryId)]);
+
+      // Check if there are results in the fetched category index object
+      const categoryIndexObject: Record<string, unknown> = await request.server.algolia.getObject({
+        indexName: 'category',
+        objectID: String(categoryId)
+      });
 
       // Counter for transaction retries
       let requestRetries: number = 0;
@@ -107,21 +109,26 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Update the category
             const category: Category = await prismaClient.category.update(categoryUpdateArgs);
 
-            // Check if there are results in the fetched category index objects
-            if (categoryIndexObjects.results.length) {
-              //! Define rollback action for Algolia update category object
-              requestRollback.categoryIndexObjects = async (): Promise<void> => {
-                await categoryIndex.partialUpdateObjects([...categoryIndexObjects.results]);
-              };
+            //! Define rollback action for Algolia update category object
+            requestRollback.categoryIndexObject = async (): Promise<void> => {
+              await request.server.algolia.partialUpdateObject({
+                indexName: 'category',
+                objectID: String(categoryId),
+                attributesToUpdate: categoryIndexObject
+              });
+            };
 
-              // Update object in Algolia category index object
-              await categoryIndex.partialUpdateObjects([{
+            // Update object in Algolia category index object
+            await request.server.algolia.partialUpdateObject({
+              indexName: 'category',
+              objectID: String(categoryId),
+              attributesToUpdate: {
                 ...request.server.helperPlugin.mapObjectValuesToNull(category),
                 objectID: String(category.id),
                 updatedAt: category.updatedAt,
                 updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(category.updatedAt),
-              }]);
-            }
+              }
+            });
 
             // Return the category
             return category;

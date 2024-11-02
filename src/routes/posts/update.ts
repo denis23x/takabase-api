@@ -5,8 +5,6 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma, Post, PrismaClient } from '../../database/client';
 import type { PostUpdateDto } from '../../types/dto/post/post-update';
 import type { ResponseError } from '../../types/crud/response/response-error.schema';
-import type { SearchIndex } from 'algoliasearch';
-import type { GetObjectsResponse } from '@algolia/client-search';
 import type { ParamsId } from '../../types/crud/params/params-id';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
@@ -82,8 +80,12 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       const postId: number = Number(request.params.id);
       const postCover: string | null = request.body.cover as any;
       const postMarkdown: string = request.body.markdown as any;
-      const postIndex: SearchIndex = request.server.algolia.initIndex('post');
-      const postIndexObjects: GetObjectsResponse<any> = await postIndex.getObjects([String(postId)]);
+
+      // Check if there are results in the fetched post index objects
+      const postIndexObject: Record<string, unknown> = await request.server.algolia.getObject({
+        indexName: 'post',
+        objectID: String(postId)
+      });
 
       // Get the list of images in the post markdown body
       const bodyMarkdownImageList: string[] = request.server.markdownPlugin.getImageListFromBody(postMarkdown);
@@ -212,21 +214,26 @@ export default async function (fastify: FastifyInstance): Promise<void> {
             // Update the post
             const postNext: Post = await prismaClient.post.update(postUpdateArgs);
 
-            // Check if there are results in the fetched post index objects
-            if (postIndexObjects.results.length) {
-              //! Define rollback action for Algolia update post object
-              requestRollback.postIndexObjects = async (): Promise<void> => {
-                await postIndex.partialUpdateObjects([...postIndexObjects.results]);
-              };
+            //! Define rollback action for Algolia update post object
+            requestRollback.postIndexObject = async (): Promise<void> => {
+              await request.server.algolia.partialUpdateObject({
+                indexName: 'post',
+                objectID: String(postId),
+                attributesToUpdate: postIndexObject
+              });
+            };
 
-              // Update object in Algolia post index object
-              await postIndex.partialUpdateObjects([{
+            // Update object in Algolia post index object
+            await request.server.algolia.partialUpdateObject({
+              indexName: 'post',
+              objectID: String(postId),
+              attributesToUpdate: {
                 ...request.server.helperPlugin.mapObjectValuesToNull(postNext),
                 objectID: String(postNext.id),
                 updatedAt: postNext.updatedAt,
                 updatedAtUnixTimestamp: request.server.dayjsPlugin.getUnixTimestamp(postNext.updatedAt)
-              }]);
-            }
+              }
+            });
 
             // Return the post
             return postNext;
